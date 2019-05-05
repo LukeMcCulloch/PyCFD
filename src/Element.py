@@ -11,7 +11,7 @@ class triangle(object):
     def __init__(self, p1,p2,p3):
         self.make_nodes(p1,p2,p3)
         self.make_edges(p1,p2,p3)
-        return
+        
     def make_nodes(self, p1,p2,p3):
         self.nodes = {}
         self.nodes[0] = p1
