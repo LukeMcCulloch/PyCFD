@@ -1,2 +1,9 @@
 # PyCFD
-many aspects of computational fluid dynamics, prototyped in Python
+
+Many aspects of computational fluid dynamics, prototyped in Python
+
+
+
+# Requirements
+
+1. NumPy
