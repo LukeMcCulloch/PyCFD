@@ -31,6 +31,12 @@ def cacheGeometry(f):
 
 
 
+     
+##
+##******************************************************
+##
+
+
 class halfedge(object):
     def __init__(self, staticGeometry=False):
         ### Members
@@ -65,10 +71,71 @@ class halfedge(object):
         """The vector represented by this halfedge"""
         v = self.vertex.position - self.twin.vertex.position
         return v
+    
+    def normal(self):
+        return 
+    
+    
+    class Vertex(object):
+    """
+    Getting adjacent objects:
+        
+        el      = list(self.adjacentEdges())
+        evpl    = list(self.adjacentEdgeVertexPairs())
+        fl      = list(self.adjacentFaces())
+        hl      = list(self.adjacentHalfEdges())
+        vl      = list(self.adjacentVerts())
+        
+    """
 
+    ### Construct a vertex, possibly with a known position
+    def __init__(self, pos=None, staticGeometry=False):
+
+        if pos is not None:
+            self._pos = pos
+            if staticGeometry:
+                self._pos.flags.writeable = False
+
+        self.anyHalfEdge = None      # Any halfedge exiting this vertex
+
+        self._cache = dict()
+        self.staticGeometry = staticGeometry
+
+        # Global id number, mainly for debugging
+        global NEXT_VERTEX_ID
+        self.id = NEXT_VERTEX_ID
+        NEXT_VERTEX_ID += 1
+
+    ## Slightly prettier print function
+    # TODO Maybe make repr() more verbose?
+    def __str__(self):
+        return "<Vertex #{}>".format(self.id)
+    def __repr__(self):
+        return self.__str__()
+
+
+    @property
+    def position(self):
+        return self._pos
+
+    @position.setter
+    def position(self, value):
+        if self.staticGeometry:
+            raise ValueError("ERROR: Cannot write to vertex position with staticGeometry=True. To allow dynamic geometry, set staticGeometry=False when creating vertex (or in the parent mesh constructor)")
+        self._pos = value
+
+
+     
+##
+##******************************************************
+##
 class edge(self, staticGeometry=False)):
     def __init__(self):
         
+     
+##
+##******************************************************
+##
 class triangle(object, staticGeometry=False)):
     def __init__(self, p1,p2,p3):
         self.make_nodes(p1,p2,p3)
@@ -82,9 +149,13 @@ class triangle(object, staticGeometry=False)):
         return
     def make_edges(self, p1,p2,p3):
         self.edge = {}
-        self.edge[1] = np.asarray([p2,p1])
-        self.edge[2] = np.asarray([p3,p2])
-        self.edge[3] = np.asarray([p1,p3])
+        #        self.edge[1] = np.asarray([p2,p1])
+        #        self.edge[2] = np.asarray([p3,p2])
+        #        self.edge[3] = np.asarray([p1,p3])
+        
+        self.edge[1] = np.asarray([p1,p2])
+        self.edge[2] = np.asarray([p2,p3])
+        self.edge[3] = np.asarray([p3,p1])
         return
     
     
@@ -97,6 +168,25 @@ class triangle(object, staticGeometry=False)):
 
         return n
     
+    def edge_normals(self):
+        keys = self.edge.keys()
+        for i,key in enumerate(keys):
+            edge = self.edge[key]
+            other = self.edge[keys[(i+1)%3]]
+            
+            parallel = edge[1] - edge[0]
+            perpindicular = np.asarray([parallel[1], -parallel[0]])
+            Nv = normalize(perpindicular)
+            
+            othervec = other[1] - other[0]
+            #    *
+            #   | \
+            #  *__*
+            #
+            test = dot(Nv,othervec)
+            if test>0:
+                Nv = -Nv
+        return Nv
     
     def area(self):
         """The area of this tri"""
