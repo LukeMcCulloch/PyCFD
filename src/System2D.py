@@ -64,7 +64,12 @@ class Face(object):
         """
         vec = self.nodes[1] - self.nodes[0]
         return normalize2D(np.asarray([vec[1],-vec[0]]))
-                      
+    
+    def e_xi(self):
+        return
+    
+    def e_eta(self):
+        return 
         
         
 class Cell(object):
@@ -77,10 +82,22 @@ class Cell(object):
         self.nodes = nodes
         self.N = len(self.nodes)
         self.num_faces = self.N
+        self.set_centroid()
         self.F = np.asarray((self.num_faces),float)
         self.G = np.asarray((self.num_faces),float)
         self.faces = []
         self.set_face_vectors()
+        
+    def set_centroid(self):
+        """The 'center' of this face
+        -center as average point location
+        
+        -circumcentric?
+        -barycentric?
+        """
+        scale = 1./float(self.N)
+        self.centroid = scale * sum([el.vector for el in self.nodes]) 
+        return self.centroid
         
     def set_face_vectors(self):
         for i in range(self.N):
