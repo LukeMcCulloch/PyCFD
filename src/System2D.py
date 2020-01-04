@@ -9,6 +9,8 @@ import numpy as np
 
 from Overload import Overload
 
+from Utilities import normalize, normalized, norm, dot, cross
+
 class Node(Overload):
     def __init__(self, vector):
         self.x0 = vector[0]
@@ -22,16 +24,39 @@ class Edge(object):
     
     def __init__(self, nodes):
         self.nodes = nodes
-        self.N = len(nodes)
+        self.N = 2 #len(nodes)
         self.center = np.zeros((self.N),float)
         sumx0 = sum( [el.x0 for el in self.nodes] )
         sumx1 = sum( [el.x1 for el in self.nodes] )
             
+    def normal(self):
+        """
+        cross vector with 0 in x2 dir
+         with vector with 1 in the x2 dir
+         
+         this is of course (x1,-x0, 0)
+         
+         normals point in
+         
+        """
+        vec = self.nodes[1] - self.nodes[0]
+        dumvec1 = np.zeros((3),float)
+        dumvec2 = np.zeros_like((dumvec1))
+        dumvec1[:-1] = self.nodes[1] - self.nodes[0]
+        dumvec2[:-1] = self.nodes[1] - self.nodes[0]
+        dumvec2[-1] = 1.
+        
+        
+        n3 = normalize(cross(dumvec1,dumvec2) )
+        return n3[:-1]
+                      
         
         
 class Cell(object):
     """
     The Cij'th cell
+    
+    ccw-winding
     """
     def __init__(self, nodes):
         self.nodes = nodes
@@ -55,6 +80,22 @@ class Cell(object):
     
     def face(self, i):
         return 
+    
+    def print_vertices(self):
+        for vert in self.nodes:
+            print vert.vector
+        return
+    
+    
+    def print_edges(self, normals=False):
+        for edge in self.edges:
+            print 'edge'
+            for vert in edge.nodes:
+                print vert.vector
+            if normals:
+                print 'edge normal'
+                print edge.normal()
+        return
 
 
 class Grid(object):
@@ -108,8 +149,8 @@ class Grid(object):
                                     Cell([
                                             self.nodes[i,j],
                                             self.nodes[i,j+1],
-                                            self.nodes[i+1,j],
-                                            self.nodes[i+1,j+1]
+                                            self.nodes[i+1,j+1],
+                                            self.nodes[i+1,j]
                                         ])  )
                 
         self.cells = np.asarray(self.cells)
