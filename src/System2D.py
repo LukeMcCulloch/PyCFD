@@ -25,8 +25,9 @@ class Face(object):
     '''
     In 2D, a face is an edge
     '''
-    def __init__(self, nodes):
+    def __init__(self, nodes, parentcell):
         self.nodes = nodes
+        self.cell = parentcell
         self.N = 2 #len(nodes)
         self.center = np.zeros((self.N),float)
         #sumx0 = sum( [el.x0 for el in self.nodes] )
@@ -103,7 +104,8 @@ class Cell(object):
         for i in range(self.N):
             self.faces.append( Face( [self.nodes[i],
                                       self.nodes[(i+1)%self.N] 
-                                      ] ))
+                                      ],
+                               parentcell=self))
         return
     
     def get(self, i):
