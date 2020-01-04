@@ -115,7 +115,7 @@ class Grid(object):
         self.cells = np.asarray(self.cells)
         return
         
-        
+
         
 if __name__ == '__main__':
     gd = Grid(type_='rect')

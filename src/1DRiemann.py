@@ -112,6 +112,10 @@ def plot_Riemann(time):
     ax3.fill_between(x,-20, sol, facecolor='blue', alpha=0.2)
     
     return fig
+
+
+if __name__ == '__main__':
+    plot_Riemann(.01)
     
 # Create interactive widget to visualize solution 
 #interact(plot_Riemann, time=(0,5,0.1), qvar={'sigma11':0, 'sigma22':1, 'sigma12':2, 

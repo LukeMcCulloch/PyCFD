@@ -131,6 +131,9 @@ def plot_trans_diag(dt,transverse_solver_up,transverse_solver_down):
         ax.add_patch(poly) 
     
     return fig
+
+if __name__ == '__main__':
+    plot_trans_diag(.01, 'On', 'On')
     
 #StaticInteract(plot_trans_diag, dt=RangeWidget(0.0,0.008,0.0004), transverse_solver_up=RadioWidget(['On','Off']),
 #               transverse_solver_down=RadioWidget(['On','Off']))
