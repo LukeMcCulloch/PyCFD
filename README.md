@@ -1,6 +1,6 @@
 # PyCFD
 
-Many aspects of computational fluid dynamics, prototyped in Python
+Some aspects of computational fluid dynamics, prototyped in Python
 
 
 
