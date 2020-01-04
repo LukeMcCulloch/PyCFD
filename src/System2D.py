@@ -21,7 +21,7 @@ class Cell(object):
     def __init__(self, nodes):
         self.nodes = nodes
         self.N = len(self.nodes)
-        self.num_faces = N
+        self.num_faces = self.N
         self.F = np.asarray((self.num_faces),float)
         self.G = np.asarray((self.num_faces),float)
     
@@ -59,7 +59,7 @@ class Grid(object):
             self.nodes.append([])
             for j in  range(self.n):
                 self.mesh[0,i,j] = mms[i]
-                self.mesh[1,i,j] = mms[j]
+                self.mesh[1,i,j] = nms[j]
                 self.nodes[i].append(Node(self.mesh[:,i,j]))
                 
         self.nodes = np.asarray(self.nodes)
