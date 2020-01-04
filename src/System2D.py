@@ -26,8 +26,8 @@ class Edge(object):
         self.nodes = nodes
         self.N = 2 #len(nodes)
         self.center = np.zeros((self.N),float)
-        sumx0 = sum( [el.x0 for el in self.nodes] )
-        sumx1 = sum( [el.x1 for el in self.nodes] )
+        #sumx0 = sum( [el.x0 for el in self.nodes] )
+        #sumx1 = sum( [el.x1 for el in self.nodes] )
             
     def normal(self):
         """
