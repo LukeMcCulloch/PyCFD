@@ -14,6 +14,21 @@ class Overload(object):
         
     
     def __add__(self, other):
-        return self.vector + other.vector
+        if isinstance(other, Overload):
+            return self.vector + other.vector
+        else:
+            return self.vector + other
+    
+    def __radd__(self, other):
+        return self.__add__(other)
+    
+    def __sub__(self, other):
+        if isinstance(other, Overload):
+            return self.vector - other.vector
+        else:
+            return self.vector - other
+    
+    def __rsub__(self, other):
+        return self.__sub__(other)
     
     
