@@ -12,12 +12,17 @@ class Node(object):
         self.x0 = vector[0]
         self.x1 = vector[1]
         self.vector = vector
-        self.num_faces = len(self.vector)
         
         
 class Cell(object):
+    """
+    The Cij'th cell
+    """
     def __init__(self, nodes):
         self.nodes = nodes
+        self.num_faces = len(self.nodes)
+        self.F = np.asarray((self.num_faces),float)
+        self.G = np.asarray((self.num_faces),float)
 
 
 class Grid(object):
