@@ -20,9 +20,17 @@ class Cell(object):
     """
     def __init__(self, nodes):
         self.nodes = nodes
-        self.num_faces = len(self.nodes)
+        self.N = len(self.nodes)
+        self.num_faces = N
         self.F = np.asarray((self.num_faces),float)
         self.G = np.asarray((self.num_faces),float)
+    
+    def get(self, i):
+        assert(i<=self.N),'error, i>N'
+        return self.N%i
+    
+    def face(self, i):
+        return 
 
 
 class Grid(object):
