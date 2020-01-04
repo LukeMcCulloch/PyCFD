@@ -179,9 +179,9 @@ class triangle(object, staticGeometry=False)):
             Nv = normalize(perpindicular)
             
             othervec = other[1] - other[0]
-            #    *
+            #   *
             #   | \
-            #  *__*
+            #   *--*
             #
             test = dot(Nv,othervec)
             if test>0:

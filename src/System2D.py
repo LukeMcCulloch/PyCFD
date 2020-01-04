@@ -7,11 +7,26 @@ Created on Fri Jan  3 15:35:53 2020
 
 import numpy as np
 
-class Node(object):
+from Overload import Overload
+
+class Node(Overload):
     def __init__(self, vector):
         self.x0 = vector[0]
         self.x1 = vector[1]
         self.vector = vector
+        
+    #def __call__(self):
+    #    return self.vector
+
+class Edge(object):
+    
+    def __init__(self, nodes):
+        self.nodes = nodes
+        self.N = len(nodes)
+        self.center = np.zeros((self.N),float)
+        sumx0 = sum( [el.x0 for el in self.nodes] )
+        sumx1 = sum( [el.x1 for el in self.nodes] )
+            
         
         
 class Cell(object):
@@ -24,6 +39,15 @@ class Cell(object):
         self.num_faces = self.N
         self.F = np.asarray((self.num_faces),float)
         self.G = np.asarray((self.num_faces),float)
+        self.edges = []
+        self.set_edge_vectors()
+        
+    def set_edge_vectors(self):
+        for i in range(self.N):
+            self.edges.append( Edge( [self.nodes[i],
+                                      self.nodes[(i+1)%self.N] 
+                                      ] ))
+        return
     
     def get(self, i):
         assert(i<=self.N),'error, i>N'
@@ -79,14 +103,14 @@ class Grid(object):
         for i in range(self.m-1):
             self.cells.append([])
             for j in  range(self.n-1):
+                
                 self.cells[i].append(
                                     Cell([
                                             self.nodes[i,j],
                                             self.nodes[i,j+1],
                                             self.nodes[i+1,j],
                                             self.nodes[i+1,j+1]
-                                        ])
-                )
+                                        ])  )
                 
         self.cells = np.asarray(self.cells)
         return
@@ -97,13 +121,14 @@ class Grid(object):
         for i in range(self.m-1):
             self.cells.append([])
             for j in  range(self.n-1):
+                
                 self.cells[i].append(
                                     Cell([
                                             self.nodes[i,j],
                                             self.nodes[i,j+1],
                                             self.nodes[i+1,j]
-                                        ])
-                )
+                                        ]) )
+                
                 self.cells[i].append(
                                     Cell([
                                             self.nodes[i,j+1],
