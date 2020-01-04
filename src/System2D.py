@@ -33,7 +33,7 @@ class Face(object):
         #sumx1 = sum( [el.x1 for el in self.nodes] )
         self.area = np.linalg.norm(self.nodes[1]-self.nodes[0])
             
-    def normal(self):
+    def normalfancy(self):
         """
         cross vector with 0 in x2 dir
          with vector with 1 in the x2 dir
@@ -43,7 +43,8 @@ class Face(object):
          normals point in
          
         """
-        vec = self.nodes[1] - self.nodes[0]
+        #vec = self.nodes[1] - self.nodes[0]
+        
         dumvec1 = np.zeros((3),float)
         dumvec2 = np.zeros_like((dumvec1))
         dumvec1[:-1] = self.nodes[1] - self.nodes[0]
@@ -53,6 +54,16 @@ class Face(object):
         
         n3 = normalize(cross(dumvec1,dumvec2) )
         return n3[:-1]
+        
+        #return normalize2D(np.asarray([vec[1],-vec[0]]))
+                      
+    def normal(self):
+        """
+        normalized(x1,-x0)
+         
+        """
+        vec = self.nodes[1] - self.nodes[0]
+        return normalize2D(np.asarray([vec[1],-vec[0]]))
                       
         
         
