@@ -29,6 +29,126 @@ def dot(u,v):
     return np.dot(u,v)
 
 
+
+'''
+2D vector utilities
+'''
+
+## A wrapper for the purposes of this class, to avoid interacting with numpy
+def Vector2D(x,y):
+    return np.array([float(x),float(y)])
+
+def printVec2(v):
+    return "({:.5f}, {:.5f})".format(v[0], v[1])
+
+
+# Normalizes a numpy vector
+# This methods modifies its argument in place, but also returns a reference to that
+# array for chaining.
+# Works on both single vectors and nx3 arrays of vectors (perfomed in-place).
+# If zeroError=False, then this function while silently return a same-sized 0
+# for low-norm vectors. If zeroError=True it will throw an exception
+def normalize2D(vec, zeroError=False):
+
+    # Used for testing zeroError
+    eps = 0.00000000001
+
+    # Use separate tests for 1D vs 2D arrays (TODO is there a nicer way to do this?)
+    if(len(vec.shape) == 1):
+
+        norm = np.linalg.norm(vec)
+        if(norm < 0.0000001):
+            if(zeroError):
+                raise ArithmeticError("Cannot normalize function with norm near 0")
+            else:
+                vec[0] = 0
+                vec[1] = 0
+                return vec
+        vec[0] /= norm
+        vec[1] /= norm
+        return vec
+
+    elif(len(vec.shape) == 2):
+
+        # Compute norms for each vector
+        norms = np.sqrt( vec[:,0]**2 + vec[:,1]**2 + vec[:,2]**2 )
+
+        # Check for norm zero, if checking is enabled
+        if(zeroError and np.any(norms < 0.00000000001)):
+            raise ArithmeticError("Cannot normalize function with norm near 0")
+
+        # Normalize in place
+        # oldSettings = np.seterr(invalid='ignore')    # Silence warnings since we check above if the user cares
+        vec[:,0] /= norms
+        vec[:,1] /= norms
+        vec[:,2] /= norms
+        # np.seterr(**oldSettings)
+
+    else:
+        raise ValueError("I don't know how to normalize a vector array with > 2 dimensions")
+
+    return vec
+
+
+# Normalizes a numpy vector.
+# This method returns a new (normalized) vector
+# Works on both single vectors and nx3 arrays of vectors (perfomed in-place).
+# If zeroError=False, then this function while silently return a same-sized 0
+# for low-norm vectors. If zeroError=True it will throw an exception
+def normalized2D(vec, zeroError=False):
+
+    # Used for testing zeroError
+    eps = 0.00000000001
+
+    # Use separate tests for 1D vs 2D arrays (TODO is there a nicer way to do this?)
+    if(len(vec.shape) == 1):
+
+        norm = np.linalg.norm(vec)
+        if(norm < 0.0000001):
+            if(zeroError):
+                raise ArithmeticError("Cannot normalize function with norm near 0")
+            else:
+                return np.zeros_like(vec)
+        return vec / norm
+
+    elif(len(vec.shape) == 2):
+
+        # Compute norms for each vector
+        norms = np.sqrt( vec[:,0]**2 + vec[:,1]**2  )
+
+        # Check for norm zero, if checking is enabled
+        if(zeroError and np.any(norms < 0.00000000001)):
+            raise ArithmeticError("Cannot normalize function with norm near 0")
+        else:
+            norms += 1.e-8
+            #            if np.any(norms[:,0] < 0.00000000001):
+            #                norms[:,0] += 1.e-8
+            #            elif np.any(norms[:,1] < 0.00000000001):
+            #                norms[:,1] += 1.e-8
+            #            elif np.any(norms[:,2] < 0.00000000001):
+            #                norms[:,2] += 1.e-8
+        # Normalize in place
+        # oldSettings = np.seterr(invalid='ignore')    # Silence warnings since we check above if the user cares
+        vec = vec.copy()
+        #if not np.any(norms >0.):
+        #norms  = sum(norms)
+        #print 'norms = ',type(norms),norms
+        vec[:,0] /= norms
+        vec[:,1] /= norms
+        # np.seterr(**oldSettings)
+
+    else:
+        raise ValueError("I don't know how to normalize a vector array with > 2 dimensions")
+
+    return vec
+
+
+
+'''
+3D vector utilities
+'''
+
+
 ## A wrapper for the purposes of this class, to avoid interacting with numpy
 def Vector3D(x,y,z):
     return np.array([float(x),float(y),float(z)])

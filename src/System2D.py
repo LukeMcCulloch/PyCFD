@@ -9,7 +9,8 @@ import numpy as np
 
 from Overload import Overload
 
-from Utilities import normalize, normalized, norm, dot, cross
+from Utilities import normalize, normalized, norm, dot, cross, \
+    normalize2D, normalized2D
 
 class Node(Overload):
     def __init__(self, vector):
@@ -20,14 +21,17 @@ class Node(Overload):
     #def __call__(self):
     #    return self.vector
 
-class Edge(object):
-    
+class Face(object):
+    '''
+    In 2D, a face is an edge
+    '''
     def __init__(self, nodes):
         self.nodes = nodes
         self.N = 2 #len(nodes)
         self.center = np.zeros((self.N),float)
         #sumx0 = sum( [el.x0 for el in self.nodes] )
         #sumx1 = sum( [el.x1 for el in self.nodes] )
+        self.area = np.linalg.norm(self.nodes[1]-self.nodes[0])
             
     def normal(self):
         """
@@ -64,12 +68,12 @@ class Cell(object):
         self.num_faces = self.N
         self.F = np.asarray((self.num_faces),float)
         self.G = np.asarray((self.num_faces),float)
-        self.edges = []
-        self.set_edge_vectors()
+        self.faces = []
+        self.set_face_vectors()
         
-    def set_edge_vectors(self):
+    def set_face_vectors(self):
         for i in range(self.N):
-            self.edges.append( Edge( [self.nodes[i],
+            self.faces.append( Face( [self.nodes[i],
                                       self.nodes[(i+1)%self.N] 
                                       ] ))
         return
@@ -87,14 +91,14 @@ class Cell(object):
         return
     
     
-    def print_edges(self, normals=False):
-        for edge in self.edges:
-            print 'edge'
-            for vert in edge.nodes:
+    def print_faces(self, normals=False):
+        for face in self.faces:
+            print 'face'
+            for vert in face.nodes:
                 print vert.vector
             if normals:
-                print 'edge normal'
-                print edge.normal()
+                print 'face normal'
+                print face.normal()
         return
 
 
