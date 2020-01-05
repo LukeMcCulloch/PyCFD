@@ -153,6 +153,9 @@ class Grid(object):
         nms = np.linspace(0.,1.,n)
         self.mesh = mesh
         #
+        """
+        Nodes are defined first
+        """
         self.nodes = []
         for i in range(self.m):
             self.nodes.append([])
@@ -166,6 +169,11 @@ class Grid(object):
         self.make_cells()
         
     def make_cells(self):
+        """
+        Nodes are defined first
+        so, 
+        Coincident Cells share nodes
+        """
         if self.type is 'rect':
             self.make_rect_cells()
         else:
