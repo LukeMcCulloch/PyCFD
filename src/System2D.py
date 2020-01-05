@@ -28,9 +28,10 @@ class Face(object):
     '''
     In 2D, a face is an edge
     '''
-    def __init__(self, nodes, parentcell):
+    def __init__(self, nodes, parentcell, fid):
         self.nodes = nodes
         self.parentcell = parentcell
+        self.fid = fid
         for node in self.nodes:
             node.parent_faces.append(self)
             
@@ -74,6 +75,7 @@ class Face(object):
         return normalize2D(np.asarray([vec[1],-vec[0]]))
     
     def e_xi(self):
+        
         return
     
     def e_eta(self):
@@ -86,7 +88,7 @@ class Cell(object):
     
     ccw-winding
     """
-    def __init__(self, nodes):
+    def __init__(self, nodes, cid, nface): #, FaceCellMap):
         self.nodes = nodes
         self.N = len(self.nodes)
         self.num_faces = self.N
@@ -94,7 +96,8 @@ class Cell(object):
         self.F = np.asarray((self.num_faces),float)
         self.G = np.asarray((self.num_faces),float)
         self.faces = []
-        self.set_face_vectors()
+        self.cid = cid
+        self.set_face_vectors(nface)
         
     def set_centroid(self):
         """The 'center' of this face
@@ -107,13 +110,15 @@ class Cell(object):
         self.centroid = scale * sum([el.vector for el in self.nodes]) 
         return self.centroid
         
-    def set_face_vectors(self):
+    def set_face_vectors(self, nface):   #, n, FaceCellMap):
         for i in range(self.N):
             self.faces.append( Face( [self.nodes[i],
                                       self.nodes[(i+1)%self.N] 
                                       ],
-                               parentcell=self))
-        return
+                               parentcell=self,
+                               fid = nface))
+            nface += 1
+        return #n, FaceCellMap
     
     def get(self, i):
         assert(i<=self.N),'error, i>N'
@@ -144,6 +149,12 @@ class Grid(object):
     def __init__(self, mesh=None, m=10,n=10,type_='rect'):
         self.gridtype = {'rect':0,
                          'tri':1}
+        self.nCells = 0
+        self.nFaces = 0
+        self.nNodes = m*n
+        
+        self.cellList = []
+        
         self.type = type_
         if mesh is None:
             mesh = np.zeros((2,m,n),float) # C-ordering.  last index is most rapid
@@ -173,7 +184,12 @@ class Grid(object):
                 
         self.nodes = np.asarray(self.nodes)
         
+        
+        # now cells and faces:
+        self.FaceCellMap = {}
         self.make_cells()
+        # maps
+        self.make_FaceCellMap()
         
     
     def make_cells(self):
@@ -182,7 +198,7 @@ class Grid(object):
         so, 
         Coincident Cells share nodes
         """
-        if self.type is 'rect':
+        if self.type == 'rect':
             self.make_rect_cells()
         else:
             self.make_tri_cells()
@@ -196,13 +212,16 @@ class Grid(object):
             for j in  range(self.n-1):
                 
                 self.cells[i].append(
-                                    Cell([
-                                            self.nodes[i,j],
-                                            self.nodes[i,j+1],
-                                            self.nodes[i+1,j+1],
-                                            self.nodes[i+1,j]
-                                        ])  )
-                
+                                    Cell([self.nodes[i  ,j  ],
+                                          self.nodes[i  ,j+1],
+                                          self.nodes[i+1,j+1],
+                                          self.nodes[i+1,j  ] ],
+                                         cid=self.nCells,
+                                         nface = self.nFaces)
+                                    )
+                self.cellList.append(self.cells[i][-1])
+                self.nFaces += 4
+                self.nCells +=1
         self.cells = np.asarray(self.cells)
         return
     
@@ -215,23 +234,41 @@ class Grid(object):
             for j in  range(self.n-1):
                 
                 self.cells[i].append(
-                                    Cell([
-                                            self.nodes[i,j],
-                                            self.nodes[i,j+1],
-                                            self.nodes[i+1,j]
-                                        ]) )
+                                    Cell([self.nodes[i  ,j  ],
+                                          self.nodes[i  ,j+1],
+                                          self.nodes[i+1,j  ] ],
+                                         cid=self.nCells,
+                                         nface = self.nFaces)
+                                    )
+                self.cellList.append(self.cells[i][-1])
+                self.nCells +=1
+                self.nFaces += 3
                 
                 self.cells[i].append(
-                                    Cell([
-                                            self.nodes[i,j+1],
-                                            self.nodes[i+1,j+1],
-                                            self.nodes[i+1,j]
-                                        ])
-                )
+                                    Cell([self.nodes[i  ,j+1],
+                                          self.nodes[i+1,j+1],
+                                          self.nodes[i+1,j  ] ],
+                                         cid=self.nCells,
+                                         nface = self.nFaces)
+                                    )
+                self.cellList.append(self.cells[i][-1])
+                self.nCells += 1
+                self.nFaces += 3
                 
         self.cells = np.asarray(self.cells)
         return
-        
+    
+    def make_FaceCellMap(self):
+        """
+            iterate over all faces, 
+            and save the map from face to cell it belongs 
+            too
+        """
+        for cell in self.cellList:
+            for face in cell.faces:
+                self.FaceCellMap[face.fid] = cell #old fashioned way
+                #self.FaceCellMap[face] = cell
+        return
 
         
 if __name__ == '__main__':
