@@ -11,6 +11,7 @@ class Overload(object):
     
     def __init__(self, vector):
         self.vector = vector
+        self.parentcell = []
         
     
     def __add__(self, other):

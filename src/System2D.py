@@ -17,6 +17,9 @@ class Node(Overload):
         self.x0 = vector[0]
         self.x1 = vector[1]
         self.vector = vector
+        self.parent_faces = [] #nodes are created before faces
+        # and before cells, so we can wait until face creation
+        # to start filling this in.
         
     #def __call__(self):
     #    return self.vector
@@ -27,6 +30,10 @@ class Face(object):
     '''
     def __init__(self, nodes, parentcell):
         self.nodes = nodes
+        self.parentcell = parentcell
+        for node in self.nodes:
+            node.parent_faces.append(self)
+            
         self.cell = parentcell
         self.N = 2 #len(nodes)
         self.center = np.zeros((self.N),float)
@@ -168,6 +175,7 @@ class Grid(object):
         
         self.make_cells()
         
+    
     def make_cells(self):
         """
         Nodes are defined first
@@ -180,8 +188,8 @@ class Grid(object):
             self.make_tri_cells()
         return
     
+    
     def make_rect_cells(self):
-        
         self.cells = []
         for i in range(self.m-1):
             self.cells.append([])
@@ -197,6 +205,7 @@ class Grid(object):
                 
         self.cells = np.asarray(self.cells)
         return
+    
     
     def make_tri_cells(self):
         
