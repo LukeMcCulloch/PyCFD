@@ -260,9 +260,13 @@ class Grid(object):
     
     def make_FaceCellMap(self):
         """
-            iterate over all faces, 
-            and save the map from face to cell it belongs 
-            too
+        iterate over all faces, 
+        and save the map from face to cell it belongs 
+        too
+            
+        see:
+            https://scicomp.stackexchange.com/questions/24981/
+            getting-adjacent-cells-map-for-an-unstructured-polyhedral-mesh
         """
         for cell in self.cellList:
             for face in cell.faces:
