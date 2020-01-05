@@ -32,6 +32,7 @@ class Face(object):
         self.nodes = nodes
         self.parentcell = parentcell
         self.fid = fid
+        self.adjacentface = None
         for node in self.nodes:
             node.parent_faces.append(self)
             
@@ -64,12 +65,10 @@ class Face(object):
         n3 = normalize(cross(dumvec1,dumvec2) )
         return n3[:-1]
         
-        #return normalize2D(np.asarray([vec[1],-vec[0]]))
                       
     def normal(self):
         """
         normalized(x1,-x0)
-         
         """
         vec = self.nodes[1] - self.nodes[0]
         return normalize2D(np.asarray([vec[1],-vec[0]]))
@@ -272,6 +271,40 @@ class Grid(object):
             for face in cell.faces:
                 self.FaceCellMap[face.fid] = cell #old fashioned way
                 #self.FaceCellMap[face] = cell
+                #node0 = face.nodes[0]
+                #node1 = face.nodes[1]
+                face_nodes = set(face.nodes)
+                lenfn = len(face_nodes)
+                
+                face_set0 = set(face.nodes[0].parent_faces)
+                face_set1 = set(face.nodes[1].parent_faces)
+                ck_face_set = face_set1# face_set1 - (face_set0 & face_set1)
+                adjacentface = None
+                
+                #for el in ck_face_set:
+                    # ck_node_set = set(el.nodes)
+                    # ck_len = len(ck_node_set & face_nodes)
+                    # #print ck_len
+                    # if  ck_len == lenfn :
+                    #     #print ck_node_set & face_nodes
+                    #     adjacentface = el
+                    #     face.adjacentface = el
+                    #     print face, face.adjacentface
+                    #     break
+                for el in ck_face_set:
+                    if  el.nodes[1] is face.nodes[0] :
+                        #adjacentface = el
+                        face.adjacentface = el
+                        #print face, face.adjacentface
+                        break
+                    
+                
+                
+                
+                        
+        return
+    
+    def make_AdjacentFaceMap(self):
         return
 
         
