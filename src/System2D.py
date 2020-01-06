@@ -80,10 +80,20 @@ class Face(object):
         return vec
     
     def e_xi(self):
+        """
+        centroid-centroid normal vector
+        across adjacent faces
         
+        in general this is not aligned with 
+        the face normal, 
+        though for orthognal meshes it will be.
+        """
         return
     
     def e_eta(self):
+        """
+        transverse face normal vector
+        """
         return 
         
         
@@ -321,8 +331,8 @@ if __name__ == '__main__':
     axTri = plotTri.plot_face_centers(axTri)
     axTri = plotTri.plot_normals(axTri)
     
-    # plotRect = PlotGrid(gd)
-    # axRect = plotRect.plot_cells()
-    # axRect = plotRect.plot_centroids(axRect)
-    # axRect = plotRect.plot_face_centers(axRect)
-    # axRect = plotRect.plot_normals(axRect)
+    plotRect = PlotGrid(gd)
+    axRect = plotRect.plot_cells()
+    axRect = plotRect.plot_centroids(axRect)
+    axRect = plotRect.plot_face_centers(axRect)
+    axRect = plotRect.plot_normals(axRect)
