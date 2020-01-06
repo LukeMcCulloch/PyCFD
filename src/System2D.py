@@ -51,11 +51,11 @@ class Face(object):
     def normalfancy(self):
         """
         cross vector with 0 in x2 dir
-         with vector with 1 in the x2 dir
+        with vector with 1 in the x2 dir
          
-         this is of course (x1,-x0, 0)
+        this is of course (x1,-x0, 0)
          
-         normals point in
+        normals point in
          
         """
         #vec = self.nodes[1] - self.nodes[0]
@@ -66,13 +66,12 @@ class Face(object):
         dumvec2[:-1] = self.nodes[1] - self.nodes[0]
         dumvec2[-1] = 1.
         
-        
         n3 = normalize(cross(dumvec1,dumvec2) )
         return n3[:-1]
         
                       
     def normal(self, normalize=True):
-        """
+        """ 2D specific face normals
         normalized(x1,-x0)
         """
         vec = self.nodes[1] - self.nodes[0]
@@ -80,6 +79,7 @@ class Face(object):
         if normalize:
             vec =  normalize2D(vec)
         return vec
+    
     
     def compute_e_xi(self):
         """
@@ -95,6 +95,7 @@ class Face(object):
         Xidiff = Xa-Xp
         magXi = 1./np.linalg.norm(Xidiff)
         return Xidiff*magXi
+    
     
     def compute_e_eta(self):
         """
