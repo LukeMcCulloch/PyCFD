@@ -33,7 +33,9 @@ class Face(object):
         self.nodes = nodes
         self.parentcell = parentcell
         self.fid = fid
-        self.adjacentface = None
+        self.adjacentface   = None
+        self.e_xi           = None
+        self.e_eta          = None
         self.isBoundary = True
         for node in self.nodes:
             node.parent_faces.append(self)
@@ -79,7 +81,7 @@ class Face(object):
             vec =  normalize2D(vec)
         return vec
     
-    def e_xi(self):
+    def compute_e_xi(self):
         """
         centroid-centroid normal vector
         across adjacent faces
@@ -88,13 +90,21 @@ class Face(object):
         the face normal, 
         though for orthognal meshes it will be.
         """
-        return
+        Xa = self.parentcell.centroid
+        Xp =  self.adjacentface.parentcell.centroid
+        Xidiff = Xa-Xp
+        magXi = 1./np.linalg.norm(Xidiff)
+        return Xidiff*magXi
     
-    def e_eta(self):
+    def compute_e_eta(self):
         """
         transverse face normal vector
         """
-        return 
+        A = self.nodes[0]
+        B = self.nodes[1]
+        Etadiff = B-A
+        magEtadiff = 1./np.linalg.norm(Etadiff)
+        return Etadiff*magEtadiff
         
         
 class Cell(object):
@@ -305,6 +315,12 @@ class Grid(object):
                             el.isBoundary = False
                             face.isBoundary = False
                             #print face, face.adjacentface
+                            # go ahead and set local vectors 
+                            # between adjacent cells
+                            face.e_xi   = face.compute_e_xi()
+                            face.e_eta  = face.compute_e_eta()
+                            el.e_xi     = el.compute_e_xi()
+                            el.e_eta    = el.compute_e_eta()
                             break
         return
     
@@ -320,9 +336,11 @@ if __name__ == '__main__':
     cell = self.cellList[44]
     face = cell.faces[0]
     
+    #print face.e_eta
+    #print face.e_xi
     
-    cell = self.cellList[0]
-    face = cell.faces[0]
+    #cell = self.cellList[0]
+    #face = cell.faces[0]
     
     
     plotTri = PlotGrid(self)
