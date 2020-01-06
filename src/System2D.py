@@ -8,6 +8,7 @@ Created on Fri Jan  3 15:35:53 2020
 import numpy as np
 
 from Overload import Overload
+from PlotGrids import PlotGrid
 
 from Utilities import normalize, normalized, norm, dot, cross, \
     normalize2D, normalized2D
@@ -33,16 +34,18 @@ class Face(object):
         self.parentcell = parentcell
         self.fid = fid
         self.adjacentface = None
+        self.isBoundary = True
         for node in self.nodes:
             node.parent_faces.append(self)
             
         self.cell = parentcell
         self.N = 2 #len(nodes)
-        self.center = np.zeros((self.N),float)
+        self.center = .5*(self.nodes[0] + self.nodes[1])
         #sumx0 = sum( [el.x0 for el in self.nodes] )
         #sumx1 = sum( [el.x1 for el in self.nodes] )
         self.area = np.linalg.norm(self.nodes[1]-self.nodes[0])
-            
+        self.normal_vector = self.normal(normalize = True)
+        
     def normalfancy(self):
         """
         cross vector with 0 in x2 dir
@@ -66,12 +69,15 @@ class Face(object):
         return n3[:-1]
         
                       
-    def normal(self):
+    def normal(self, normalize=True):
         """
         normalized(x1,-x0)
         """
         vec = self.nodes[1] - self.nodes[0]
-        return normalize2D(np.asarray([vec[1],-vec[0]]))
+        vec = np.asarray([vec[1],-vec[0]])
+        if normalize:
+            vec =  normalize2D(vec)
+        return vec
     
     def e_xi(self):
         
@@ -226,7 +232,6 @@ class Grid(object):
     
     
     def make_tri_cells(self):
-        
         self.cells = []
         for i in range(self.m-1):
             self.cells.append([])
@@ -260,8 +265,9 @@ class Grid(object):
     def make_FaceCellMap(self):
         """
         iterate over all faces, 
-        and save the map from face to cell it belongs 
-        too
+        and save the map from face to cell it belongs to
+        
+        also, find adjacent faces and map them
             
         see:
             https://scicomp.stackexchange.com/questions/24981/
@@ -273,41 +279,50 @@ class Grid(object):
                 #self.FaceCellMap[face] = cell
                 #node0 = face.nodes[0]
                 #node1 = face.nodes[1]
-                face_nodes = set(face.nodes)
-                lenfn = len(face_nodes)
+                #face_nodes = set(face.nodes)
+                #lenfn = len(face_nodes)
                 
-                face_set0 = set(face.nodes[0].parent_faces)
+                #face_set0 = set(face.nodes[0].parent_faces)
                 face_set1 = set(face.nodes[1].parent_faces)
                 ck_face_set = face_set1# face_set1 - (face_set0 & face_set1)
-                adjacentface = None
                 
-                #for el in ck_face_set:
-                    # ck_node_set = set(el.nodes)
-                    # ck_len = len(ck_node_set & face_nodes)
-                    # #print ck_len
-                    # if  ck_len == lenfn :
-                    #     #print ck_node_set & face_nodes
-                    #     adjacentface = el
-                    #     face.adjacentface = el
-                    #     print face, face.adjacentface
-                    #     break
                 for el in ck_face_set:
-                    if  el.nodes[1] is face.nodes[0] :
-                        #adjacentface = el
-                        face.adjacentface = el
-                        #print face, face.adjacentface
-                        break
-                    
-                
-                
-                
-                        
+                    if el.adjacentface is None:
+                        if  el.nodes[1] is face.nodes[0] :
+                            #adjacentface = el
+                            face.adjacentface = el
+                            el.adjacentface = face
+                            el.isBoundary = False
+                            face.isBoundary = False
+                            #print face, face.adjacentface
+                            break
         return
+    
     
     def make_AdjacentFaceMap(self):
         return
 
         
 if __name__ == '__main__':
-    gd = Grid(type_='rect')
-    self = Grid(type_='tri')
+    gd = Grid(type_='rect',m=10,n=10)
+    self = Grid(type_='tri',m=10,n=10)
+    
+    cell = self.cellList[44]
+    face = cell.faces[0]
+    
+    
+    cell = self.cellList[0]
+    face = cell.faces[0]
+    
+    
+    plotTri = PlotGrid(self)
+    axTri = plotTri.plot_cells()
+    axTri = plotTri.plot_centroids(axTri)
+    axTri = plotTri.plot_face_centers(axTri)
+    axTri = plotTri.plot_normals(axTri)
+    
+    # plotRect = PlotGrid(gd)
+    # axRect = plotRect.plot_cells()
+    # axRect = plotRect.plot_centroids(axRect)
+    # axRect = plotRect.plot_face_centers(axRect)
+    # axRect = plotRect.plot_normals(axRect)
