@@ -46,9 +46,9 @@ class Face(object):
         #sumx0 = sum( [el.x0 for el in self.nodes] )
         #sumx1 = sum( [el.x1 for el in self.nodes] )
         self.area = np.linalg.norm(self.nodes[1]-self.nodes[0])
-        self.normal_vector = self.normal(normalize = True)
+        self.normal_vector = self.compute_normal(normalize = True)
         
-    def normalfancy(self):
+    def compute_normalfancy(self):
         """
         cross vector with 0 in x2 dir
         with vector with 1 in the x2 dir
@@ -70,7 +70,7 @@ class Face(object):
         return n3[:-1]
         
                       
-    def normal(self, normalize=True):
+    def compute_normal(self, normalize=True):
         """ 2D specific face normals
         normalized(x1,-x0)
         """
@@ -166,7 +166,7 @@ class Cell(object):
                 print vert.vector
             if normals:
                 print 'face normal'
-                print face.normal()
+                print face.compute_normal()
         return
 
 
