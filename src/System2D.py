@@ -151,6 +151,7 @@ class Face(object):
         That part of the cross diffusion 
         which is constant 
         while geometry is constant
+        (note that this is zero for orthogonal meshes)
         """
         scale = self.area/(self.heta * np.dot(self.normal_vector,self.e_xi))
         return -Gamma * np.dot(self.normal_vector,self.e_eta) *scale
