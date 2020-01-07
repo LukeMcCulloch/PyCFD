@@ -14,13 +14,16 @@ from Utilities import normalize, normalized, norm, dot, cross, \
     normalize2D, normalized2D
 
 class Node(Overload):
-    def __init__(self, vector):
+    def __init__(self, vector): #, nConserved=3):
         self.x0 = vector[0]
         self.x1 = vector[1]
         self.vector = vector
         self.parent_faces = [] #nodes are created before faces
         # and before cells, so we can wait until face creation
         # to start filling this in.
+        
+        #self.nConserved     = nConserved
+        #self.Q              = np.zeros((nConserved,1),float)
         
     #def __call__(self):
     #    return self.vector
@@ -29,13 +32,16 @@ class Face(object):
     '''
     In 2D, a face is an edge
     '''
-    def __init__(self, nodes, parentcell, fid):
+    def __init__(self, nodes, parentcell, fid, 
+                 nConserved=3):
         self.nodes = nodes
         self.parentcell = parentcell
         self.fid = fid
         self.adjacentface   = None
         self.e_xi           = None
         self.e_eta          = None
+        self.nConserved     = nConserved
+        self.Q              = np.zeros((nConserved,1),float)
         self.isBoundary = True
         for node in self.nodes:
             node.parent_faces.append(self)
@@ -83,7 +89,7 @@ class Face(object):
     
     def compute_e_xi(self):
         """
-        centroid-centroid normal vector
+        centroid-centroid unit normal vector
         across adjacent faces
         
         in general this is not aligned with 
@@ -94,18 +100,24 @@ class Face(object):
         Xa =  self.adjacentface.parentcell.centroid
         Xidiff = Xa-Xp
         magXi = 1./np.linalg.norm(Xidiff)
-        return Xidiff*magXi
+        return magXi, Xidiff*magXi
     
     
     def compute_e_eta(self):
         """
-        transverse face normal vector
+        transverse face unit normal vector
         """
         A = self.nodes[0]
         B = self.nodes[1]
         Etadiff = B-A
         magEtadiff = 1./np.linalg.norm(Etadiff)
-        return Etadiff*magEtadiff
+        return magEtadiff, Etadiff*magEtadiff
+    
+    def compute_Dphi_Dxi(self):
+        Qa = self.parentcell.Q
+        Qp =  self.adjacentface.parentcell.Q
+        return (Qa-Qp)/self.hxi
+        
         
         
 class Cell(object):
@@ -114,7 +126,8 @@ class Cell(object):
     
     ccw-winding
     """
-    def __init__(self, nodes, cid, nface): #, FaceCellMap):
+    def __init__(self, nodes, cid, nface,
+                 nConserved=3): #, FaceCellMap):
         self.nodes = nodes
         self.N = len(self.nodes)
         self.num_faces = self.N
@@ -124,6 +137,7 @@ class Cell(object):
         self.faces = []
         self.cid = cid
         self.set_face_vectors(nface)
+        self.Q = np.zeros((nConserved,1),float)
         
     def set_centroid(self):
         """The 'center' of this face
@@ -318,10 +332,10 @@ class Grid(object):
                             #print face, face.adjacentface
                             # go ahead and set local vectors 
                             # between adjacent cells
-                            face.e_xi   = face.compute_e_xi()
-                            face.e_eta  = face.compute_e_eta()
-                            el.e_xi     = el.compute_e_xi()
-                            el.e_eta    = el.compute_e_eta()
+                            face.hxi, face.e_xi   = face.compute_e_xi()
+                            face.heta, face.e_eta = face.compute_e_eta()
+                            el.hxi, el.e_xi      = el.compute_e_xi()
+                            el.heta, el.e_eta    = el.compute_e_eta()
                             break
         return
     
