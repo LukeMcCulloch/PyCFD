@@ -90,8 +90,8 @@ class Face(object):
         the face normal, 
         though for orthognal meshes it will be.
         """
-        Xa = self.parentcell.centroid
-        Xp =  self.adjacentface.parentcell.centroid
+        Xp = self.parentcell.centroid
+        Xa =  self.adjacentface.parentcell.centroid
         Xidiff = Xa-Xp
         magXi = 1./np.linalg.norm(Xidiff)
         return Xidiff*magXi
