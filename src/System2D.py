@@ -167,6 +167,8 @@ class Face(object):
         Qa = self.nodes[0].Q
         Qb = self.nodes[1].Q
         return Qb-Qa #(Qb-Qa)/self.hxi
+    
+    
         
     
         
@@ -232,6 +234,17 @@ class Cell(object):
             if normals:
                 print 'face normal'
                 print face.compute_normal()
+        return
+    
+    def compute_gradient_reconstruction_A_matrix(self):
+        self.A = np.zeros((self.N,2),float)
+        for i,face in enumerate(self.faces):
+            #cell = face.adjacentface.parentcell
+            self.A[i] = face.e_xi * face.hxi
+        
+        self.AAinv = np.linalg.inv(
+                                    np.dot(self.A.T,self.A) 
+                                  )
         return
 
 
