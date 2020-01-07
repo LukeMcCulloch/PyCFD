@@ -48,19 +48,28 @@ class Face(object):
         self.parentcell = parentcell
         self.fid = fid
         self.adjacentface   = None
+        #
+        # neighbor vectors
         self.e_xi           = None
         self.e_eta          = None
+        self.heta           = None
+        self.hxi            = None
+        #
+        # conserved quantities
         self.nConserved     = nConserved
         self.Q              = np.zeros((nConserved,1),float)
         self.isBoundary = True
+        #
+        # Basic connectivity
+        #
         for node in self.nodes:
             node.parent_faces.append(self)
-            
-        self.cell = parentcell
         self.N = 2 #len(nodes)
         self.center = .5*(self.nodes[0] + self.nodes[1])
-        #sumx0 = sum( [el.x0 for el in self.nodes] )
-        #sumx1 = sum( [el.x1 for el in self.nodes] )
+        self.cell = parentcell
+        #
+        # Basic geometry
+        #
         self.area = np.linalg.norm(self.nodes[1]-self.nodes[0])
         self.normal_vector = self.compute_normal(normalize = True)
         
@@ -110,7 +119,8 @@ class Face(object):
         Xa =  self.adjacentface.parentcell.centroid
         Xidiff = Xa-Xp
         magXi = 1./np.linalg.norm(Xidiff)
-        return magXi, Xidiff*magXi
+        self.hxi, self.e_xi = magXi, Xidiff*magXi
+        return
     
     
     def compute_e_eta(self):
@@ -121,7 +131,8 @@ class Face(object):
         B = self.nodes[1]
         Etadiff = B-A
         magEtadiff = 1./np.linalg.norm(Etadiff)
-        return magEtadiff, Etadiff*magEtadiff
+        self.heta, self.e_eta =  magEtadiff, Etadiff*magEtadiff
+        return
     
     
     def compute_direct_diffusion_constant(self):
@@ -132,18 +143,30 @@ class Face(object):
         """
         return
     
-    def compute_Dphi_Dxi(self):
-        Qa = self.parentcell.Q
-        Qp =  self.adjacentface.parentcell.Q
-        return (Qa-Qp)/self.hxi
-        
+    
     def compute_cross_diffusion_constant(self):
         """
         That part of the cross diffusion 
         which is constant 
         while geometry is constant
         """
+        Qa = self.parentcell.Q
+        Qp =  self.adjacentface.parentcell.Q
         return
+    
+    
+    def compute_Dphi_Dxi(self):
+        Qa = self.parentcell.Q
+        Qp =  self.adjacentface.parentcell.Q
+        return (Qa-Qp)/self.hxi
+        
+    
+    def compute_Dphi_Deta(self):
+        Qa = self.nodes[0].Q
+        Qb = self.nodes[1].Q
+        return (Qb-Qa)/self.hxi
+        
+    
         
         
 class Cell(object):
@@ -350,18 +373,18 @@ class Grid(object):
                 for el in ck_face_set:
                     if el.adjacentface is None:
                         if  el.nodes[1] is face.nodes[0] :
-                            #adjacentface = el
+                            #
                             face.adjacentface = el
                             el.adjacentface = face
                             el.isBoundary = False
                             face.isBoundary = False
-                            #print face, face.adjacentface
+                            #
                             # go ahead and set local vectors 
                             # between adjacent cells
-                            face.hxi, face.e_xi   = face.compute_e_xi()
-                            face.heta, face.e_eta = face.compute_e_eta()
-                            el.hxi, el.e_xi      = el.compute_e_xi()
-                            el.heta, el.e_eta    = el.compute_e_eta()
+                            face.compute_e_xi()
+                            face.compute_e_eta()
+                            el.compute_e_xi()
+                            el.compute_e_eta()
                             break
         return
     
