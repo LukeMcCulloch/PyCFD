@@ -14,7 +14,7 @@ from Utilities import normalize, normalized, norm, dot, cross, \
     normalize2D, normalized2D
 
 class Node(Overload):
-    def __init__(self, vector): #, nConserved=3):
+    def __init__(self, vector, nConserved=3):
         self.x0 = vector[0]
         self.x1 = vector[1]
         self.vector = vector
@@ -22,11 +22,21 @@ class Node(Overload):
         # and before cells, so we can wait until face creation
         # to start filling this in.
         
-        #self.nConserved     = nConserved
-        #self.Q              = np.zeros((nConserved,1),float)
+        self.nConserved     = nConserved
+        self.Q              = np.zeros((nConserved,1),float)
         
     #def __call__(self):
     #    return self.vector
+    
+    def compute_nodal_phi(self):
+        """
+        simple averaging over neighboring nodes
+        """
+        N = len(self.faces)
+        for face in self.faces:
+            self.Q += face.parentcell.Q
+        self.Q /= N
+        return
 
 class Face(object):
     '''
@@ -113,11 +123,27 @@ class Face(object):
         magEtadiff = 1./np.linalg.norm(Etadiff)
         return magEtadiff, Etadiff*magEtadiff
     
+    
+    def compute_direct_diffusion_constant(self):
+        """
+        That part of the direct diffusion 
+        which is constant 
+        while geometry is constant
+        """
+        return
+    
     def compute_Dphi_Dxi(self):
         Qa = self.parentcell.Q
         Qp =  self.adjacentface.parentcell.Q
         return (Qa-Qp)/self.hxi
         
+    def compute_cross_diffusion_constant(self):
+        """
+        That part of the cross diffusion 
+        which is constant 
+        while geometry is constant
+        """
+        return
         
         
 class Cell(object):
