@@ -135,36 +135,37 @@ class Face(object):
         return
     
     
-    def compute_direct_diffusion_constant(self):
+    def compute_direct_diffusion_constant(self, Gamma=1.):
         """
         That part of the direct diffusion 
         which is constant 
         while geometry is constant
         """
-        return
+        scale = self.area/(self.hxi * np.dot(self.normal_vector,self.e_xi))
+        return Gamma * np.dot(self.normal_vector,self.normal_vector) *scale
+         
     
     
-    def compute_cross_diffusion_constant(self):
+    def compute_cross_diffusion_constant(self, Gamma=1.):
         """
         That part of the cross diffusion 
         which is constant 
         while geometry is constant
         """
-        Qa = self.parentcell.Q
-        Qp =  self.adjacentface.parentcell.Q
-        return
+        scale = self.area/(self.heta * np.dot(self.normal_vector,self.e_xi))
+        return -Gamma * np.dot(self.normal_vector,self.e_eta) *scale
     
     
     def compute_Dphi_Dxi(self):
         Qa = self.parentcell.Q
         Qp =  self.adjacentface.parentcell.Q
-        return (Qa-Qp)/self.hxi
+        return Qa-Qp #(Qa-Qp)/self.hxi
         
     
     def compute_Dphi_Deta(self):
         Qa = self.nodes[0].Q
         Qb = self.nodes[1].Q
-        return (Qb-Qa)/self.hxi
+        return Qb-Qa #(Qb-Qa)/self.hxi
         
     
         
