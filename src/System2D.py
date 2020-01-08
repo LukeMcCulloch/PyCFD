@@ -164,6 +164,11 @@ class Face(object):
         
     
     def compute_Dphi_Deta(self):
+        """
+        assumes these have been 
+        approximated by, e.g. averaging from 
+        cell centers
+        """
         Qa = self.nodes[0].Q
         Qb = self.nodes[1].Q
         return Qb-Qa #(Qb-Qa)/self.hxi
