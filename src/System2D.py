@@ -14,9 +14,10 @@ from Utilities import normalize, normalized, norm, dot, cross, \
     normalize2D, normalized2D
 
 class Node(Overload):
-    def __init__(self, vector, nConserved=3):
+    def __init__(self, vector, nid, nConserved=3):
         self.x0 = vector[0]
         self.x1 = vector[1]
+        self.nid = nid
         self.vector = vector
         self.parent_faces = [] #nodes are created before faces
         self.parent_cells = []
@@ -271,6 +272,10 @@ class Grid(object):
         self.cellList = []
         self.faceList = []
         
+        self.FToV = None #face to vertex (node) connectivity matrix
+        self.EToV = None #cell (element) to vertex
+        self.EToE = None #cell to cell
+        
         
         self.type = type_
         if mesh is None:
@@ -291,13 +296,15 @@ class Grid(object):
         """
         Nodes are defined first
         """
+        nid = 0
         self.nodes = []
         for i in range(self.m):
             self.nodes.append([])
             for j in  range(self.n):
                 self.mesh[0,i,j] = mms[i]
                 self.mesh[1,i,j] = nms[j]
-                node = Node(self.mesh[:,i,j])
+                node = Node(self.mesh[:,i,j], nid)
+                nid += 1
                 self.nodes[i].append(node) #to become 2D array (not necessary, but I do for python-fun)
                 self.nodeList.append(node) #will stay as list
                 
@@ -422,7 +429,18 @@ class Grid(object):
         return
     
     
-    def make_AdjacentFaceMap(self):
+    def buildFaceToNodeIncidence(self):
+        """
+        Note the similarity to 
+        Exterior differential forms
+        """
+        self.FToV = np.zeros((self.nFaces,self.nNodes),int)
+        
+        for edge in self.faceList:
+            vh1 = edge.nodes[0]
+            vh2 = edge.nodes[1]
+            self.FToV[edge.fid,vh1.nid] = -1
+            self.FToV[edge.fid,vh2.nid] = 1
         return
 
         
