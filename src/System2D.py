@@ -262,7 +262,9 @@ class Grid(object):
         self.nFaces = 0
         self.nNodes = m*n
         
+        self.nodeList = []
         self.cellList = []
+        
         
         self.type = type_
         if mesh is None:
@@ -289,7 +291,9 @@ class Grid(object):
             for j in  range(self.n):
                 self.mesh[0,i,j] = mms[i]
                 self.mesh[1,i,j] = nms[j]
-                self.nodes[i].append(Node(self.mesh[:,i,j]))
+                node = Node(self.mesh[:,i,j])
+                self.nodes[i].append(node) #to become 2D array (not necessary, but I do for python-fun)
+                self.nodeList.append(node) #will stay as list
                 
         self.nodes = np.asarray(self.nodes)
         
