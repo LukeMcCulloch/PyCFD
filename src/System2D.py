@@ -19,6 +19,7 @@ class Node(Overload):
         self.x1 = vector[1]
         self.vector = vector
         self.parent_faces = [] #nodes are created before faces
+        self.parent_cells = []
         # and before cells, so we can wait until face creation
         # to start filling this in.
         
@@ -185,7 +186,7 @@ class Cell(object):
     ccw-winding
     """
     def __init__(self, nodes, cid, nface,
-                 nConserved=3): #, FaceCellMap):
+                 nConserved=3, facelist=None): #, FaceCellMap):
         self.nodes = nodes
         self.N = len(self.nodes)
         self.num_faces = self.N
@@ -194,8 +195,10 @@ class Cell(object):
         self.G = np.asarray((self.num_faces),float)
         self.faces = []
         self.cid = cid
-        self.set_face_vectors(nface)
+        self.set_face_vectors(nface, facelist)
         self.Q = np.zeros((nConserved,1),float)
+        for node in self.nodes:
+            node.parent_cells.append(self)
         
     def set_centroid(self):
         """The 'center' of this face
@@ -208,13 +211,15 @@ class Cell(object):
         self.centroid = scale * sum([el.vector for el in self.nodes]) 
         return self.centroid
         
-    def set_face_vectors(self, nface):   #, n, FaceCellMap):
+    def set_face_vectors(self, nface, facelist):   #, n, FaceCellMap):
         for i in range(self.N):
-            self.faces.append( Face( [self.nodes[i],
+            face = Face( [self.nodes[i],
                                       self.nodes[(i+1)%self.N] 
                                       ],
                                parentcell=self,
-                               fid = nface))
+                               fid = nface)
+            self.faces.append( face )
+            facelist.append(   face )
             nface += 1
         return #n, FaceCellMap
     
@@ -264,6 +269,7 @@ class Grid(object):
         
         self.nodeList = []
         self.cellList = []
+        self.faceList = []
         
         
         self.type = type_
@@ -330,7 +336,8 @@ class Grid(object):
                                           self.nodes[i+1,j+1],
                                           self.nodes[i+1,j  ] ],
                                          cid=self.nCells,
-                                         nface = self.nFaces)
+                                         nface = self.nFaces,
+                                         facelist = self.faceList)
                                     )
                 self.cellList.append(self.cells[i][-1])
                 self.nFaces += 4
@@ -350,7 +357,8 @@ class Grid(object):
                                           self.nodes[i  ,j+1],
                                           self.nodes[i+1,j  ] ],
                                          cid=self.nCells,
-                                         nface = self.nFaces)
+                                         nface = self.nFaces,
+                                         facelist = self.faceList)
                                     )
                 self.cellList.append(self.cells[i][-1])
                 self.nCells +=1
@@ -361,7 +369,8 @@ class Grid(object):
                                           self.nodes[i+1,j+1],
                                           self.nodes[i+1,j  ] ],
                                          cid=self.nCells,
-                                         nface = self.nFaces)
+                                         nface = self.nFaces,
+                                         facelist = self.faceList)
                                     )
                 self.cellList.append(self.cells[i][-1])
                 self.nCells += 1
@@ -384,7 +393,7 @@ class Grid(object):
         for cell in self.cellList:
             for face in cell.faces:
                 self.FaceCellMap[face.fid] = cell #old fashioned way
-                #self.FaceCellMap[face] = cell
+                #self.FaceCellMap[face] = cell #or hash the object directly
                 #node0 = face.nodes[0]
                 #node1 = face.nodes[1]
                 #face_nodes = set(face.nodes)
