@@ -443,6 +443,20 @@ class Grid(object):
             self.FToV[edge.fid,vh2.nid] = 1
         return
 
+    
+    def buildCellToFaceIncidence(self):
+        """
+        Note the similarity to 
+        Exterior differential forms
+        """
+        self.EToF = np.zeros((self.nCells,self.nFaces),int)
+        
+        for cell in self.cellList:
+            c = cell.cid
+            for edge in cell.faces:
+                e = edge.fid
+                self.EToF[c,e] = 1
+        return
         
 if __name__ == '__main__':
     gd = Grid(type_='rect',m=10,n=10)
