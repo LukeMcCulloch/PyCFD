@@ -161,7 +161,7 @@ def triangle_area(node1,node2,node3):
     q3 = node3.vector
     x1,x2,x3 = q1[0],q2[0],q3[0]
     y1,y2,y3 = q1[1],q2[1],q3[1]
-    # area = 0.5*( (x1-x3)*(y2-y3)-(y1-y3)*(x2-x3) )      #<- cross product
+    # area = -0.5*( (x1-x3)*(y2-y3)-(y1-y3)*(x2-x3) )      #<- cross product
     return  -0.5*( x1*(y2-y3) + x2*(y3-y1) + x3*(y1-y2) ) #re-arranged
 
 '''
