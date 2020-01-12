@@ -145,7 +145,7 @@ def normalized2D(vec, zeroError=False):
 def triangle_area(node1,node2,node3):
     """
     area of a 2D triangular cell
-     which is assumed to be ordered counter clockwise.
+    which is assumed to be ordered counter clockwise.
     
          1              2
           o------------o
@@ -155,6 +155,7 @@ def triangle_area(node1,node2,node3):
               \ .
                o
                3
+    Note: Area vector is computed as the cross product of edge vectors [32] and [31].
     """
     q1 = node1.vector
     q2 = node2.vector
