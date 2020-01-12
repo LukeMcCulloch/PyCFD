@@ -192,6 +192,7 @@ class Cell(object):
         self.N = len(self.nodes)
         self.num_faces = self.N
         self.set_centroid()
+        self.volume = 0.
         self.F = np.asarray((self.num_faces),float)
         self.G = np.asarray((self.num_faces),float)
         self.faces = []
