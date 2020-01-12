@@ -143,6 +143,9 @@ def normalized2D(vec, zeroError=False):
     return vec
 
 def triangle_area(node1,node2,node3):
+    """
+    area of a 2D triangular cell
+    """
     q1 = node1.vector
     q2 = node2.vector
     q3 = node3.vector
