@@ -197,6 +197,7 @@ class Cell(object):
         self.F = np.zeros((self.num_faces),float)
         self.G = np.zeros((self.num_faces),float)
         self.faces = []
+        self.nghbr = [] #list of neighbor cells
         self.cid = cid
         self.set_face_vectors(nface, facelist)
         self.Q = np.zeros((nConserved,1),float)
@@ -333,6 +334,7 @@ class Grid(object):
         # maps
         self.make_FaceCellMap()
         
+        self.make_neighbors()
     
     def make_cells(self):
         """
@@ -408,6 +410,8 @@ class Grid(object):
         and save the map from face to cell it belongs to
         
         also, find adjacent faces and map them
+        
+        also, find neighbor cells and map them
             
         see:
             https://scicomp.stackexchange.com/questions/24981/
@@ -442,6 +446,21 @@ class Grid(object):
                             el.compute_e_xi()
                             el.compute_e_eta()
                             break
+        return
+    
+    def make_neighbors(self):
+        """
+        loop over all cells, all faces of each cell
+        if a face has an adjacent face, (not None)
+        i.e. if there is a neighbor,
+        then add that to the cells nghbr list
+        """
+        for cell in self.cellList:
+            for face in cell.faces:
+                #https://stackoverflow.com/questions/2710940/python-if-x-is-not-none-or-if-not-x-is-none
+                if face.adjacentface is not None:
+                    cell.nghbr.append(face.adjacentface.parentcell)
+        
         return
     
     
