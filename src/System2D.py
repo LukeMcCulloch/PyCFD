@@ -11,7 +11,7 @@ from Overload import Overload
 from PlotGrids import PlotGrid
 
 from Utilities import normalize, normalized, norm, dot, cross, \
-    normalize2D, normalized2D
+    normalize2D, normalized2D, triangle_area
 
 class Node(Overload):
     def __init__(self, vector, nid, nConserved=3):
@@ -182,7 +182,7 @@ class Face(object):
         
 class Cell(object):
     """
-    The Cij'th cell
+    The Cij'th cell, tris and quads only
     
     ccw-winding
     """
@@ -191,10 +191,11 @@ class Cell(object):
         self.nodes = nodes
         self.N = len(self.nodes)
         self.num_faces = self.N
-        self.set_centroid()
         self.volume = 0.
-        self.F = np.asarray((self.num_faces),float)
-        self.G = np.asarray((self.num_faces),float)
+        self.set_centroid()
+        self.set_volume()
+        self.F = np.zeros((self.num_faces),float)
+        self.G = np.zeros((self.num_faces),float)
         self.faces = []
         self.cid = cid
         self.set_face_vectors(nface, facelist)
@@ -212,6 +213,20 @@ class Cell(object):
         scale = 1./float(self.N)
         self.centroid = scale * sum([el.vector for el in self.nodes]) 
         return self.centroid
+    
+    def set_volume(self):
+        """
+        for tris and quads only 
+        """
+        if self.N == 3:
+            self.volume = triangle_area(*self.nodes)
+        else:
+            nlist1 = self.nodes[:3]
+            nlist2 = self.nodes[1:]
+            v1 = triangle_area(*nlist1)
+            v2 = triangle_area(*nlist2)
+            self.volume = v1+v2
+        return 
         
     def set_face_vectors(self, nface, facelist):   #, n, FaceCellMap):
         for i in range(self.N):
