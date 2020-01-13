@@ -516,20 +516,18 @@ class Grid(object):
     def sum_volume_green_gauss(self):
         vol = 0.
         for bound in self.boundaryList:
-            
             mid = bound.center
-            
             vol += np.dot( mid,bound.normal_vector )*bound.bface_nrml_mag
-            
         return -0.5*vol
+    
     def sum_volume_cell_sum(self):
         vol = 0.
         for cell in self.cellList:
-            
-            
             vol += cell.volume
-            
         return vol
+    #-------------------------------------------------------------------------#
+    # Done with checks
+    #-------------------------------------------------------------------------#
         
 if __name__ == '__main__':
     gd = Grid(type_='rect',m=10,n=10)
