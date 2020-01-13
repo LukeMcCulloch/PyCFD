@@ -73,7 +73,8 @@ class Face(object):
         # Basic geometry
         #
         self.area = np.linalg.norm(self.nodes[1]-self.nodes[0])
-        self.normal_vector = self.compute_normal(normalize = True)
+        self.normal_vector, self.bface_nrml_mag = self.compute_normal(normalize = True)
+        #self.normal_vector = self.compute_normal(normalize = True)
         
     def compute_normalfancy(self):
         """
@@ -103,9 +104,13 @@ class Face(object):
         """
         vec = self.nodes[1] - self.nodes[0]
         vec = np.asarray([vec[1],-vec[0]])
+        
         if normalize:
-            vec =  normalize2D(vec)
-        return vec
+            vec, nmag =  normalize2D(vec,return_mag=True)
+            #vec =  normalize2D(vec,return_mag=False)
+            return vec, nmag
+        else:
+            return vec
     
     
     def compute_e_xi(self):

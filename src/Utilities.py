@@ -48,7 +48,7 @@ def printVec2(v):
 # Works on both single vectors and nx3 arrays of vectors (perfomed in-place).
 # If zeroError=False, then this function while silently return a same-sized 0
 # for low-norm vectors. If zeroError=True it will throw an exception
-def normalize2D(vec, zeroError=False):
+def normalize2D(vec, zeroError=False, return_mag=False):
 
     # Used for testing zeroError
     eps = 0.00000000001
@@ -66,7 +66,11 @@ def normalize2D(vec, zeroError=False):
                 return vec
         vec[0] /= norm
         vec[1] /= norm
-        return vec
+        
+        if return_mag:
+            return vec, norm
+        else:
+            return vec
 
     elif(len(vec.shape) == 2):
 
@@ -87,7 +91,10 @@ def normalize2D(vec, zeroError=False):
     else:
         raise ValueError("I don't know how to normalize a vector array with > 2 dimensions")
 
-    return vec
+    if return_mag:
+        return vec, norms
+    else:
+        return vec
 
 
 # Normalizes a numpy vector.
@@ -95,7 +102,7 @@ def normalize2D(vec, zeroError=False):
 # Works on both single vectors and nx3 arrays of vectors (perfomed in-place).
 # If zeroError=False, then this function while silently return a same-sized 0
 # for low-norm vectors. If zeroError=True it will throw an exception
-def normalized2D(vec, zeroError=False):
+def normalized2D(vec, zeroError=False, return_mag=False):
 
     # Used for testing zeroError
     eps = 0.00000000001
@@ -109,7 +116,11 @@ def normalized2D(vec, zeroError=False):
                 raise ArithmeticError("Cannot normalize function with norm near 0")
             else:
                 return np.zeros_like(vec)
-        return vec / norm
+        
+        if return_mag:
+            return vec / norm, norm
+        else:
+            return vec / norm
 
     elif(len(vec.shape) == 2):
 
@@ -139,8 +150,11 @@ def normalized2D(vec, zeroError=False):
 
     else:
         raise ValueError("I don't know how to normalize a vector array with > 2 dimensions")
-
-    return vec
+    
+    if return_mag:
+        return vec, norms
+    else:
+        return vec
 
 def triangle_area(node1,node2,node3):
     """
