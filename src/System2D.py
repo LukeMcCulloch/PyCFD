@@ -74,7 +74,6 @@ class Face(object):
         #
         self.area = np.linalg.norm(self.nodes[1]-self.nodes[0])
         self.normal_vector, self.bface_nrml_mag = self.compute_normal(normalize = True)
-        #self.normal_vector = self.compute_normal(normalize = True)
         
     def compute_normalfancy(self):
         """
@@ -503,9 +502,10 @@ class Grid(object):
                 self.EToF[c,e] = 1
         return
     
-    #----------------------
+    
+    #-------------------------------------------------------------------------#
     # Mesh checks
-    #----------------------
+    #-------------------------------------------------------------------------#
     def check_volume(self):
         return
     def sum_volume_green_gauss(self):
