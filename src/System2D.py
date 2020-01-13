@@ -288,6 +288,7 @@ class Grid(object):
         self.nodeList = []
         self.cellList = []
         self.faceList = []
+        self.boundaryList = []
         
         self.FToV = None #face to vertex (node) connectivity matrix
         self.EToV = None #cell (element) to vertex
@@ -460,6 +461,10 @@ class Grid(object):
                 #https://stackoverflow.com/questions/2710940/python-if-x-is-not-none-or-if-not-x-is-none
                 if face.adjacentface is not None:
                     cell.nghbr.append(face.adjacentface.parentcell)
+                else:
+                    # you've got the information to define the boundary 
+                    # so do it here!:
+                    self.boundaryList.append(face)
         
         return
     
@@ -492,6 +497,22 @@ class Grid(object):
                 e = edge.fid
                 self.EToF[c,e] = 1
         return
+    
+    #----------------------
+    # Mesh checks
+    #----------------------
+    def check_volume(self):
+        return
+    def sum_volume_green_gauss(self):
+        vol = 0.
+        for bound in self.boundaryList:
+            
+            mid = bound.center
+            
+            vol += np.dot( mid,bound.normal_vector )*bound.area
+            #not quite right!
+            
+        return 0.5*vol
         
 if __name__ == '__main__':
     gd = Grid(type_='rect',m=10,n=10)
