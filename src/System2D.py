@@ -506,18 +506,30 @@ class Grid(object):
     #-------------------------------------------------------------------------#
     # Mesh checks
     #-------------------------------------------------------------------------#
-    def check_volume(self):
+    def check_volume(self, tol=1e-14):
+        v1 = self.sum_volume_green_gauss()
+        v2 = self.sum_volume_cell_sum()
+        if (abs(v1-v2)>tol):
+            print " Volume difference is larger than round-off error... Something is wrong. Stop."
         return
+    
     def sum_volume_green_gauss(self):
         vol = 0.
         for bound in self.boundaryList:
             
             mid = bound.center
             
-            vol += np.dot( mid,bound.normal_vector )*bound.area
-            #not quite right!
+            vol += np.dot( mid,bound.normal_vector )*bound.bface_nrml_mag
             
-        return 0.5*vol
+        return -0.5*vol
+    def sum_volume_cell_sum(self):
+        vol = 0.
+        for cell in self.cellList:
+            
+            
+            vol += cell.volume
+            
+        return vol
         
 if __name__ == '__main__':
     gd = Grid(type_='rect',m=10,n=10)
