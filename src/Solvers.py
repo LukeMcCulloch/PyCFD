@@ -16,13 +16,12 @@ class cclsq(object):
         self.nNodes = mesh.nNodes
         self.nCells = mesh.nCells
         #
-        self.nnghbrs_lsq    #number of lsq neighbors
-        self.nghbr_lsq      #list of lsq neighbors
-        self.cx             #LSQ coefficient for x-derivative
-        self.cy             #LSQ coefficient for y-derivative
+        self.nnghbrs_lsq = None     #number of lsq neighbors
+        self.nghbr_lsq = None       #list of lsq neighbors
+        self.cx = None             #LSQ coefficient for x-derivative
+        self.cy = None              #LSQ coefficient for y-derivative
         
         self.node   = np.zeros((self.nNodes),float)
-        self.cclsq  = np.zeros((self.nCells),float)
         
     def construct_vertex_stencil(self):
         return
@@ -69,6 +68,11 @@ class Solvers(object):
         self.limiter_beps = 1.0e-14
         self.phi = np.zeros((mesh.nCells),float)
         
+        
+        #------------------------------------------
+        #>> least squared gradient
+        #------------------------------------------
+        self.cclsq  = np.asarray( [cclsq(mesh) for i in range(mesh.nCells)] )
         
         
         
@@ -235,21 +239,46 @@ class Solvers(object):
     def compute_limiter(self):
         # loop cells
         for cell in self.mesh.cellList:
+            i = cell.cid
             # loop primitive variables
-            for i in range(nq):
+            for ivar in range(nq):
+                
                 #----------------------------------------------------
                 # find the min and max values
                 # Initialize them with the solution at the current cell.
                 # which could be min or max.
-                wmin = self.w[cell.cid,i]
-                wmax = self.w[cell.cid,i]
+                wmin = self.w[cell.cid,ivar]
+                wmax = self.w[cell.cid,ivar]
                 
                 #Loop over LSQ neighbors and find min and max
-                for k in 
+                for nghbr_cell_cid in self.cclsq[i].nghbr_lsq:
+                    wmin = min(wmin, self.w[nghbr_cell_cid,ivar])
+                    wmax = max(wmax, self.w[nghbr_cell_cid,ivar])
                 
+                #----------------------------------------------------
+                # Compute phi to enforce maximum principle at vertices (MLP)
+                xc,yc = self.cell[i].centroid
+                
+                # Loop over vertices of the cell i: 3 or 4 vertices for tria or quad.
+                for vert in self.cell[i].nodes:
         return
     
     # survey of gradient reconstruction methods
     # https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/20140011550.pdf
     def compute_gradients(self):
+        
+        #init gradient to zero
+        self.gradw[:,:,:] = 0.
+        
+        # compute gradients for primative variables
+        for ivar in range(nq):
+            
+            #compute gradients in all cells
+            for cell in self.mesh.cells:
+                
+                wi = self.w[cell.cid, ivar]
+                
+                #loop nieghbors
+                for k in self.cclsq[i].nnghbrs_lsq:
+                    nghbr_cell = self.cclsq[i].nghbr_lsq[k]
         return
