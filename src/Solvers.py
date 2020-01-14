@@ -21,7 +21,8 @@ class cclsq(object):
         self.cx             #LSQ coefficient for x-derivative
         self.cy             #LSQ coefficient for y-derivative
         
-        self.cclsq = np.zeros()
+        self.node   = np.zeros((self.nNodes),float)
+        self.cclsq  = np.zeros((self.nCells),float)
         
     def construct_vertex_stencil(self):
         return
