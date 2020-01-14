@@ -122,12 +122,16 @@ def Solvers(object):
         
         self.gradw[:,:,:] = 0.0
         
-        #--------------------------------------------------------------------------------
+        #----------------------------------------------------------------------
         # Compute gradients at cells.
-        
         if (self.second_order): self.compute_gradients()
         if (self.use_limiter): self.compute_limiter()
-        #--------------------------------------------------------------------------------
+        #----------------------------------------------------------------------
+        
+        
+        #----------------------------------------------------------------------
+        # Residual computation: interior faces
+        #----------------------------------------------------------------------
         # Flux computation across internal faces (to be accumulated in res(:))
         #
         #          v2=Left(2)
@@ -146,7 +150,7 @@ def Solvers(object):
         # 2. Compute the numerical flux.
         # 3. Add it to the residual for 1, and subtract it from the residual for 2.
         #
-        #--------------------------------------------------------------------------------
+        #----------------------------------------------------------------------
         for face in mesh.faceList:
             adj_face = face.adjacentface
             
