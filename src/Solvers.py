@@ -9,7 +9,24 @@ import numpy as np
 
 nq = 4 # Euler system size
 
-def Solvers(object):
+class cclsq(object):
+    
+    def __init__(self, mesh):
+        self.mesh = mesh
+        self.nNodes = mesh.nNodes
+        self.nCells = mesh.nCells
+        #
+        self.nnghbrs_lsq    #number of lsq neighbors
+        self.nghbr_lsq      #list of lsq neighbors
+        self.cx             #LSQ coefficient for x-derivative
+        self.cy             #LSQ coefficient for y-derivative
+        
+        self.cclsq = np.zeros()
+        
+    def construct_vertex_stencil(self):
+        return
+
+class Solvers(object):
     def __init__(self, mesh):
         self.mesh = mesh
         
@@ -227,6 +244,7 @@ def Solvers(object):
                 wmax = self.w[cell.cid,i]
                 
                 #Loop over LSQ neighbors and find min and max
+                for k in 
                 
         return
     
