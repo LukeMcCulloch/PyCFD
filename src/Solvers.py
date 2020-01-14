@@ -33,6 +33,10 @@ def Solvers(object):
         
         # fluid properties
         self.gamma = 1.4 # Ratio of specific heats for air
+        self.rho_inf = 1.0
+        self.u_inf = 1.0
+        self.v_inf = 0.0
+        self.p_inf = 1./self.gamma
         
         
         
@@ -135,4 +139,4 @@ def Solvers(object):
         w(self.iv) = u[2]/u[0]
         w(self.ip) = (self.gamma-1.0)*( u[3] - \
                                        0.5*w[0]*(w[1]*w[1] + w[2]*w[2]) )
-        return
+        return w
