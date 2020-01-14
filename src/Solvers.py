@@ -20,7 +20,7 @@ def Solvers(object):
         # 
         # solution convergence
         self.res = np.zeros((len(mesh.cellList),nq),float) #residual vector
-        self.residual_norm = np.zeros((nq,1),float)
+        self.res_norm = np.zeros((nq,1),float)
         
         # update step data
         self.u0 = np.zeros((mesh.nCells,nq),float)
@@ -85,15 +85,14 @@ def Solvers(object):
     #-------------------------------------------------------------------------#
     #
     # compute residuals
-    #
-    #-------------------------------------------------------------------------#
-    
+    # 
     #-------------------------------------------------------------------------#
     #
     # compute_residual: comptutes the local residual 
     #
     #-------------------------------------------------------------------------#
     def compute_residual_norm(self):
+        self.res_norm[:] = np.sum(np.abs(self.res)) / float(self.mesh.nCells)
         return
     
     #-------------------------------------------------------------------------#
@@ -105,6 +104,7 @@ def Solvers(object):
     def compute_residual(self):
         mesh = self.mesh
         for cell in mesh.cellList:
+            
         return
     
     
