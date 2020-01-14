@@ -48,6 +48,7 @@ def Solvers(object):
         #------------------------------------------
         #>> Cell-centered limiter data
         #------------------------------------------
+        self.limiter_beps = 1.0e-14
         self.phi = np.zeros((mesh.nCells),float)
         
         
@@ -214,4 +215,22 @@ def Solvers(object):
     #
     #**************************************************************************
     def compute_limiter(self):
+        # loop cells
+        for cell in self.mesh.cellList:
+            # loop primitive variables
+            for i in range(nq):
+                #----------------------------------------------------
+                # find the min and max values
+                # Initialize them with the solution at the current cell.
+                # which could be min or max.
+                wmin = self.w[cell.cid,i]
+                wmax = self.w[cell.cid,i]
+                
+                #Loop over LSQ neighbors and find min and max
+                
+        return
+    
+    # survey of gradient reconstruction methods
+    # https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/20140011550.pdf
+    def compute_gradients(self):
         return
