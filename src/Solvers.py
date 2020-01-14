@@ -124,6 +124,29 @@ def Solvers(object):
         
         #--------------------------------------------------------------------------------
         # Compute gradients at cells.
+        
+        if (self.second_order): self.compute_gradients()
+        if (self.use_limiter): self.compute_limiter()
+        #--------------------------------------------------------------------------------
+        # Flux computation across internal faces (to be accumulated in res(:))
+        #
+        #          v2=Left(2)
+        #        o---o---------o       face(j,:) = [i,k,v2,v1]
+        #       .    .          .
+        #      .     .           .
+        #     .      .normal      .
+        #    .  Left .--->  Right  .
+        #   .   c1   .       c2     .
+        #  .         .               .
+        # o----------o----------------o
+        #          v1=Right(1)
+        #
+        #
+        # 1. Extrapolate the solutions to the face-midpoint from centroids 1 and 2.
+        # 2. Compute the numerical flux.
+        # 3. Add it to the residual for 1, and subtract it from the residual for 2.
+        #
+        #--------------------------------------------------------------------------------
         for face in mesh.faceList:
             adj_face = face.adjacentface
             
