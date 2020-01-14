@@ -469,7 +469,6 @@ class Grid(object):
                     # you've got the information to define the boundary 
                     # so do it here!:
                     self.boundaryList.append(face)
-        
         return
     
     

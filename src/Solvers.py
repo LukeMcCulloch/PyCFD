@@ -26,8 +26,8 @@ def Solvers(object):
         self.res_norm = np.zeros((nq,1),float)
         #
         # local convergence storage saved for speed
-        self.gradw1 = np.zeros((np,2))
-        self.gradw2 = np.zeros((np,2))
+        self.gradw1 = np.zeros((nq,2),float)
+        self.gradw2 = np.zeros((nq,2),float)
         
         # update step data
         self.u0 = np.zeros((mesh.nCells,nq),float)
@@ -45,7 +45,10 @@ def Solvers(object):
         self.v_inf = 0.0
         self.p_inf = 1./self.gamma
         
-        
+        #------------------------------------------
+        #>> Cell-centered limiter data
+        #------------------------------------------
+        self.phi = np.zeros((mesh.nCells),float)
         
         
         
@@ -121,7 +124,25 @@ def Solvers(object):
         
         #--------------------------------------------------------------------------------
         # Compute gradients at cells.
-        for cell in mesh.cellList:
+        for face in mesh.faceList:
+            adj_face = face.adjacentface
+            
+            c1 = face.parentcell     # Left cell of the face
+            c2 = adj_face.parentcell # Right cell of the face
+            
+            v1 = face.nodes[0] # Left node of the face
+            v2 = face.nodes[1] # Right node of the face
+            
+            u1 = self.u[c1.cid] #Conservative variables at c1
+            u2 = self.u[c2.cid] #Conservative variables at c2
+            
+            self.gradw1 = self.gradw[c1.cid]
+            self.gradw2 = self.gradw[c2.cid]
+            
+            unit_face_normal = face.normal_vector
+            #Face midpoint at which we compute the flux.
+            xm,ym = face.center
+            
             
         return
     
@@ -158,3 +179,12 @@ def Solvers(object):
         w(self.ip) = (self.gamma-1.0)*( u[3] - \
                                        0.5*w[0]*(w[1]*w[1] + w[2]*w[2]) )
         return w
+    
+    
+    
+    #**************************************************************************
+    # Compute limiter functions
+    #
+    #**************************************************************************
+    def compute_limiter(self):
+        return
