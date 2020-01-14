@@ -13,6 +13,9 @@ def Solvers(object):
     def __init__(self, mesh):
         self.mesh = mesh
         
+        self.second_order = True
+        self.use_limiter = True
+        
         # solution data
         self.u = np.zeros((mesh.nCells,nq),float) # conservative variables at cells/nodes
         self.w = np.zeros((mesh.nCells,nq),float) # primative variables at cells/nodes
@@ -21,6 +24,10 @@ def Solvers(object):
         # solution convergence
         self.res = np.zeros((len(mesh.cellList),nq),float) #residual vector
         self.res_norm = np.zeros((nq,1),float)
+        #
+        # local convergence storage saved for speed
+        self.gradw1 = np.zeros((np,2))
+        self.gradw2 = np.zeros((np,2))
         
         # update step data
         self.u0 = np.zeros((mesh.nCells,nq),float)
@@ -103,6 +110,17 @@ def Solvers(object):
     #-------------------------------------------------------------------------#
     def compute_residual(self):
         mesh = self.mesh
+        
+        self.gradw1[:,:] = 0.
+        self.gradw2[:,:] = 0.
+        
+        self.res[:,:] = 0.
+        self.wsn[:] = 0.0
+        
+        self.gradw[:,:,:] = 0.0
+        
+        #--------------------------------------------------------------------------------
+        # Compute gradients at cells.
         for cell in mesh.cellList:
             
         return
