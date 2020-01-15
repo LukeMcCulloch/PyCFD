@@ -310,10 +310,19 @@ class Solvers(object):
                         (a**2 + two*b**2 + a*b + eps2)
         return vk_limiter
     
+    
     # survey of gradient reconstruction methods
     # https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/20140011550.pdf
     def compute_gradients(self):
-        
+        """
+        #*******************************************************************************
+        # Compute the LSQ gradients in all cells for all primitive variables.
+        #
+        # - Compute the gradient by [wx,wy] = sum_nghbrs [cx,cy]*(w_nghbr - wj),
+        #   where [cx,cy] are the LSQ coefficients.
+        #
+        #*******************************************************************************
+        """        
         #init gradient to zero
         self.gradw[:,:,:] = 0.
         
@@ -322,10 +331,15 @@ class Solvers(object):
             
             #compute gradients in all cells
             for cell in self.mesh.cells:
+                i = cell.cid
                 
-                wi = self.w[cell.cid, ivar]
+                wi = self.w[i, ivar]
                 
                 #loop nieghbors
                 for k in self.cclsq[i].nnghbrs_lsq:
                     nghbr_cell = self.cclsq[i].nghbr_lsq[k]
+                    wk = self.w[nghbr_cell,ivar]    #Solution at the neighbor cell.
+                    
+                    self.gradw[i,ivar,0] = self.gradw[i,ivar,0] + self.cclsq[i].cx[k]*(wk-wi)
+                    self.gradw[i,ivar,1] = self.gradw[i,ivar,1] + self.cclsq[i].cy[k]*(wk-wi)
         return
