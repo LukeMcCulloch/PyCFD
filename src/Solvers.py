@@ -8,6 +8,8 @@ Created on Fri Jan  3 21:15:20 2020
 import numpy as np
 pi = np.pi
 
+from flux import roe
+
 nq = 4 # Euler system size
 
 class cclsq(object):
@@ -189,9 +191,21 @@ class Solvers(object):
             self.gradw2 = self.gradw[c2.cid]
             
             unit_face_normal = face.normal_vector
+            
             #Face midpoint at which we compute the flux.
             xm,ym = face.center
             
+            #Set limiter functions
+            if (self.use_limiter) :
+                phi1 = self.phi[c1.cid]
+                phi2 = self.phi[c2.cid]
+            else:
+                phi1 = 1.0
+                phi2 = 1.0
+                
+            # Reconstruct the solution to the face midpoint and compute a numerical flux.
+            # (reconstruction is implemented inside "interface_flux".
+            self.interface_flux()
             
         return
     
