@@ -239,6 +239,7 @@ class Solvers(object):
         # loop cells
         for cell in self.mesh.cells:
             i = cell.cid
+            
             # loop primitive variables
             for ivar in range(nq):
                 
@@ -259,27 +260,55 @@ class Solvers(object):
                 xc,yc = self.mesh.cells[i].centroid
                 
                 # Loop over vertices of the cell i: 3 or 4 vertices for tria or quad.
-                for iv in self.mesh.cells[i].nodes:
+                for k,iv in enumerate(self.mesh.cells[i].nodes):
                     xp,yp = iv.vector
                     
-                # Linear reconstruction to the vertex k
-                #diffx = xp-xc
-                #diffy = yp-yc
-                wf = self.w[i,ivar] + \
-                                self.gradw[i,ivar,0]*(xp-xc) + \
-                                self.gradw[i,ivar,1]*(yp-yc)
+                    # Linear reconstruction to the vertex k
+                    #diffx = xp-xc
+                    #diffy = yp-yc
+                    wf = self.w[i,ivar] + \
+                                    self.gradw[i,ivar,0]*(xp-xc) + \
+                                    self.gradw[i,ivar,1]*(yp-yc)
+                    
+                    # compute dw^-.
+                    dwm = wf - self.w[i,ivar]
+                    
+                    # compute dw^+.
+                    if ( dwm > 0.0 ):
+                        dwp = wmax - self.w[i,ivar]
+                    else:
+                        dwp = wmin - self.w[i,ivar]
+                    
+                    # Increase magnitude by 'limiter_beps' without changin sign.
+                    # dwm = sign(one,dwm)*(abs(dwm) + limiter_beps)
+                    
+                    # Note: We always have dwm*dwp >= 0 by the above choice! So, r=a/b>0 always
+                    
+                    # Limiter function: Venkat limiter
+                    phi_vertex = self.vk_limiter(dwp, dwm, self.mesh.cells[i].volume)
+                    
+                    # Keep the minimum over the control points (vertices)
+                    if (k==0):
+                        phi_vertex_min = phi_vertex
+                    else:
+                        phi_vertex_min = min(phi_vertex_min, phi_vertex)
+                        
+                    #end of vertex loop
+                    
+                    
+                # Keep the minimum over variables.
+                if (ivar==0) :
+                    phi_var_min = phi_vertex_min
+                else:
+                    phi_var_min = min(phi_var_min, phi_vertex_min)
                 
-                # compute dw^-.
-                dwm = wf - self.w[i,ivar]
-                
-                # Increase magnitude by 'limiter_beps' without changin sign.
-                # dwm = sign(one,dwm)*(abs(dwm) + limiter_beps)
-                
-                # Note: We always have dwm*dwp >= 0 by the above choice! So, r=a/b>0 always
-                
-                # Limiter function: Venkat limiter
-                phi_vertex = self.vk_limiter(dwp, dwm, self.mesh.cells[i].volume)
-                
+                #end primative variable loop
+            
+            #Set the minimum phi over the control points and over the variables to be
+            #our limiter function. We'll use it for all variables to be on a safe side.
+            self.phi[i] = phi_var_min
+            # end cell loop
+        
         return
     
     def vk_limiter(self, a, b, vol):
