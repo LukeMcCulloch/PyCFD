@@ -6,6 +6,7 @@ Created on Fri Jan  3 21:15:20 2020
 @author: lukemcculloch
 """
 import numpy as np
+pi = np.pi
 
 nq = 4 # Euler system size
 
@@ -39,7 +40,7 @@ class Solvers(object):
         self.gradw = np.zeros((mesh.nCells,nq,2),float) # gradients of w at cells/nodes.
         # 
         # solution convergence
-        self.res = np.zeros((len(mesh.cellList),nq),float) #residual vector
+        self.res = np.zeros((mesh.nCells,nq),float) #residual vector
         self.res_norm = np.zeros((nq,1),float)
         #
         # local convergence storage saved for speed
@@ -73,8 +74,6 @@ class Solvers(object):
         #>> least squared gradient
         #------------------------------------------
         self.cclsq  = np.asarray( [cclsq(mesh) for i in range(mesh.nCells)] )
-        
-        
         
         
         
@@ -223,10 +222,10 @@ class Solvers(object):
     def u2w(self, u):
         w = np.zeros((nq),float)
         
-        w(self.ir) = u[0]
-        w(self.iu) = u[1]/u[0]
-        w(self.iv) = u[2]/u[0]
-        w(self.ip) = (self.gamma-1.0)*( u[3] - \
+        w[self.ir] = u[0]
+        w[self.iu] = u[1]/u[0]
+        w[self.iv] = u[2]/u[0]
+        w[self.ip] = (self.gamma-1.0)*( u[3] - \
                                        0.5*w[0]*(w[1]*w[1] + w[2]*w[2]) )
         return w
     
@@ -238,7 +237,7 @@ class Solvers(object):
     #**************************************************************************
     def compute_limiter(self):
         # loop cells
-        for cell in self.mesh.cellList:
+        for cell in self.mesh.cells:
             i = cell.cid
             # loop primitive variables
             for ivar in range(nq):
@@ -257,11 +256,59 @@ class Solvers(object):
                 
                 #----------------------------------------------------
                 # Compute phi to enforce maximum principle at vertices (MLP)
-                xc,yc = self.cell[i].centroid
+                xc,yc = self.mesh.cells[i].centroid
                 
                 # Loop over vertices of the cell i: 3 or 4 vertices for tria or quad.
-                for vert in self.cell[i].nodes:
+                for iv in self.mesh.cells[i].nodes:
+                    xp,yp = iv.vector
+                    
+                # Linear reconstruction to the vertex k
+                #diffx = xp-xc
+                #diffy = yp-yc
+                wf = self.w[i,ivar] + \
+                                self.gradw[i,ivar,0]*(xp-xc) + \
+                                self.gradw[i,ivar,1]*(yp-yc)
+                
+                # compute dw^-.
+                dwm = wf - self.w[i,ivar]
+                
+                # Increase magnitude by 'limiter_beps' without changin sign.
+                # dwm = sign(one,dwm)*(abs(dwm) + limiter_beps)
+                
+                # Note: We always have dwm*dwp >= 0 by the above choice! So, r=a/b>0 always
+                
+                # Limiter function: Venkat limiter
+                phi_vertex = self.vk_limiter(dwp, dwm, self.mesh.cells[i].volume)
+                
         return
+    
+    def vk_limiter(self, a, b, vol):
+        """
+        ***********************************************************************
+        * -- Venkat Limiter Function--
+        *
+        * 'Convergence to Steady State Solutions of the Euler Equations on Unstructured
+        *  Grids with Limiters', V. Venkatakrishnan, JCP 118, 120-130, 1995.
+        *
+        * The limiter has been implemented in such a way that the difference, b, is
+        * limited in the form: b -> vk_limiter * b.
+        *
+        * ---------------------------------------------------------------------
+        *  Input:     a, b     : two differences
+        *
+        * Output:   vk_limiter : to be used as b -> vk_limiter * b.
+        * ---------------------------------------------------------------------
+        *
+        ***********************************************************************
+        """
+        two = 2.0
+        half = 0.5
+        Kp = 5.0   #<<<<< Adjustable parameter K
+        diameter = two*(vol/pi)**half
+        eps2 = (Kp*diameter)**3
+        vk_limiter = ( (a**2 + eps2) + two*b*a ) /                       \
+                        (a**2 + two*b**2 + a*b + eps2)
+        return vk_limiter
     
     # survey of gradient reconstruction methods
     # https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/20140011550.pdf
