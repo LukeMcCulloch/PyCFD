@@ -357,10 +357,10 @@ class Grid(object):
     def make_rect_cells(self):
         self.cells = []
         for i in range(self.m-1):
-            self.cells.append([])
+            #self.cells.append([])
             for j in  range(self.n-1):
                 
-                self.cells[i].append(
+                self.cells.append(
                                     Cell([self.nodes[i  ,j  ],
                                           self.nodes[i  ,j+1],
                                           self.nodes[i+1,j+1],
@@ -369,7 +369,7 @@ class Grid(object):
                                          nface = self.nFaces,
                                          facelist = self.faceList)
                                     )
-                self.cellList.append(self.cells[i][-1])
+                self.cellList.append(self.cells[-1])
                 self.nFaces += 4
                 self.nCells +=1
         self.cells = np.asarray(self.cells)
@@ -379,10 +379,10 @@ class Grid(object):
     def make_tri_cells(self):
         self.cells = []
         for i in range(self.m-1):
-            self.cells.append([])
+            #self.cells.append([])
             for j in  range(self.n-1):
                 
-                self.cells[i].append(
+                self.cells.append(
                                     Cell([self.nodes[i  ,j  ],
                                           self.nodes[i  ,j+1],
                                           self.nodes[i+1,j  ] ],
@@ -390,11 +390,11 @@ class Grid(object):
                                          nface = self.nFaces,
                                          facelist = self.faceList)
                                     )
-                self.cellList.append(self.cells[i][-1])
+                self.cellList.append(self.cells[-1])
                 self.nCells +=1
                 self.nFaces += 3
                 
-                self.cells[i].append(
+                self.cells.append(
                                     Cell([self.nodes[i  ,j+1],
                                           self.nodes[i+1,j+1],
                                           self.nodes[i+1,j  ] ],
@@ -402,7 +402,7 @@ class Grid(object):
                                          nface = self.nFaces,
                                          facelist = self.faceList)
                                     )
-                self.cellList.append(self.cells[i][-1])
+                self.cellList.append(self.cells[-1])
                 self.nCells += 1
                 self.nFaces += 3
                 
