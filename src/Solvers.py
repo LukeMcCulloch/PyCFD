@@ -216,6 +216,15 @@ class Solvers(object):
             
         return
     
+    def test_lsq_coefficients(self):
+        """
+          Compute the gradient of w=2*x+y 
+          to see if we get wx=2 and wy=1 correctly.
+        """
+        verifcation_error = False
+        
+        
+        return
     
     
     
