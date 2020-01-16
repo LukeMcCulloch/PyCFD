@@ -93,11 +93,8 @@ class Solvers(object):
         #>> least squared gradient
         #------------------------------------------
         self.cclsq  = np.asarray( [StencilLSQ(cell,mesh) for cell in mesh.cells] )
-        """
-        e.g.
-        self.cclsq[0].nghbr_lsq #bulk list of all cells in the 
-        'extended cell halo'
-        """
+        #e.g.
+        #self.cclsq[0].nghbr_lsq #bulk list of all cells in the 'extended cell halo'
     
     def solver_boot(self):
         
@@ -111,6 +108,12 @@ class Solvers(object):
     
     
     def compute_lsq_coefficients(self):
+        
+        print "--------------------------------------------------"
+        print " Computing LSQ coefficients... "
+        
+        ix = 0
+        iy = 1
         
         #----------------------------------------------------------------------
         #----------------------------------------------------------------------
@@ -129,8 +132,22 @@ class Solvers(object):
             #------------------------------------------------------------------
             #Define the LSQ problem size
             m = self.cclsq[i].nnghbrs_lsq
-            
             n = self.dim
+            
+            
+            #------------------------------------------------------------------
+            # Allocate LSQ matrix and the pseudo inverse, R^{-1}*Q^T.
+            a = np.zeros((m,n),float)
+            rinvqt = np.zeros((n,m),float)
+            
+            #------------------------------------------------------------------
+            # Build the weighted-LSQ matrix A(m,n).
+            #
+            #     weight_1 * [ (x1-xi)*wxi + (y1-yi)*wyi ] = weight_1 * [ w1 - wi ]
+            #     weight_2 * [ (x2-xi)*wxi + (y2-yi)*wyi ] = weight_2 * [ w2 - wi ]
+            #                 .
+            #                 .
+            #     weight_m * [ (xm-xi)*wxi + (ym-yi)*wyi ] = weight_2 * [ wm - wi ]
         
         return
         
