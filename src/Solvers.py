@@ -160,7 +160,8 @@ class Solvers(object):
                 
             #------------------------------------------------------------------
             # Perform QR factorization and compute R^{-1}*Q^T from A(m,n)
-            
+            qt, r = np.linalg.qr(a)
+            rinvqt = np.dot( np.linalg.inv(r), qt)
                 
         return
         

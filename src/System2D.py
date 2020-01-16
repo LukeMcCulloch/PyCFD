@@ -269,6 +269,9 @@ class Cell(object):
         return
     
     def compute_gradient_reconstruction_A_matrix(self):
+        """
+        compact stencil
+        """
         self.A = np.zeros((self.N,2),float)
         for i,face in enumerate(self.faces):
             #cell = face.adjacentface.parentcell
