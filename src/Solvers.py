@@ -26,8 +26,8 @@ class StencilLSQ(object):
         #
         self.nnghbrs_lsq = None     #number of lsq neighbors
         self.nghbr_lsq = []         #list of lsq neighbors
-        self.cx = None              #LSQ coefficient for x-derivative
-        self.cy = None              #LSQ coefficient for y-derivative
+        self.cx = []                #LSQ coefficient for x-derivative
+        self.cy = []                #LSQ coefficient for y-derivative
         #
         #self.node   = np.zeros((self.nNodes),float) #node to cell list
         self.construct_vertex_stencil()
@@ -42,6 +42,10 @@ class StencilLSQ(object):
         self.nghbr_lsq = set(self.nghbr_lsq)
         self.nghbr_lsq = list(self.nghbr_lsq)
         self.nnghbrs_lsq = len(self.nghbr_lsq)
+        
+        # Allocate the LSQ coeffient arrays for the cell i:
+        self.cx = np.zeros((self.nnghbrs_lsq),float)
+        self.cy = np.zeros((self.nnghbrs_lsq),float)
         return
     
     
@@ -123,7 +127,7 @@ class Solvers(object):
         
         #self.compute_lsq_coefficients()
         
-        #self.set_initial_solution
+        #self.set_initial_solution()
         
         self.explicit_steady_solver()
         return
@@ -201,8 +205,8 @@ class Solvers(object):
             for k, nghbr_cell in enumerate(self.cclsq[i].nghbr_lsq):
                 dX = nghbr_cell.centroid - cell.centroid 
                 weight_k = 1.0/(np.linalg.norm(dX)**lsq_weight_invdis_power)
-                self.cclsq[i].cx = rinvqt[ix,k] * weight_k
-                self.cclsq[i].cy = rinvqt[iy,k] * weight_k
+                self.cclsq[i].cx[k] = rinvqt[ix,k] * weight_k
+                self.cclsq[i].cy[k] = rinvqt[iy,k] * weight_k
         return
     
     def test_lsq_coefficients(self, tol=1.e-10):
@@ -228,8 +232,8 @@ class Solvers(object):
                 
                 # This is how we use the LSQ coefficients: 
                 # accumulate cx*(wk-wi) and cy*(wk-wi).
-                wx += self.cclsq[i].cx * ( (2.0*xk+yk) - (2.0*xi+yi))
-                wy += self.cclsq[i].cy * ( (2.0*xk+yk) - (2.0*xi+yi))
+                wx += self.cclsq[i].cx[k] * ( (2.0*xk+yk) - (2.0*xi+yi))
+                wy += self.cclsq[i].cy[k] * ( (2.0*xk+yk) - (2.0*xi+yi))
             
             if (abs(wx-2.0) > tol) or (abs(wy-1.0) > tol) :
                 print " wx = ", wx, " exact ux = 2.0"
