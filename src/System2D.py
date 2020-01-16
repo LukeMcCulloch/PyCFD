@@ -268,7 +268,7 @@ class Cell(object):
                 print face.compute_normal()
         return
     
-    def compute_gradient_reconstruction_A_matrix(self):
+    def compute_compact_gradient_reconstruction_A_matrix(self):
         """
         compact stencil
         """
@@ -280,7 +280,24 @@ class Cell(object):
         self.AAinv = np.linalg.inv(
                                     np.dot(self.A.T,self.A) 
                                   )
+        qi, ri = np.linalg.qr(self.A)
+        self.rinvqt = np.dot(np.linalg.inv(ri), qi.T)
         return
+    
+    
+    
+#    def compute_extended_gradient_reconstruction(self):
+#        """
+#        compact stencil
+#        """
+#        self.A = np.zeros((self.N,2),float)
+#        for i,face in enumerate(self.faces):
+#            #cell = face.adjacentface.parentcell
+#            self.A[i] = face.e_xi * face.hxi
+#        
+#        qi, ri = np.linalg.qr(cell.A)
+#        self.rinvqt = np.dot(np.linalg.inv(ri), qi.T)
+#        return
 
 
 class Grid(object):

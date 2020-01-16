@@ -24,10 +24,10 @@ class StencilLSQ(object):
         self.mesh = mesh #reference to mesh
         #
         self.nnghbrs_lsq = None     #number of lsq neighbors
-        self.nghbr_lsq = []       #list of lsq neighbors
-        self.cx = None             #LSQ coefficient for x-derivative
+        self.nghbr_lsq = []         #list of lsq neighbors
+        self.cx = None              #LSQ coefficient for x-derivative
         self.cy = None              #LSQ coefficient for y-derivative
-        
+        #
         #self.node   = np.zeros((self.nNodes),float) #node to cell list
         self.construct_vertex_stencil()
         
@@ -39,7 +39,6 @@ class StencilLSQ(object):
                     self.nghbr_lsq.append(cell)
         
         self.nghbr_lsq = set(self.nghbr_lsq)
-        #self.nghbr_lsq = self.nghbr_lsq - self.cell
         self.nghbr_lsq = list(self.nghbr_lsq)
         self.nnghbrs_lsq = len(self.nghbr_lsq)
         return
@@ -96,9 +95,15 @@ class Solvers(object):
         #e.g.
         #self.cclsq[0].nghbr_lsq #bulk list of all cells in the 'extended cell halo'
     
+        #------------------------------------------
+        #>> precompute least squared gradient coefficients
+        #------------------------------------------
+        self.compute_lsq_coefficients()
+        
+        
     def solver_boot(self):
         
-        self.compute_lsq_coefficients()
+        #self.compute_lsq_coefficients()
         
         #self.set_initial_solution
         
@@ -127,7 +132,7 @@ class Solvers(object):
         #----------------------------------------------------------------------
         #----------------------------------------------------------------------
         # compute the LSQ coefficients (cx, cy) in all cells
-        for i in range(self.mesh.ncells):
+        for i in range(self.mesh.nCells):
             cell = self.mesh.cells[i]
             #------------------------------------------------------------------
             #Define the LSQ problem size
@@ -163,6 +168,16 @@ class Solvers(object):
             q, r = np.linalg.qr(a)
             rinvqt = np.dot( np.linalg.inv(r), q.T)
                 
+            #------------------------------------------------------------------
+            #  Compute and store the LSQ coefficients: R^{-1}*Q^T*w
+            #
+            # (wx,wy) = R^{-1}*Q^T*RHS
+            #         = sum_k (cx,cy)*(wk-wi).
+            for k, nghbr_cell in enumerate(self.cclsq[i].nghbr_lsq):
+                dX = nghbr_cell.centroid - cell.centroid 
+                weight_k = 1.0/(np.linalg.norm(dX)**lsq_weight_invdis_power)
+                self.cclsq[i].cx = rinvqt[ix,k] * weight_k
+                self.cclsq[i].cy = rinvqt[iy,k] * weight_k
         return
         
     #-------------------------------------------------------------------------#
@@ -171,10 +186,14 @@ class Solvers(object):
     # This subroutine solves an un steady problem by 2nd-order TVD-RK with a
     # global time step.
     #-------------------------------------------------------------------------#
-    def explicit_unsteady_solver(self):
+    def explicit_unsteady_solver(self, tfinal=None):
         time = 0.0
+        if tfinal is None:
+            self.t_final = 1.0
+        else:
+            self.t_final = tfinal
         
-        while (time < t_final):
+        while (time < self.t_final):
             #------------------------------------------------------------------
             # Compute the residual: res(i,:)
             self.compute_residual()
