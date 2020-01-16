@@ -92,9 +92,18 @@ class Solvers(object):
         self.cclsq  = np.asarray( [StencilLSQ(cell,mesh) for cell in mesh.cells] )
         """
         e.g.
-        self.cclsq[0].nghbr_lsq
+        self.cclsq[0].nghbr_lsq #bulk list of all cells in the 
+        'extended cell halo'
         """
+    
+    def solver_boot(self):
         
+        self.compute_lsq_coefficients()
+        
+        #self.set_initial_solution
+        
+        self.explicit_steady_solver()
+        return
         
         
         
