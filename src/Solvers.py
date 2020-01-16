@@ -99,6 +99,7 @@ class Solvers(object):
         #>> precompute least squared gradient coefficients
         #------------------------------------------
         self.compute_lsq_coefficients()
+        self.test_lsq_coefficients()
         
         
     def solver_boot(self):
@@ -216,7 +217,7 @@ class Solvers(object):
             
         return
     
-    def test_lsq_coefficients(self):
+    def test_lsq_coefficients(self, tol=1.e-10):
         """
           Compute the gradient of w=2*x+y 
           to see if we get wx=2 and wy=1 correctly.
@@ -231,7 +232,26 @@ class Solvers(object):
             # (xi,yi) to be used to compute the function 2*x+y at i.
             xi,yi = cell.centroid
             
+            #Loop over the vertex neighbors.
+            for k, nghbr_cell in enumerate(self.cclsq[i].nghbr_lsq):
+                
+                #(xk,yk) to be used to compute the function 2*x+y at k.
+                xk,yk = nghbr_cell.centroid
+                
+                # This is how we use the LSQ coefficients: 
+                # accumulate cx*(wk-wi) and cy*(wk-wi).
+                wx += self.cclsq[i].cx * ( (2.0*xk) - (2.0*xi+yi))
+                wy += self.cclsq[i].cy * ( (2.0*yk) - (2.0*xi+yi))
             
+            if (abs(wx-2.0) > tol) or (abs(wy-1.0) > tol) :
+                print " wx = ", wx, " exact ux = 2.0"
+                print " wy = ", wy, " exact uy = 1.0"
+                verifcation_error = True
+                
+        if verifcation_error:
+            print " LSQ coefficients are not correct. See above. Stop."
+        else:
+            print " Verified: LSQ coefficients are exact for a linear function."
         return
     
     
