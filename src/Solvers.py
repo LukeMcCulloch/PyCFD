@@ -31,6 +31,7 @@ class StencilLSQ(object):
         #self.node   = np.zeros((self.nNodes),float) #node to cell list
         self.construct_vertex_stencil()
         
+        
     def construct_vertex_stencil(self):
         for node in self.cell.nodes:
             for cell in node.parent_cells:
@@ -42,10 +43,12 @@ class StencilLSQ(object):
         self.nghbr_lsq = list(self.nghbr_lsq)
         self.nnghbrs_lsq = len(self.nghbr_lsq)
         return
+    
 
 class Solvers(object):
     def __init__(self, mesh):
         self.mesh = mesh
+        self.dim = mesh.dim
         
         self.second_order = True
         self.use_limiter = True
@@ -53,15 +56,15 @@ class Solvers(object):
         # solution data
         self.u = np.zeros((mesh.nCells,nq),float) # conservative variables at cells/nodes
         self.w = np.zeros((mesh.nCells,nq),float) # primative variables at cells/nodes
-        self.gradw = np.zeros((mesh.nCells,nq,2),float) # gradients of w at cells/nodes.
+        self.gradw = np.zeros((mesh.nCells,nq,self.dim),float) # gradients of w at cells/nodes.
         # 
         # solution convergence
         self.res = np.zeros((mesh.nCells,nq),float) #residual vector
         self.res_norm = np.zeros((nq,1),float)
         #
         # local convergence storage saved for speed
-        self.gradw1 = np.zeros((nq,2),float)
-        self.gradw2 = np.zeros((nq,2),float)
+        self.gradw1 = np.zeros((nq,self.dim),float)
+        self.gradw2 = np.zeros((nq,self.dim),float)
         
         # update step data
         self.u0 = np.zeros((mesh.nCells,nq),float)
@@ -105,7 +108,31 @@ class Solvers(object):
         self.explicit_steady_solver()
         return
         
+    
+    
+    def compute_lsq_coefficients(self):
         
+        #----------------------------------------------------------------------
+        #----------------------------------------------------------------------
+        #The power to the inverse distance weight. The value 0.0 is used to avoid
+        #instability known for Euler solvers. So, this is the unweighted LSQ gradient.
+        #More accurate gradients are obtained with 1.0, and such can be used for the
+        #viscous terms and source terms in turbulence models.
+        lsq_weight_invdis_power = 0.0
+        
+        
+        #----------------------------------------------------------------------
+        #----------------------------------------------------------------------
+        # compute the LSQ coefficients (cx, cy) in all cells
+        for i in self.mesh.ncells:
+            
+            #------------------------------------------------------------------
+            #Define the LSQ problem size
+            m = self.cclsq[i].nnghbrs_lsq
+            
+            n = self.dim
+        
+        return
         
     #-------------------------------------------------------------------------#
     # Euler solver: Explicit Unsteady Solver: Ut + Fx + Gy = S

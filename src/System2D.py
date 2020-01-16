@@ -285,6 +285,7 @@ class Grid(object):
     def __init__(self, mesh=None, m=10,n=10,type_='rect'):
         self.gridtype = {'rect':0,
                          'tri':1}
+        self.dim = 2    #2D grid
         self.nCells = 0
         self.nFaces = 0
         self.nNodes = m*n
