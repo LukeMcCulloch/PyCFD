@@ -190,7 +190,9 @@ class Cell(object):
     """
     The Cij'th cell, tris and quads only
     
-    ccw-winding
+    ccw-winding: normals point in
+    
+    cw-winding: normals point out
     """
     def __init__(self, nodes, cid, nface,
                  nConserved=3, facelist=None): #, FaceCellMap):
@@ -406,7 +408,7 @@ class Cell(object):
                     alpha = alpha)
             
         if fillcolor:
-            plt.fill(x,y)
+            ph = plt.fill(x,y, 'r', lw=2)
         else:  
             ax = self.plot_normals(canvas = ax)
             ax = self.plot_centroid(canvas = ax)
@@ -415,8 +417,14 @@ class Cell(object):
 
 
 class Grid(object):
+    """
+    ccw-winding: normals point in
     
-    def __init__(self, mesh=None, m=10,n=10,type_='rect'):
+    cw-winding: normals point out
+    """
+    def __init__(self, mesh=None, m=10,n=10,
+                 type_='rect', winding='cw'):
+        
         self.gridtype = {'rect':0,
                          'tri':1}
         self.dim = 2    #2D grid
@@ -472,7 +480,7 @@ class Grid(object):
         
         # now cells and faces:
         self.FaceCellMap = {}
-        self.make_cells()
+        self.make_cells(winding = winding)
         # maps
         self.make_FaceCellMap()
         
@@ -483,16 +491,16 @@ class Grid(object):
         self.buildFaceToNodeIncidence() # self.FToV
         self.buildVertexToCellIncidence() # self.VToC
     
-    def make_cells(self):
+    def make_cells(self, winding ='cw'):
         """
         Nodes are defined first
         so, 
         Coincident Cells share nodes
         """
         if self.type == 'rect':
-            self.make_rect_cells(winding='cw')
+            self.make_rect_cells(winding = winding)
         else:
-            self.make_tri_cells(winding='cw')
+            self.make_tri_cells(winding = winding)
         return
     
     

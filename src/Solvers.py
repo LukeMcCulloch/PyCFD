@@ -556,8 +556,10 @@ def show_LSQ_grad_area_plots():
     return
 
 if __name__ == '__main__':
-    gd = Grid(type_='rect',m=10,n=10)
-    self = Grid(type_='tri',m=10,n=10)
+    gd = Grid(type_='rect',m=10,n=10,
+              winding='cw')
+    self = Grid(type_='tri',m=10,n=10,
+              winding='cw')
     
     cell = self.cellList[44]
     face = cell.faces[0]
