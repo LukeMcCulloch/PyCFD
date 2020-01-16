@@ -24,14 +24,23 @@ class StencilLSQ(object):
         self.mesh = mesh #reference to mesh
         #
         self.nnghbrs_lsq = None     #number of lsq neighbors
-        self.nghbr_lsq = None       #list of lsq neighbors
+        self.nghbr_lsq = []       #list of lsq neighbors
         self.cx = None             #LSQ coefficient for x-derivative
         self.cy = None              #LSQ coefficient for y-derivative
         
         #self.node   = np.zeros((self.nNodes),float) #node to cell list
+        self.construct_vertex_stencil()
         
     def construct_vertex_stencil(self):
+        for node in self.cell.nodes:
+            for cell in node.parent_cells:
+                if cell is not self.cell:
+                    self.nghbr_lsq.append(cell)
         
+        self.nghbr_lsq = set(self.nghbr_lsq)
+        #self.nghbr_lsq = self.nghbr_lsq - self.cell
+        self.nghbr_lsq = list(self.nghbr_lsq)
+        self.nnghbrs_lsq = len(self.nghbr_lsq)
         return
 
 class Solvers(object):
@@ -81,7 +90,10 @@ class Solvers(object):
         #>> least squared gradient
         #------------------------------------------
         self.cclsq  = np.asarray( [StencilLSQ(cell,mesh) for cell in mesh.cells] )
-        
+        """
+        e.g.
+        self.cclsq[0].nghbr_lsq
+        """
         
         
         
