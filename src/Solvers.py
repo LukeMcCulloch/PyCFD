@@ -131,6 +131,13 @@ class Solvers(object):
     
     
     def compute_lsq_coefficients(self):
+        """
+        compute the neighbor-stencil-coefficients such that
+        a gradient summed around a cell 
+        (compact or extended stencil around the cell in questions)
+        will give a least squares reconstruction of the gradient 
+        at the cell in question
+        """
         
         print "--------------------------------------------------"
         print " Computing LSQ coefficients... "
@@ -533,7 +540,7 @@ class Solvers(object):
             for cell in self.mesh.cells:
                 i = cell.cid
                 
-                wi = self.w[i, ivar]
+                wi = self.w[i, ivar] #solution at this cell
                 
                 #loop nieghbors
                 for k in self.cclsq[i].nnghbrs_lsq:
