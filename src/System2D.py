@@ -294,10 +294,11 @@ class Grid(object):
         self.faceList = []
         self.boundaryList = []
         
-        self.FToV = None #face to vertex (node) connectivity matrix
-        self.EToV = None #cell (element) to vertex
-        self.EToE = None #cell to cell
-        
+        self.FToV = None # face to vertex (node) connectivity matrix
+        self.EToV = None # cell (element) to vertex
+        self.EToF = None # cell to face
+        self.EToE = None # cell to cell
+        self.VToE = None # vertex to cell incidence
         
         self.type = type_
         if mesh is None:
@@ -341,6 +342,11 @@ class Grid(object):
         self.make_FaceCellMap()
         
         self.make_neighbors()
+        
+        # build incidence tables
+        self.buildCellToFaceIncidence() # self.EToF
+        self.buildFaceToNodeIncidence() # self.FToV
+        self.buildVertexToCellIncidence() # self.VToC
     
     def make_cells(self):
         """
@@ -500,6 +506,31 @@ class Grid(object):
             for edge in cell.faces:
                 e = edge.fid
                 self.EToF[c,e] = 1
+        return
+    
+    
+    
+    def buildVertexToCellIncidence(self):
+        """
+        Note the similarity to 
+        Exterior differential forms
+        
+        e.g. 
+        self.nodes_array[10].parent_cells[0] is self.cells[0]
+        >>True
+        self.nodes_array[10].parent_cells[1] is self.cells[1]
+        >> True
+        self.nodes_array[10].parent_cells[2] is self.cellList[18]
+        >> True
+        
+        """
+        self.VToE = np.zeros((self.nNodes,self.nCells),int)
+        
+        for cell in self.cellList:
+            c = cell.cid
+            for node in cell.nodes:
+                n = node.nid
+                self.VToE[n,c] = 1
         return
     
     
