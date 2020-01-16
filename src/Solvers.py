@@ -19,19 +19,19 @@ class StencilLSQ(object):
     #>> Cell-centered LSQ stencil data
     #------------------------------------------
     """
-    def __init__(self, cell):
-        self.cell = cell
-        #self.nNodes = mesh.nNodes
-        #self.nCells = mesh.nCells
+    def __init__(self, cell, mesh):
+        self.cell = cell #reference to cell
+        self.mesh = mesh #reference to mesh
         #
         self.nnghbrs_lsq = None     #number of lsq neighbors
         self.nghbr_lsq = None       #list of lsq neighbors
         self.cx = None             #LSQ coefficient for x-derivative
         self.cy = None              #LSQ coefficient for y-derivative
         
-        #self.node   = np.zeros((self.nNodes),float)
+        #self.node   = np.zeros((self.nNodes),float) #node to cell list
         
     def construct_vertex_stencil(self):
+        
         return
 
 class Solvers(object):
@@ -80,7 +80,7 @@ class Solvers(object):
         #------------------------------------------
         #>> least squared gradient
         #------------------------------------------
-        self.cclsq  = np.asarray( [StencilLSQ(cell) for cell in mesh.cells] )
+        self.cclsq  = np.asarray( [StencilLSQ(cell,mesh) for cell in mesh.cells] )
         
         
         

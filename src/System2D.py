@@ -327,10 +327,11 @@ class Grid(object):
                 self.mesh[1,i,j] = nms[j]
                 node = Node(self.mesh[:,i,j], nid)
                 nid += 1
-                self.nodes[i].append(node) #to become 2D array (not necessary, but I do for python-fun)
+                self.nodes[i].append(node) #to become 2D array (nicer for building the grid)
                 self.nodeList.append(node) #will stay as list
                 
         self.nodes = np.asarray(self.nodes)
+        self.nodes_array = np.asarray(self.nodeList) #is this at all faster?
         
         
         # now cells and faces:
