@@ -127,7 +127,7 @@ class Solvers(object):
         #instability known for Euler solvers. So, this is the unweighted LSQ gradient.
         #More accurate gradients are obtained with 1.0, and such can be used for the
         #viscous terms and source terms in turbulence models.
-        lsq_weight_invdis_power = 0.0
+        lsq_weight_invdis_power = 1.0
         
         
         #----------------------------------------------------------------------
@@ -143,7 +143,7 @@ class Solvers(object):
             
             #------------------------------------------------------------------
             # Allocate LSQ matrix and the pseudo inverse, R^{-1}*Q^T.
-            a       = np.zeros((m,n),float)
+            a = np.zeros((m,n),float)
             #rinvqt  = np.zeros((n,m),float)
             
             #------------------------------------------------------------------
@@ -180,6 +180,45 @@ class Solvers(object):
                 self.cclsq[i].cx = rinvqt[ix,k] * weight_k
                 self.cclsq[i].cy = rinvqt[iy,k] * weight_k
         return
+    
+    def test_lsq_coefficients(self, tol=1.e-10):
+        """
+          Compute the gradient of w=2*x+y 
+          to see if we get wx=2 and wy=1 correctly.
+        """
+        verifcation_error = False
+        
+        for i, cell in enumerate(self.mesh.cells):
+            
+            #initialize wx and wy
+            wx,wy = 0.0,0.0
+            
+            # (xi,yi) to be used to compute the function 2*x+y at i.
+            xi,yi = cell.centroid
+            
+            #Loop over the vertex neighbors.
+            for k, nghbr_cell in enumerate(self.cclsq[i].nghbr_lsq):
+                
+                #(xk,yk) to be used to compute the function 2*x+y at k.
+                xk,yk = nghbr_cell.centroid
+                
+                # This is how we use the LSQ coefficients: 
+                # accumulate cx*(wk-wi) and cy*(wk-wi).
+                wx += self.cclsq[i].cx * ( (2.0*xk+yk) - (2.0*xi+yi))
+                wy += self.cclsq[i].cy * ( (2.0*xk+yk) - (2.0*xi+yi))
+            
+            if (abs(wx-2.0) > tol) or (abs(wy-1.0) > tol) :
+                print " wx = ", wx, " exact ux = 2.0"
+                print " wy = ", wy, " exact uy = 1.0"
+                verifcation_error = True
+                
+        if verifcation_error:
+            print " LSQ coefficients are not correct. See above. Stop."
+        else:
+            print " Verified: LSQ coefficients are exact for a linear function."
+        return
+    
+    
         
     #-------------------------------------------------------------------------#
     # Euler solver: Explicit Unsteady Solver: Ut + Fx + Gy = S
@@ -216,45 +255,6 @@ class Solvers(object):
             #- 1st Stage of Runge-Kutta:
             
         return
-    
-    def test_lsq_coefficients(self, tol=1.e-10):
-        """
-          Compute the gradient of w=2*x+y 
-          to see if we get wx=2 and wy=1 correctly.
-        """
-        verifcation_error = False
-        
-        for i, cell in enumerate(self.mesh.cells):
-            
-            #initialize wx and wy
-            wx,wy = 0.0,0.0
-            
-            # (xi,yi) to be used to compute the function 2*x+y at i.
-            xi,yi = cell.centroid
-            
-            #Loop over the vertex neighbors.
-            for k, nghbr_cell in enumerate(self.cclsq[i].nghbr_lsq):
-                
-                #(xk,yk) to be used to compute the function 2*x+y at k.
-                xk,yk = nghbr_cell.centroid
-                
-                # This is how we use the LSQ coefficients: 
-                # accumulate cx*(wk-wi) and cy*(wk-wi).
-                wx += self.cclsq[i].cx * ( (2.0*xk) - (2.0*xi+yi))
-                wy += self.cclsq[i].cy * ( (2.0*yk) - (2.0*xi+yi))
-            
-            if (abs(wx-2.0) > tol) or (abs(wy-1.0) > tol) :
-                print " wx = ", wx, " exact ux = 2.0"
-                print " wy = ", wy, " exact uy = 1.0"
-                verifcation_error = True
-                
-        if verifcation_error:
-            print " LSQ coefficients are not correct. See above. Stop."
-        else:
-            print " Verified: LSQ coefficients are exact for a linear function."
-        return
-    
-    
     
     #-------------------------------------------------------------------------#
     #
@@ -534,8 +534,8 @@ class Solvers(object):
     
 
 if __name__ == '__main__':
-    gd = Grid(type_='rect',m=10,n=10)
-    self = Grid(type_='tri',m=10,n=10)
+    self = Grid(type_='rect',m=10,n=10)
+    gd = Grid(type_='tri',m=10,n=10)
     
     cell = self.cellList[44]
     face = cell.faces[0]
