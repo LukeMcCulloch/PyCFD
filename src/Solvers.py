@@ -6,6 +6,7 @@ Created on Fri Jan  3 21:15:20 2020
 @author: lukemcculloch
 """
 import numpy as np
+import matplotlib.pyplot as plt
 pi = np.pi
 
 from flux import roe
@@ -41,6 +42,22 @@ class StencilLSQ(object):
         self.nghbr_lsq = set(self.nghbr_lsq)
         self.nghbr_lsq = list(self.nghbr_lsq)
         self.nnghbrs_lsq = len(self.nghbr_lsq)
+        return
+    
+    
+    def plot_lsq_reconstruction(self, canvas = None,
+                   alpha=.1):
+        if canvas is None:
+            fig, ax = plt.subplots()
+            ax.axis('equal')
+        else:
+            ax = canvas
+            
+        ax = self.cell.plot_cell(canvas = ax,
+                                 fillcolor=True)
+        for cell in self.nghbr_lsq:
+            ax = cell.plot_cell(canvas = ax)
+        
         return
     
 
@@ -532,12 +549,25 @@ class Solvers(object):
         return roe(nx,gamma,uL,uR,f,fL,fR)
     
     
+    
+def show_LSQ_grad_area_plots():
+    for cc in ssolve.cclsq[55:60]:
+        cc.plot_lsq_reconstruction()
+    return
 
 if __name__ == '__main__':
-    self = Grid(type_='rect',m=10,n=10)
-    gd = Grid(type_='tri',m=10,n=10)
+    gd = Grid(type_='rect',m=10,n=10)
+    self = Grid(type_='tri',m=10,n=10)
     
     cell = self.cellList[44]
     face = cell.faces[0]
     
+    #cell.plot_cell()
+    
     ssolve = Solvers(mesh = self)
+    
+    cc = ssolve.cclsq[33]
+    cc.plot_lsq_reconstruction()
+    
+    show_LSQ_grad_area_plots()
+    
