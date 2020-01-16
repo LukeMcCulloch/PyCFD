@@ -9,22 +9,27 @@ import numpy as np
 pi = np.pi
 
 from flux import roe
+from System2D import Grid
 
 nq = 4 # Euler system size
 
-class cclsq(object):
-    
-    def __init__(self, mesh):
-        self.mesh = mesh
-        self.nNodes = mesh.nNodes
-        self.nCells = mesh.nCells
+class StencilLSQ(object):
+    """
+    #------------------------------------------
+    #>> Cell-centered LSQ stencil data
+    #------------------------------------------
+    """
+    def __init__(self, cell):
+        self.cell = cell
+        #self.nNodes = mesh.nNodes
+        #self.nCells = mesh.nCells
         #
         self.nnghbrs_lsq = None     #number of lsq neighbors
         self.nghbr_lsq = None       #list of lsq neighbors
         self.cx = None             #LSQ coefficient for x-derivative
         self.cy = None              #LSQ coefficient for y-derivative
         
-        self.node   = np.zeros((self.nNodes),float)
+        #self.node   = np.zeros((self.nNodes),float)
         
     def construct_vertex_stencil(self):
         return
@@ -75,7 +80,7 @@ class Solvers(object):
         #------------------------------------------
         #>> least squared gradient
         #------------------------------------------
-        self.cclsq  = np.asarray( [cclsq(mesh) for i in range(mesh.nCells)] )
+        self.cclsq  = np.asarray( [StencilLSQ(cell) for cell in mesh.cells] )
         
         
         
@@ -386,3 +391,18 @@ class Solvers(object):
                     self.gradw[i,ivar,0] = self.gradw[i,ivar,0] + self.cclsq[i].cx[k]*(wk-wi)
                     self.gradw[i,ivar,1] = self.gradw[i,ivar,1] + self.cclsq[i].cy[k]*(wk-wi)
         return
+    
+    
+    def interface_flux(self):
+        return roe(nx,gamma,uL,uR,f,fL,fR)
+    
+    
+
+if __name__ == '__main__':
+    gd = Grid(type_='rect',m=10,n=10)
+    self = Grid(type_='tri',m=10,n=10)
+    
+    cell = self.cellList[44]
+    face = cell.faces[0]
+    
+    ssolve = Solvers(mesh = self)
