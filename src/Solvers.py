@@ -223,7 +223,15 @@ class Solvers(object):
         """
         verifcation_error = False
         
-        
+        for i, cell in enumerate(self.mesh.cells):
+            
+            #initialize wx and wy
+            wx,wy = 0.0,0.0
+            
+            # (xi,yi) to be used to compute the function 2*x+y at i.
+            xi,yi = cell.centroid
+            
+            
         return
     
     
