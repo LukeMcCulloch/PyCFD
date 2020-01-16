@@ -58,7 +58,7 @@ class StencilLSQ(object):
             ax = canvas
             
         ax = self.cell.plot_cell(canvas = ax,
-                                 fillcolor=True)
+                                 fillcolor='green')
         for cell in self.nghbr_lsq:
             ax = cell.plot_cell(canvas = ax)
         
@@ -566,11 +566,27 @@ def show_LSQ_grad_area_plots():
         cc.plot_lsq_reconstruction()
     return
 
+def show_one_tri_cell():
+    cc = ssolve.cclsq[57]
+    cc.plot_lsq_reconstruction()
+    cell = cc.cell
+    cell.plot_cell()
+    return
+
+def show_ont_quad_cell():
+    ssolve = Solvers(mesh = gd)
+    cc =  ssolve.cclsq[57]
+    cc.plot_lsq_reconstruction()
+    cell = cc.cell
+    cell.plot_cell()
+    return
+    
+
 if __name__ == '__main__':
     gd = Grid(type_='rect',m=10,n=10,
-              winding='cw')
+              winding='ccw')
     self = Grid(type_='tri',m=10,n=10,
-              winding='cw')
+              winding='ccw')
     
     cell = self.cellList[44]
     face = cell.faces[0]
@@ -579,8 +595,15 @@ if __name__ == '__main__':
     
     ssolve = Solvers(mesh = self)
     
-    cc = ssolve.cclsq[33]
-    cc.plot_lsq_reconstruction()
+    #cc = ssolve.cclsq[33]
+    #cc.plot_lsq_reconstruction()
     
-    show_LSQ_grad_area_plots()
+    #show_LSQ_grad_area_plots()
+    
+    
+    cc = ssolve.cclsq[57]
+    cc.plot_lsq_reconstruction()
+    cell = cc.cell
+    cell.plot_cell()
+    
     

@@ -190,9 +190,9 @@ class Cell(object):
     """
     The Cij'th cell, tris and quads only
     
-    ccw-winding: normals point in
+    ccw-winding: normals point out
     
-    cw-winding: normals point out
+    cw-winding: normals point in
     """
     def __init__(self, nodes, cid, nface,
                  nConserved=3, facelist=None): #, FaceCellMap):
@@ -377,9 +377,8 @@ class Cell(object):
         return ax
         
     def plot_cell(self, canvas = None,
-                  fig=None,
-                   alpha=.1, 
-                   fillcolor=None):
+                  fig=None,alpha=.1,
+                  fillcolor=None):
         if canvas is None:
             fig, ax = plt.subplots()
             ax.axis('equal')
@@ -387,6 +386,7 @@ class Cell(object):
             ax = canvas
             
         cell = self
+        
     
         for face in cell.faces:
             n0 = face.nodes[0]
@@ -407,8 +407,12 @@ class Cell(object):
                     color='black',
                     alpha = alpha)
             
-        if fillcolor:
-            ph = plt.fill(x,y, 'r', lw=2)
+        if fillcolor is not None:
+            xf = [ node.vector[0] for node in cell.nodes]
+            yf = [ node.vector[1] for node in cell.nodes]
+            xf.append(cell.nodes[0].vector[0])
+            yf.append(cell.nodes[0].vector[1])
+            ph = plt.fill(xf,yf, fillcolor, lw=2)
         else:  
             ax = self.plot_normals(canvas = ax)
             ax = self.plot_centroid(canvas = ax)
@@ -418,12 +422,12 @@ class Cell(object):
 
 class Grid(object):
     """
-    ccw-winding: normals point in
+    cw-winding: normals point in
     
-    cw-winding: normals point out
+    ccw-winding: normals point out
     """
     def __init__(self, mesh=None, m=10,n=10,
-                 type_='rect', winding='cw'):
+                 type_='rect', winding='ccw'):
         
         self.gridtype = {'rect':0,
                          'tri':1}
@@ -507,7 +511,7 @@ class Grid(object):
     def make_rect_cells(self, winding='ccw'):
         self.cells = []
         
-        if winding=='ccw':
+        if winding=='cw':
             for i in range(self.m-1):
                 #self.cells.append([])
                 for j in  range(self.n-1):
@@ -551,7 +555,7 @@ class Grid(object):
     def make_tri_cells(self, winding='ccw'):
         self.cells = []
         
-        if winding=='ccw':
+        if winding=='cw':
             for i in range(self.m-1):
                 #self.cells.append([])
                 for j in  range(self.n-1):
