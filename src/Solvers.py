@@ -138,7 +138,7 @@ class Solvers(object):
             #------------------------------------------------------------------
             # Allocate LSQ matrix and the pseudo inverse, R^{-1}*Q^T.
             a       = np.zeros((m,n),float)
-            rinvqt  = np.zeros((n,m),float)
+            #rinvqt  = np.zeros((n,m),float)
             
             #------------------------------------------------------------------
             # Build the weighted-LSQ matrix A(m,n).
@@ -160,8 +160,8 @@ class Solvers(object):
                 
             #------------------------------------------------------------------
             # Perform QR factorization and compute R^{-1}*Q^T from A(m,n)
-            qt, r = np.linalg.qr(a)
-            rinvqt = np.dot( np.linalg.inv(r), qt)
+            q, r = np.linalg.qr(a)
+            rinvqt = np.dot( np.linalg.inv(r), q.T)
                 
         return
         
