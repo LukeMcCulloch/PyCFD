@@ -127,8 +127,8 @@ class Solvers(object):
         #----------------------------------------------------------------------
         #----------------------------------------------------------------------
         # compute the LSQ coefficients (cx, cy) in all cells
-        for i in self.mesh.ncells:
-            
+        for i in range(self.mesh.ncells):
+            cell = self.mesh.cells[i]
             #------------------------------------------------------------------
             #Define the LSQ problem size
             m = self.cclsq[i].nnghbrs_lsq
@@ -137,8 +137,8 @@ class Solvers(object):
             
             #------------------------------------------------------------------
             # Allocate LSQ matrix and the pseudo inverse, R^{-1}*Q^T.
-            a = np.zeros((m,n),float)
-            rinvqt = np.zeros((n,m),float)
+            a       = np.zeros((m,n),float)
+            rinvqt  = np.zeros((n,m),float)
             
             #------------------------------------------------------------------
             # Build the weighted-LSQ matrix A(m,n).
@@ -148,7 +148,20 @@ class Solvers(object):
             #                 .
             #                 .
             #     weight_m * [ (xm-xi)*wxi + (ym-yi)*wyi ] = weight_2 * [ wm - wi ]
-        
+            for k, nghbr_cell in enumerate(self.cclsq[i].nghbr_lsq):
+                dX = nghbr_cell.centroid - cell.centroid 
+                # note you already stored this when you implemented this
+                # in the mesh itself.
+                
+                weight_k = 1.0/(np.linalg.norm(dX)**lsq_weight_invdis_power)
+                
+                a[k,0] = weight_k*dX[0]
+                a[k,1] = weight_k*dX[1]
+                
+            #------------------------------------------------------------------
+            # Perform QR factorization and compute R^{-1}*Q^T from A(m,n)
+            
+                
         return
         
     #-------------------------------------------------------------------------#
