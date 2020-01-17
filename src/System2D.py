@@ -316,7 +316,9 @@ class Cell(object):
                 color='green',
                 marker='o',
                 alpha = alpha,)
-        
+        name = str(cell.cid)
+        plt.annotate(name,
+                     cell.centroid)
         return ax
     
     

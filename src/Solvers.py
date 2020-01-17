@@ -7,6 +7,8 @@ Created on Fri Jan  3 21:15:20 2020
 """
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+
 pi = np.pi
 
 from flux import roe
@@ -57,11 +59,31 @@ class StencilLSQ(object):
         else:
             ax = canvas
             
+        fig.suptitle('LSQ reconstruction stencil', fontsize=10)
+            
         ax = self.cell.plot_cell(canvas = ax,
                                  fillcolor='green')
         for cell in self.nghbr_lsq:
             ax = cell.plot_cell(canvas = ax)
+            
+        patch = mpatches.Patch(color='green', label='primary cell')
+        plt.legend(handles=[patch])
         
+        mytitle = 'stencil_'+str(self.cell.cid)
+        
+        self.save_pdf(filename=mytitle, ftype = '.pdf')
+        return
+    
+    
+    def save_pdf(self, filename = None, ftype = '.pdf', closeit=True):
+        """ save pdf file.
+        No file extension needed.
+        """
+        if filename == None:
+            filename = default_input('please enter a name for the picture', 'curve')
+        plt.savefig(filename+ftype, bbox_inches = 'tight')
+        if closeit:
+            plt.close()
         return
     
 
