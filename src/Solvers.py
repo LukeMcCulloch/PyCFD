@@ -615,7 +615,7 @@ class Solvers(object):
         zero = 0.0
         inviscid_flux = roe
         
-        # convert consertative to primative variables
+        # convert consertative to primitive variables
         w1 = self.u2w(u1)
         w2 = self.u2w(u2)
         
