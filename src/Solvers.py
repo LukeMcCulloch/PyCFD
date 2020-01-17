@@ -138,11 +138,19 @@ class Solvers(object):
         #e.g.
         #self.cclsq[0].nghbr_lsq #bulk list of all cells in the 'extended cell halo'
     
+        
         #------------------------------------------
         #>> precompute least squared gradient coefficients
         #------------------------------------------
         self.compute_lsq_coefficients()
         self.test_lsq_coefficients()
+        
+        
+        #------------------------------------------
+        #>> residual data
+        #------------------------------------------
+        self.num_flux = np.zeros(4,float)
+        
         
         
     def solver_boot(self):
@@ -306,6 +314,13 @@ class Solvers(object):
             
         return
     
+    
+    
+    
+    
+    
+    
+    
     #-------------------------------------------------------------------------#
     #
     # compute residuals
@@ -395,7 +410,14 @@ class Solvers(object):
                 
             # Reconstruct the solution to the face midpoint and compute a numerical flux.
             # (reconstruction is implemented inside "interface_flux".
-            self.interface_flux()
+            wave_speed = 0.0
+            self.interface_flux(u1, u2, 
+                                gradw1, gradw2,
+                                c1.centroid,
+                                c2.centroid,
+                                xm, ym,
+                                self.num_flux, wave_speed
+                                )
             
         return
     
