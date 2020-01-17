@@ -52,7 +52,7 @@ class StencilLSQ(object):
     
     
     def plot_lsq_reconstruction(self, canvas = None,
-                   alpha=.1):
+                                alpha=.1, saveit = False):
         if canvas is None:
             fig, ax = plt.subplots()
             ax.axis('equal')
@@ -69,9 +69,10 @@ class StencilLSQ(object):
         patch = mpatches.Patch(color='green', label='primary cell')
         plt.legend(handles=[patch])
         
-        mytitle = 'stencil_'+str(self.cell.cid)
-        
-        self.save_pdf(filename=mytitle, ftype = '.pdf')
+        if saveit:
+            mytitle = 'stencil_'+str(self.cell.cid)
+            
+            self.save_pdf(filename=mytitle, ftype = '.pdf')
         return
     
     
@@ -600,8 +601,25 @@ class Solvers(object):
         return
     
     
-    def interface_flux(self):
-        return roe(nx,gamma,uL,uR,f,fL,fR)
+    def interface_flux(self,
+                       u1, u2, 
+                       gradw1, gradw2, 
+                       n12,                 # Directed area vector (unit vector)
+                       xc1, yc1,            # left centroid
+                       xc2, yc2,            # right centroid
+                       xm, ym,              # face midpoint
+                       phi1, phi2,          # limiter
+                       num_flux,            # numerical flux (output)
+                       wsn                  # max wave speed at face 
+                       ):
+        zero = 0.0
+        inviscid_flux = roe
+        
+        # convert consertative to primative variables
+        w1 = self.u2w(u1)
+        w2 = self.u2w(u2)
+        
+        return inviscid_flux(nx,gamma,uL,uR,f,fL,fR)
     
     
     
@@ -645,9 +663,9 @@ if __name__ == '__main__':
     show_LSQ_grad_area_plots()
     
     
-    cc = ssolve.cclsq[57]
-    cc.plot_lsq_reconstruction()
-    cell = cc.cell
-    cell.plot_cell()
+    # cc = ssolve.cclsq[57]
+    # cc.plot_lsq_reconstruction()
+    # cell = cc.cell
+    # cell.plot_cell()
     
     
