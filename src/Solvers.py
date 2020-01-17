@@ -598,7 +598,7 @@ if __name__ == '__main__':
     #cc = ssolve.cclsq[33]
     #cc.plot_lsq_reconstruction()
     
-    #show_LSQ_grad_area_plots()
+    show_LSQ_grad_area_plots()
     
     
     cc = ssolve.cclsq[57]
