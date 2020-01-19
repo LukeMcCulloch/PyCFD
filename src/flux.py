@@ -3,17 +3,112 @@
 """
 Created on Fri Jan  3 21:15:20 2020
 
-@author: lukemcculloch
 """
 import numpy as np
 Array = np.zeros
 sqrt = np.sqrt
 
 
+
+#********************************************************************************
+#* -- 3D Roe's Flux Function and Jacobian --
+#*
+#* NOTE: This version does not use any tangent vector.
+#*       See "I do like CFD, VOL.1" about how tangent vectors are eliminated.
+#*
+#* This subroutine computes the Roe flux for the Euler equations
+#* in the direction, njk=[nx,ny,nz].
+#*
+#* P. L. Roe, Approximate Riemann Solvers, Parameter Vectors and Difference
+#* Schemes, Journal of Computational Physics, 43, pp. 357-372.
+#*
+#* Conservative form of the Euler equations:
+#*
+#*     dU/dt + dF/dx + dG/dy + dH/dz = 0
+#*
+#* This subroutine computes the numerical flux for the flux in the direction,
+#* njk=[nx,ny,nz]:
+#*
+#*     Fn = F*nx + G*ny + H*nz = | rho*qn          |
+#*                               | rho*qn*u + p*nx |
+#*                               | rho*qn*v + p*ny |
+#*                               | rho*qn*w + p*nz |
+#*                               | rho*qn*H        |    (qn = u*nx + v*ny + w*nz)
+#*
+#* The Roe flux is implemented in the following form:
+#*
+#*   Numerical flux = 1/2 [ Fn(UR) + Fn(UL) - |An|dU ], 
+#*
+#*  where
+#*
+#*    An = dFn/dU,  |An| = R|Lambda|L, dU = UR - UL.
+#*
+#* The dissipation term, |An|dU, is actually computed as
+#*
+#*     sum_{k=1,4} |lambda_k| * (LdU)_k * r_k,
+#*
+#* where lambda_k is the k-th eigenvalue, (LdU)_k is the k-th wave strength,
+#* and r_k is the k-th right-eigenvector evaluated at the Roe-average state.
+#*
+#* Note: The 4th component is a combined contribution from two shear waves.
+#*       They are combined to eliminate the tangent vectors.
+#*       So, (LdU)_4 is not really a wave strength, and
+#*       r_4 is not really an eigenvector.
+#*       See "I do like CFD, VOL.1" about how tangent vectors are eliminated.
+#*
+#* Note: In the code, the vector of conserative variables are denoted by uc.
+#*
+#* ------------------------------------------------------------------------------
+#*  Input: ucL(1:5) =  Left state (rhoL, rhoL*uL, rhoL*vL, rhoL*wR, rhoL*EL)
+#*         ucR(1:5) = Right state (rhoR, rhoL*uR, rhoL*vR, rhoL*wR, rhoL*ER)
+#*         njk(1:3) = unit face normal vector (nx, ny, nz), pointing from Left to Right.
+#*
+#*           njk
+#*  Face normal ^   o Right data point
+#*              |  .
+#*              | .
+#*              |. 
+#*       -------x-------- Face
+#*             .                 Left and right states are
+#*            .                   1. Values at data points for 1st-order accuracy
+#*           .                    2. Extrapolated values at the face midpoint 'x'
+#*          o Left data point        for 2nd/higher-order accuracy.
+#*
+#*
+#* Output:  num_flux(1:5) = the numerical flux vector
+#*                    wsn = maximum wave speed (eigenvalue)
+#*
+#* ------------------------------------------------------------------------------
+#*
+#* Note: This subroutine has been prepared for an educational purpose.
+#*       It is not at all efficient. Think about how you can optimize it.
+#*       One way to make it efficient is to reduce the number of local variables,
+#*       by re-using temporary variables as many times as possible.
+#*
+#* Note: Please let me know if you find bugs. I'll greatly appreciate it and
+#*       fix the bugs.
+#*
+#* Katate Masatsuka, November 2012. http://www.cfdbooks.com
+#*
+#* converted to python by Luke McCulloch
+#*
+#********************************************************************************
+def roe():
+    """
+    3D Roe approximate Riemann Solver for 
+    the flux across a face
+    """
+    #
+    # 
+    #    self.ucL = np.zeros(5,float)       #conservative variables in 3D
+    #    self.ucR = np.zeros(5,float)       #conservative variables in 3D
+    #
+
 #-----------------------------------------------------------------------------#
 # Riemann solver: Roe's approximate Riemann solver
+# this is independent of Katate Masatsuka's Roe solver
 #-----------------------------------------------------------------------------#
-def roe(nx,gamma,uL,uR,f,fL,fR) :
+def roe1D(nx,gamma,uL,uR,f,fL,fR) :
     dd = Array((3),float)
     dF = Array((3),float)
     V = Array((3),float)

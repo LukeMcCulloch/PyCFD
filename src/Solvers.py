@@ -637,7 +637,6 @@ class Solvers(object):
         
         # Store the reconstructed solutions as conservative variables.
         # Just becasue flux functions use conservative variables.
-        
         uL = self.w2u(wL) #conservative variables computed from wL and wR.
         uR = self.w2u(wR) #conservative variables computed from wL and wR.
 
