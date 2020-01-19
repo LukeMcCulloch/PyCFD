@@ -109,7 +109,7 @@ class Solvers(object):
         self.gradw1 = np.zeros((nq,self.dim),float)
         self.gradw2 = np.zeros((nq,self.dim),float)
         
-        # update step data
+        # update (pseudo) time step data
         self.u0 = np.zeros((mesh.nCells,nq),float)
         
         # accessor integers for clarity
@@ -130,6 +130,8 @@ class Solvers(object):
         self.uR3d = np.zeros(5,float)       #conservative variables in 3D
         self.n12_3d = np.zeros(3,float)     #face normal in 3D
         self.num_flux3d = np.zeros(5,float) #numerical flux in 3D
+        
+        self.wsn = np.zeros((self.mesh.nCells),float) # max wave speed array
         
         #------------------------------------------
         #>> Cell-centered limiter data
@@ -679,7 +681,8 @@ class Solvers(object):
         #  (1) Roe flux
         #------------------------------------------------------------
         #return inviscid_flux(nx,gamma,uL,uR,f,fL,fR)
-        inviscid_flux(self.uL3d,self.uR3d,self.n12_3d, num_flux3d,wsn)
+        inviscid_flux(self.uL3d,self.uR3d,self.n12_3d, 
+                      self.num_flux3d,self.wsn)
         return
     
     

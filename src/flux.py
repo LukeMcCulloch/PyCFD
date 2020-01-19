@@ -133,11 +133,11 @@ def roe(ucL, ucR, njk, num_flux,wsn):
     rho, dqn, dp            = 0.,0.,0.              # Differences in rho, qn, p, e.g., dp=pR-pL
     du, dv, dw              = 0.,0.,0.              # Velocity differences
     
-    LdU = np.zeros(4,float)     # Wave strengths = L*(UR-UL)
-    ws  = np.zeros(4,float)     # Wave speeds
-    dws = np.zeros(4,float)     # Width of a parabolic fit for entropy fix 
-    R = np.zeros((5,4),float)   # Right-eigenvector matrix 
-    diss = np.zeros(4,float)    # Dissipation term
+    LdU     = np.zeros(4,float)     # Wave strengths = L*(UR-UL)
+    ws      = np.zeros(4,float)     # Wave speeds
+    dws     = np.zeros(4,float)     # Width of a parabolic fit for entropy fix 
+    R       = np.zeros((5,4),float) # Right-eigenvector matrix 
+    diss    = np.zeros(4,float)     # Dissipation term
     
     # Face normal vector (unit vector)
     nx,ny,nz = njk
@@ -238,7 +238,7 @@ def roe(ucL, ucR, njk, num_flux,wsn):
         
         
     # Left-moving acoustic wave
-    R[0,0] = one    
+    R[0,0] = one   
     R[1,0] = u - a*nx
     R[2,0] = v - a*ny
     R[3,0] = w - a*nz
@@ -270,7 +270,7 @@ def roe(ucL, ucR, njk, num_flux,wsn):
     
     #Dissipation Term: |An|(UR-UL) = R|Lambda|L*dU = sum_k of [ ws[k] * R[:,k] * L*dU[k] ]
     
-    diss[:] = ws[0]*LdU[0]*R[:,0] + ws[1]*LdU[1]*R[:,1] &
+    diss[:] = ws[0]*LdU[0]*R[:,0] + ws[1]*LdU[1]*R[:,1] \
              + ws[2]*LdU[2]*R[:,2] + ws[3]*LdU[3]*R[:,3]
     
     # This is the numerical flux: Roe flux = 1/2 *[  Fn[UL]+Fn[UR] - |An|[UR-UL] ]
