@@ -621,6 +621,55 @@ class Solvers(object):
         
         # Linear Reconstruction in the primitive variables
         
+        #Cell 1 centroid to the face midpoint:
+        wL = w1 + phi1 * (gradw1[:,0]*(xm-xc1) + gradw1[:,1]*(ym-yc1))
+        
+        #Cell 2 centroid to the face midpoint:
+        wR = w2 + phi2 * ( gradw2[:,0]*(xm-xc2) + gradw2[:,1]*(ym-yc2) )
+        
+        # Store the reconstructed solutions as conservative variables.
+        # Just becasue flux functions use conservative variables.
+        
+        uL = self.w2u(wL)
+        uR = self.w2u(wR)
+        
+        #----------------------------------------------------------------------
+        #----------------------------------------------------------------------
+        # Define 3D solution arrays and a 3D face normal.
+        #----------------------------------------------------------------------
+        #----------------------------------------------------------------------
+
+        #Left state: 3D <- 2D
+
+        self.uL3d[0] = uL[0]
+        self.uL3d[1] = uL[1]
+        self.uL3d[2] = uL[2]
+        self.uL3d[3] = zero
+        self.uL3d[4] = uL[3]
+
+        #Right state: 3D <- 2D
+        
+        self.uR3d[0] = uR[0]
+        self.uR3d[1] = uR[1]
+        self.uR3d[2] = uR[2]
+        self.uR3d[3] = zero
+        self.uR3d[4] = uR[3]
+        
+        #Normal vector
+        
+        self.n12_3d[0] = n12[0]
+        self.n12_3d[1] = n12[1]
+        self.n12_3d[2] = zero
+
+        #----------------------------------------------------------------------
+        #----------------------------------------------------------------------
+        #  Compute inviscid flux by 3D flux subroutines
+        #----------------------------------------------------------------------
+        #----------------------------------------------------------------------
+        
+        #------------------------------------------------------------
+        #  (1) Roe flux
+        #------------------------------------------------------------
         return inviscid_flux(nx,gamma,uL,uR,f,fL,fR)
     
     
