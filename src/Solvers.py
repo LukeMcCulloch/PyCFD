@@ -52,7 +52,7 @@ class StencilLSQ(object):
     
     
     def plot_lsq_reconstruction(self, canvas = None,
-                   alpha=.1):
+                   alpha=.1, saveit=False):
         if canvas is None:
             fig, ax = plt.subplots()
             ax.axis('equal')
@@ -69,9 +69,10 @@ class StencilLSQ(object):
         patch = mpatches.Patch(color='green', label='primary cell')
         plt.legend(handles=[patch])
         
-        mytitle = 'stencil_'+str(self.cell.cid)
-        
-        self.save_pdf(filename=mytitle, ftype = '.pdf')
+        if saveit:
+            mytitle = 'stencil_'+str(self.cell.cid)
+            
+            self.save_pdf(filename=mytitle, ftype = '.pdf')
         return
     
     
@@ -80,7 +81,7 @@ class StencilLSQ(object):
         No file extension needed.
         """
         if filename == None:
-            filename = default_input('please enter a name for the picture', 'curve')
+            filename = default_input('please enter a name for the picture', 'lsq_reconstruction')
         plt.savefig(filename+ftype, bbox_inches = 'tight')
         if closeit:
             plt.close()
@@ -623,9 +624,9 @@ if __name__ == '__main__':
     show_LSQ_grad_area_plots()
     
     
-    cc = ssolve.cclsq[57]
-    cc.plot_lsq_reconstruction()
-    cell = cc.cell
-    cell.plot_cell()
+#    cc = ssolve.cclsq[57]
+#    cc.plot_lsq_reconstruction()
+#    cell = cc.cell
+#    cell.plot_cell()
     
     
