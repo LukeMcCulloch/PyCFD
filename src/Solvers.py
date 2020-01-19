@@ -125,6 +125,12 @@ class Solvers(object):
         self.v_inf = 0.0
         self.p_inf = 1./self.gamma
         
+        #flux
+        self.uL3d = np.zeros(5,float)       #conservative variables in 3D
+        self.uR3d = np.zeros(5,float)       #conservative variables in 3D
+        self.n12_3d = np.zeros(3,float)     #face normal in 3D
+        self.num_flux3d = np.zeros(5,float) #numerical flux in 3D
+        
         #------------------------------------------
         #>> Cell-centered limiter data
         #------------------------------------------
@@ -670,8 +676,9 @@ class Solvers(object):
         #------------------------------------------------------------
         #  (1) Roe flux
         #------------------------------------------------------------
-        return inviscid_flux(nx,gamma,uL,uR,f,fL,fR)
-    
+        #return inviscid_flux(nx,gamma,uL,uR,f,fL,fR)
+        inviscid_flux(self.uL3d,self.uR3d,self.n12_3d, num_flux3d,wsn)
+        return
     
     
 def show_LSQ_grad_area_plots():
