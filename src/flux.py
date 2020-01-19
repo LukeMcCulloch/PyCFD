@@ -214,7 +214,16 @@ def roe(ucL, ucR, njk, num_flux,wsn):
     ws[2] = abs(qn)   #Entropy wave
     ws[3] = abs(qn)   #Shear waves
 
-    
+    # Harten's Entropy Fix JCP(1983), 49, pp357-393. This is typically applied
+    # only for the nonlinear fields (k=1 and 3), but here it is applied to all
+    # for robustness, avoiding vanishing wave speeds by making a parabolic fit
+    # near ws = 0 for all waves.
+    # 02-27-2018: The limiting can be too much for the shear wave and entropy wave.
+    #             Flat plate calculation shows that applying it to all contaminates
+    #             the solution significantly. So, apply only to the nonlinear waves,
+    #             or apply very small limiting to entropy and shear waves.
+    #
+    # Note: ws(1) and ws(2) are the nonlinear waves.
     
     return
 
