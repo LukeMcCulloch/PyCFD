@@ -114,6 +114,35 @@ def roe(ucL, ucR, njk, num_flux,wsn):
     two = 2.0
     half = 0.5
     
+    #Local variables
+    #            L = Left
+    #            R = Right
+    # No subscript = Roe average
+    
+    nx, ny, nz              = 0.,0.,0.              # Normal vector components
+    uL, uR, vL, vR, wL, wR  = 0.,0.,0.,0.,0.,0      # Velocity components.
+    rhoL, rhoR, pL, pR      = 0.,0.,0.,0.           # Pimitive variables.
+    qnL, qnR                = 0.,0.                 # Normal velocities
+    aL, aR, HL, HR          = 0.,0.,0.,0.           # Speed of sound, Total enthalpy
+    fL                      = 0.                    # Physical flux evaluated at ucL
+    fR                      = 0.                    # Physical flux evaluated at ucR
+    
+    RT                      = 0.                    # RT = sqrt(rhoR/rhoL)
+    rho,u,v,w,H,a,qn        = 0.,0.,0.,0.,0.,0.,0.  # Roe-averages
+    
+    rho, dqn, dp            = 0.,0.,0.              # Differences in rho, qn, p, e.g., dp=pR-pL
+    du, dv, dw              = 0.,0.,0.              # Velocity differences
+    
+    LdU = np.zeros(4,float)     # Wave strengths = L*(UR-UL)
+    ws  = np.zeros(4,float)     # Wave speeds
+    dws = np.zeros(4,float)     # Width of a parabolic fit for entropy fix 
+    R = np.zeros((5,4),float)   # Right-eigenvector matrix 
+    diss = np.zeros(4,float)    # Dissipation term
+    
+    # Face normal vector (unit vector)
+    nx,ny,nz = njk
+    
+    
     return
 
 #-----------------------------------------------------------------------------#
