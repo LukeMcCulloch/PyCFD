@@ -52,7 +52,7 @@ class StencilLSQ(object):
     
     
     def plot_lsq_reconstruction(self, canvas = None,
-                                alpha=.1, saveit = False):
+                                alpha = .1, saveit = False):
         if canvas is None:
             fig, ax = plt.subplots()
             ax.axis('equal')
@@ -81,7 +81,7 @@ class StencilLSQ(object):
         No file extension needed.
         """
         if filename == None:
-            filename = default_input('please enter a name for the picture', 'curve')
+            filename = default_input('please enter a name for the picture', 'lsq_reconstruction')
         plt.savefig(filename+ftype, bbox_inches = 'tight')
         if closeit:
             plt.close()
