@@ -622,10 +622,12 @@ class Solvers(object):
         inviscid_flux = roe
         
         # convert consertative to primitive variables
-        w1 = self.u2w(u1)
+        # at centroids.
+        w1 = self.u2w(u1) 
         w2 = self.u2w(u2)
         
         # Linear Reconstruction in the primitive variables
+        # primitive variables reconstructed to the face wL, WR:
         
         #Cell 1 centroid to the face midpoint:
         wL = w1 + phi1 * (gradw1[:,0]*(xm-xc1) + gradw1[:,1]*(ym-yc1))
