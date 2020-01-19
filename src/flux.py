@@ -98,10 +98,12 @@ def roe(ucL, ucR, njk, num_flux,wsn):
     3D Roe approximate Riemann Solver for 
     the flux across a face
     
-     
+    input:
     ucL = np.zeros(5,float)         #conservative variables in 3D
     ucR = np.zeros(5,float)         #conservative variables in 3D
     njk = np.zeros(3,float)         #face normal in 3D
+    
+    output:
     num_flux                        #Numerical viscous flux
     wsn                             # max wave speed
     """
@@ -111,6 +113,8 @@ def roe(ucL, ucR, njk, num_flux,wsn):
     one = 1.0
     two = 2.0
     half = 0.5
+    
+    return
 
 #-----------------------------------------------------------------------------#
 # Riemann solver: Roe's approximate Riemann solver
