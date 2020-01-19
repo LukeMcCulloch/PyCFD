@@ -224,7 +224,11 @@ def roe(ucL, ucR, njk, num_flux,wsn):
     #             or apply very small limiting to entropy and shear waves.
     #
     # Note: ws(1) and ws(2) are the nonlinear waves.
+    dws[:] = eig_limiting_factor[:]*a
+    if ( ws[i] < dws[i] ): 
+        ws[i] = half * ( ws[i]*ws[i]/dws[i]+dws[i] )
     
+    #np.where( ws<dws, ws, half * ( ws[i]*ws[i]/dws[i]+dws[i] ) )
     return
 
 #-----------------------------------------------------------------------------#
