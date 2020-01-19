@@ -229,7 +229,60 @@ def roe(ucL, ucR, njk, num_flux,wsn):
         ws[i] = half * ( ws[i]*ws[i]/dws[i]+dws[i] )
     
     #np.where( ws<dws, ws, half * ( ws[i]*ws[i]/dws[i]+dws[i] ) )
+        
+        
+    # Right Eigenvectors
+    # Note: Two shear wave components are combined into one, so that tangent vectors
+    #       are not required. And that's why there are only 4 vectors here.
+    #       See "I do like CFD, VOL.1" about how tangent vectors are eliminated.
+        
+        
+    # Left-moving acoustic wave
+    R[0,0] = one    
+    R[1,0] = u - a*nx
+    R[2,0] = v - a*ny
+    R[3,0] = w - a*nz
+    R[4,0] = H - a*qn
+
+    # Right-moving acoustic wave
+    R[0,1] = one
+    R[1,1] = u + a*nx
+    R[2,1] = v + a*ny
+    R[3,1] = w + a*nz
+    R[4,1] = H + a*qn
+
+    # Entropy wave
+    R[0,2] = one
+    R[1,2] = u
+    R[2,2] = v 
+    R[3,2] = w
+    R[4,2] = half*(u*u + v*v + w*w)
+    
+    # Two shear wave components combined into one (wave strength incorporated).
+    du = uR - uL
+    dv = vR - vL
+    dw = wR - wL
+    R[0,3] = zero
+    R[1,3] = du - dqn*nx
+    R[2,3] = dv - dqn*ny
+    R[3,3] = dw - dqn*nz
+    R[4,3] = u*du + v*dv + w*dw - qn*dqn
+    
+    #Dissipation Term: |An|(UR-UL) = R|Lambda|L*dU = sum_k of [ ws[k] * R[:,k] * L*dU[k] ]
+    
+    diss[:] = ws[0]*LdU[0]*R[:,0] + ws[1]*LdU[1]*R[:,1] &
+             + ws[2]*LdU[2]*R[:,2] + ws[3]*LdU[3]*R[:,3]
+    
+    # This is the numerical flux: Roe flux = 1/2 *[  Fn[UL]+Fn[UR] - |An|[UR-UL] ]
+    
+    num_flux = half * (fL + fR - diss)
+    
+    # Max wave speed normal to the face:
+    wsn = abs(qn) + a
+        
+        
     return
+
 
 #-----------------------------------------------------------------------------#
 # Riemann solver: Roe's approximate Riemann solver
