@@ -130,7 +130,6 @@ class Solvers(object):
         self.uR3d = np.zeros(5,float)       #conservative variables in 3D
         self.n12_3d = np.zeros(3,float)     #face normal in 3D
         self.num_flux3d = np.zeros(5,float) #numerical flux in 3D
-        
         self.wsn = np.zeros((self.mesh.nCells),float) # max wave speed array
         
         #------------------------------------------
@@ -352,6 +351,7 @@ class Solvers(object):
     def compute_residual(self):
         mesh = self.mesh
         
+        # Gradients of primitive variables
         self.gradw1[:,:] = 0.
         self.gradw2[:,:] = 0.
         
@@ -419,13 +419,14 @@ class Solvers(object):
                 
             # Reconstruct the solution to the face midpoint and compute a numerical flux.
             # (reconstruction is implemented inside "interface_flux".
-            wave_speed = 0.0
+            self.wsn = 0.0
             self.interface_flux(u1, u2, 
-                                gradw1, gradw2,
+                                self.gradw1, self.gradw2,
+                                unit_face_normal, #<- unit face normal
                                 c1.centroid,
                                 c2.centroid,
                                 xm, ym,
-                                self.num_flux, wave_speed
+                                self.num_flux, self.wsn
                                 )
             
         return
@@ -682,7 +683,7 @@ class Solvers(object):
         #------------------------------------------------------------
         #return inviscid_flux(nx,gamma,uL,uR,f,fL,fR)
         inviscid_flux(self.uL3d,self.uR3d,self.n12_3d, 
-                      self.num_flux3d,self.wsn)
+                      self.num_flux3d,wsn)
         return
     
     
