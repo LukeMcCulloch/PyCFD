@@ -143,6 +143,79 @@ def roe(ucL, ucR, njk, num_flux,wsn):
     nx,ny,nz = njk
     
     
+    #Primitive and other variables.
+    
+    #  Left state
+    
+    rhoL = ucL[0]
+    uL = ucL[1]/ucL[0]
+    vL = ucL[2]/ucL[0]
+    wL = ucL[3]/ucL[0]
+    qnL = uL*nx + vL*ny + wL*nz
+    pL = (gamma-one)*( ucL[4] - half*rhoL*(uL*uL+vL*vL+wL*wL) )
+    aL = sqrt(gamma*pL/rhoL)
+    HL = aL*aL/(gamma-one) + half*(uL*uL+vL*vL+wL*wL)
+    
+    #  Right state
+    
+    rhoR = ucR[0]
+    uR = ucR[1]/ucR[0]
+    vR = ucR[2]/ucR[0]
+    wR = ucR[3]/ucR[0]
+    qnR = uR*nx + vR*ny + wR*nz
+    pR = (gamma-one)*( ucR[4] - half*rhoR*(uR*uR+vR*vR+wR*wR) )
+    aR = sqrt(gamma*pR/rhoR)
+    HR = aR*aR/(gamma-one) + half*(uR*uR+vR*vR+wR*wR)
+    
+    #Compute the physical flux: fL = Fn(UL) and fR = Fn(UR)
+    
+    fL[0] = rhoL*qnL
+    fL[1] = rhoL*qnL * uL + pL*nx
+    fL[2] = rhoL*qnL * vL + pL*ny
+    fL[3] = rhoL*qnL * wL + pL*nz
+    fL[4] = rhoL*qnL * HL
+      
+    fR[0] = rhoR*qnR
+    fR[1] = rhoR*qnR * uR + pR*nx
+    fR[2] = rhoR*qnR * vR + pR*ny
+    fR[3] = rhoR*qnR * wR + pR*nz
+    fR[4] = rhoR*qnR * HR
+    
+    #First compute the Roe-averaged quantities
+    
+    #  NOTE: See http://www.cfdnotes.com/cfdnotes_roe_averaged_density.html for
+    #        the Roe-averaged density.
+    
+    
+    RT = sqrt(rhoR/rhoL)
+    rho = RT*rhoL                                       #Roe-averaged density
+    u = (uL + RT*uR)/(one + RT)                         #Roe-averaged x-velocity
+    v = (vL + RT*vR)/(one + RT)                         #Roe-averaged y-velocity
+    w = (wL + RT*wR)/(one + RT)                         #Roe-averaged z-velocity
+    H = (HL + RT*HR)/(one + RT)                         #Roe-averaged total enthalpy
+    a = sqrt( (gamma-one)*(H-half*(u*u + v*v + w*w)) )  #Roe-averaged speed of sound
+    qn = u*nx + v*ny + w*nz                             #Roe-averaged face-normal velocity
+    
+    #Wave Strengths
+    
+    drho = rhoR - rhoL #Density difference
+    dp =   pR - pL   #Pressure difference
+    dqn =  qnR - qnL  #Normal velocity difference
+    
+    LdU[0] = (dp - rho*a*dqn )/(two*a*a) #Left-moving acoustic wave strength
+    LdU[1] = (dp + rho*a*dqn )/(two*a*a) #Right-moving acoustic wave strength
+    LdU[2] =  drho - dp/(a*a)            #Entropy wave strength
+    LdU[3] = rho                         #Shear wave strength (not really, just a factor)
+    
+    #Absolute values of the wave Speeds
+    
+    ws[0] = abs(qn-a) #Left-moving acoustic wave
+    ws[1] = abs(qn+a) #Right-moving acoustic wave
+    ws[2] = abs(qn)   #Entropy wave
+    ws[3] = abs(qn)   #Shear waves
+
+    
+    
     return
 
 #-----------------------------------------------------------------------------#
