@@ -619,6 +619,8 @@ class Solvers(object):
         w1 = self.u2w(u1)
         w2 = self.u2w(u2)
         
+        # Linear Reconstruction in the primitive variables
+        
         return inviscid_flux(nx,gamma,uL,uR,f,fL,fR)
     
     
