@@ -93,16 +93,24 @@ sqrt = np.sqrt
 #* converted to python by Luke McCulloch
 #*
 #********************************************************************************
-def roe():
+def roe(ucL, ucR, njk, num_flux,wsn):
     """
     3D Roe approximate Riemann Solver for 
     the flux across a face
+    
+     
+    ucL = np.zeros(5,float)         #conservative variables in 3D
+    ucR = np.zeros(5,float)         #conservative variables in 3D
+    njk = np.zeros(3,float)         #face normal in 3D
+    num_flux                        #Numerical viscous flux
+    wsn                             # max wave speed
     """
-    #
-    # 
-    #    self.ucL = np.zeros(5,float)       #conservative variables in 3D
-    #    self.ucR = np.zeros(5,float)       #conservative variables in 3D
-    #
+    
+    #Some constants
+    zero = 0.0
+    one = 1.0
+    two = 2.0
+    half = 0.5
 
 #-----------------------------------------------------------------------------#
 # Riemann solver: Roe's approximate Riemann solver
