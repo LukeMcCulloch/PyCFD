@@ -13,6 +13,7 @@ pi = np.pi
 
 from flux import roe
 from System2D import Grid
+from BoundaryConditions import BC_states
 
 nq = 4 # Euler system size
 
@@ -472,9 +473,36 @@ class Solvers(object):
             #
             # c = bcell, the cell having the boundary face j.
             #
-
-
-
+        for i, face in enumerate(self.mesh.boundaryList):
+            
+            v1 = face.nodes[0] # Left node of the face
+            v2 = face.nodes[1] # Right node of the face
+            
+            #Face midpoint at which we compute the flux.
+            xm,ym = face.center
+            
+            #Set limiter functions
+            if (self.use_limiter) :
+                phi1 = self.phi[c1.cid]
+                phi2 = self.phi[c2.cid]
+            else:
+                phi1 = 1.0
+                phi2 = 1.0
+                
+                
+            u1 = self.u[c1.cid] #Conservative variables at c1
+            self.gradw1 = self.gradw[c1.cid]
+            
+            self.unit_face_normal = face.normal_vector
+            
+            #Cell having a boundary face defined by the set of nodes j and j+1.
+            c1 = face.parentcell
+            
+            #---------------------------------------------------
+            # Get the right state (weak BC!)
+            get_right_state
+            
+            
         return
     
     
