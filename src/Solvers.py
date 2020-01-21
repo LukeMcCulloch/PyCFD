@@ -430,8 +430,8 @@ class Solvers(object):
             
             #  Add the flux multiplied by the magnitude of the directed area vector to c1.
 
-            self.res[c1.cid,:] = self.res[c1.cid,:]  +  self.num_flux * face.bface_nrml_mag
-            self.wsn[c1.cid] += self.wave_speed * face.bface_nrml_mag
+            self.res[c1.cid,:] = self.res[c1.cid,:]  +  self.num_flux * face.face_nrml_mag
+            self.wsn[c1.cid] += self.wave_speed * face.face_nrml_mag
 
         return
     

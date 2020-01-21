@@ -74,8 +74,8 @@ class Face(object):
         # Basic geometry
         #
         self.area = np.linalg.norm(self.nodes[1]-self.nodes[0])
-        self.normal_vector, self.bface_nrml_mag = self.compute_normal(normalize = True)
-        #self.normal_vector, self.bface_nrml_mag = self.compute_normalfancy(normalize = True)
+        self.normal_vector, self.face_nrml_mag = self.compute_normal(normalize = True)
+        #self.normal_vector, self.face_nrml_mag = self.compute_normalfancy(normalize = True)
         
     def compute_normalfancy(self, normalize=True):
         """
@@ -750,7 +750,7 @@ class Grid(object):
         vol = 0.
         for bound in self.boundaryList:
             mid = bound.center
-            vol += np.dot( mid,bound.normal_vector )*bound.bface_nrml_mag
+            vol += np.dot( mid,bound.normal_vector )*bound.face_nrml_mag
         return -0.5*vol
     
     def sum_volume_cell_sum(self):
