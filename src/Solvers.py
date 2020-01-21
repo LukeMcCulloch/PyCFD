@@ -442,6 +442,14 @@ class Solvers(object):
             self.res[c2.cid,:] = self.res[c2.cid,:]  -  self.num_flux * face.face_nrml_mag
             self.wsn[c2.cid] = self.wsn[c2.cid]    + self.wave_speed * face.face_nrml_mag
 
+            # End of Residual computation: interior faces
+            #--------------------------------------------------------------------------------
+
+
+
+
+
+
         return
     
     
