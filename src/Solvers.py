@@ -389,7 +389,7 @@ class Solvers(object):
         # 3. Add it to the residual for 1, and subtract it from the residual for 2.
         #
         #----------------------------------------------------------------------
-        for face in mesh.faceList:
+        for i,face in enumerate(mesh.faceList):
             adj_face = face.adjacentface
             
             c1 = face.parentcell     # Left cell of the face
@@ -419,7 +419,6 @@ class Solvers(object):
                 
             # Reconstruct the solution to the face midpoint and compute a numerical flux.
             # (reconstruction is implemented inside "interface_flux".
-            self.wsn = 0.0
             self.interface_flux(u1, u2, 
                                 self.gradw1, self.gradw2,
                                 unit_face_normal, #<- unit face normal
@@ -429,6 +428,11 @@ class Solvers(object):
                                 self.num_flux, self.wsn
                                 )
             
+            #  Add the flux multiplied by the magnitude of the directed area vector to c1.
+
+            self.res[c1.cid,:] = self.res[c1.cid,:]  +  self.num_flux * face.bface_nrml_mag
+            self.wsn[c1.cid] += self.wave_speed * face.bface_nrml_mag
+
         return
     
     
