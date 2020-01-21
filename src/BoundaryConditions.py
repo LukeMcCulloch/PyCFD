@@ -13,6 +13,23 @@ class BC_states(object):
     
     
     def get_right_state(self):
+        """
+        #
+        #
+        # ---------------------------------------------------------------------
+        #  Input: xb,yb = boundary face midpoint
+        #           ucL = Interior conservative variables (rho, rho*u, rho*v, rho*E)
+        #           njk = Outward boundary normal vector.
+        #           bc_state_type = BC name
+        # 
+        # Output:   ucb = Boundary state in conservative variables (rho, rho*u, rho*v, rho*E)
+        # ---------------------------------------------------------------------
+        #
+        # Note:    E = p/(gamma-1)/rho + 0.5*(u^2+v^2)
+        #       -> p = (gamma-1)*rho*E-0.5*rho*(u^2+v^2)
+        #
+        #
+        """
         return
     
     
