@@ -44,8 +44,16 @@ class BC_states(object):
         """
         #Local variables
         wL = np.zeros(4,float)
-        wb = np.zeros(4,float)
-        dummy =  np.zeros(4,float)
+        wb = np.zeros_like(wL)
+        dummy =  np.zeros_like(wL)
+        
+        #---------------------------------------------------------
+        # Get the primitive variables [rho,u,v,p] as input to
+        # the following subroutines, which return the boundary
+        # state in the primitive variables.
+        
+        wL = u2w(ucL)
+        
         return
     
     
