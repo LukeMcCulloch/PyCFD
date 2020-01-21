@@ -448,6 +448,31 @@ class Solvers(object):
 
 
 
+            #--------------------------------------------------------------------------------
+            #--------------------------------------------------------------------------------
+            #--------------------------------------------------------------------------------
+            #--------------------------------------------------------------------------------
+            #--------------------------------------------------------------------------------
+            # Residual computation: boundary faces:
+            #
+            # Close the residual by looping over boundary faces and distribute a contribution
+            # to the corresponding cell.
+            
+            # Boundary face j consists of nodes j and j+1.
+            #
+            #  Interior domain      /
+            #                      /
+            #              /\     o
+            #             /  \   /
+            #            / c1 \ /   Outside the domain
+            # --o-------o------o
+            #           j   |  j+1
+            #               |   
+            #               v Face normal for the face j.
+            #
+            # c = bcell, the cell having the boundary face j.
+            #
+
 
 
         return
