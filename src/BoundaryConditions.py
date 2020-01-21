@@ -33,13 +33,13 @@ class BC_states(object):
         
 
         #Input
-         real(p2)              , intent( in) :: xb, yb
-         real(p2), dimension(4), intent( in) :: ucL
-         real(p2), dimension(2), intent( in) :: njk
-         character(80),          intent( in) :: bc_state_type
+         float                  :: xb, yb
+         array((4,1),float)     :: ucL
+         array((2,1),float)     :: njk
+         string                 :: bc_state_type
         
         #Output
-         real(p2), dimension(4), intent(out) :: ucb
+         array((4,1),float)     :: ucb
         
         """
         #Local variables
