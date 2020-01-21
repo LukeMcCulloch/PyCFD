@@ -5,6 +5,7 @@ Created on Tue Jan 21 00:36:00 2020
 
 @author: lukemcculloch
 """
+import numpy as np
 
 class BC_states(object):
     
@@ -12,9 +13,9 @@ class BC_states(object):
         self.p2 = p2
     
     
-    def get_right_state(self):
+    def get_right_state(self, xb,yb,ucL,njk,bc_state_type, ucb):
         """
-        #
+        # ---------------------------------------------------------------------
         #
         # ---------------------------------------------------------------------
         #  Input: xb,yb = boundary face midpoint
@@ -29,7 +30,22 @@ class BC_states(object):
         #       -> p = (gamma-1)*rho*E-0.5*rho*(u^2+v^2)
         #
         #
+        
+
+        #Input
+         real(p2)              , intent( in) :: xb, yb
+         real(p2), dimension(4), intent( in) :: ucL
+         real(p2), dimension(2), intent( in) :: njk
+         character(80),          intent( in) :: bc_state_type
+        
+        #Output
+         real(p2), dimension(4), intent(out) :: ucb
+        
         """
+        #Local variables
+        wL = np.zeros(4,float)
+        wb = np.zeros(4,float)
+        dummy =  np.zeros(4,float)
         return
     
     
