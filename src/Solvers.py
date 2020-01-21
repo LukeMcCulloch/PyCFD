@@ -159,6 +159,9 @@ class Solvers(object):
         #------------------------------------------
         self.num_flux = np.zeros(4,float)
         
+        # local copies of data
+        self.unit_face_normal = np.zeros((2),float)
+        
         
         
     def solver_boot(self):
@@ -404,7 +407,7 @@ class Solvers(object):
             self.gradw1 = self.gradw[c1.cid]
             self.gradw2 = self.gradw[c2.cid]
             
-            unit_face_normal = face.normal_vector
+            self.unit_face_normal = face.normal_vector
             
             #Face midpoint at which we compute the flux.
             xm,ym = face.center
@@ -421,7 +424,7 @@ class Solvers(object):
             # (reconstruction is implemented inside "interface_flux".
             self.interface_flux(u1, u2, 
                                 self.gradw1, self.gradw2,
-                                unit_face_normal, #<- unit face normal
+                                self.unit_face_normal, #<- unit face normal
                                 c1.centroid,
                                 c2.centroid,
                                 xm, ym,
@@ -432,6 +435,12 @@ class Solvers(object):
 
             self.res[c1.cid,:] = self.res[c1.cid,:]  +  self.num_flux * face.face_nrml_mag
             self.wsn[c1.cid] += self.wave_speed * face.face_nrml_mag
+
+            #  Subtract the flux multiplied by the magnitude of the directed area vector from c2.
+            #  NOTE: Subtract because the outward face normal is -n for the c2.
+            
+            self.res[c2.cid,:] = self.res[c2.cid,:]  -  self.num_flux * face.face_nrml_mag
+            self.wsn[c2.cid] = self.wsn[c2.cid]    + self.wave_speed * face.face_nrml_mag
 
         return
     
