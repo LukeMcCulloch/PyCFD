@@ -5,6 +5,14 @@ Created on Fri Jan  3 21:15:20 2020
 
 @author: lukemcculloch
 """
+import weakref
+try:
+    from memory_profiler import profile
+    MEM_PROFILE = True
+except:
+    print 'please install memory_profiler'
+    MEM_PROFILE = False
+#
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches

@@ -5,6 +5,8 @@ Created on Fri Jan  3 15:35:53 2020
 @author: Luke.McCulloch
 """
 import weakref
+from memory_profiler import profile
+#
 import numpy as np
 import matplotlib.pyplot as plt
 
