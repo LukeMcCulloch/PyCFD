@@ -4,7 +4,7 @@ Created on Fri Jan  3 15:35:53 2020
 
 @author: Luke.McCulloch
 """
-
+import weakref
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -48,7 +48,8 @@ class Face(object):
     def __init__(self, nodes, parentcell, fid, 
                  nConserved=3):
         self.nodes = nodes
-        self.parentcell = parentcell
+        #self.parentcell = parentcell
+        self._parentcell = weakref.ref(parentcell) if parentcell else parentcell
         self.fid = fid
         self.adjacentface   = None
         #
@@ -76,6 +77,21 @@ class Face(object):
         self.area = np.linalg.norm(self.nodes[1]-self.nodes[0])
         self.normal_vector, self.face_nrml_mag = self.compute_normal(normalize = True)
         #self.normal_vector, self.face_nrml_mag = self.compute_normalfancy(normalize = True)
+        
+        
+    @property
+    def parentcell(self):
+        if not self._parentcell:
+            return self._parentcell
+        _parentcell = self._parentcell()
+        if _parentcell:
+            return _parentcell
+        else:
+            raise LookupError("Parent was destroyed")
+            
+    def __del__(self):
+        print("delete", self.fid)
+        
         
     def compute_normalfancy(self, normalize=True):
         """
