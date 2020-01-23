@@ -155,8 +155,8 @@ class BC_states(object):
         
         # Ensure zero normal velocity on average:
         
-        wb(2) = wL(2) - un*njk(1)
-        wb(3) = wL(3) - un*njk(2)
+        wb[1] = wL[1] - un*njk[0]
+        wb[2] = wL[2] - un*njk[1]
         return
     
     
