@@ -102,6 +102,21 @@ class BC_states(object):
         wb[3] = flowstate.p_inf
         return
     
+    
+    
+    #**************************************************************************
+    # Subsonic outflow (backpressure)
+    #**************************************************************************
+    def back_pressure(self, wL, wb):
+        flowstate = self.flowstate
+        #-------------------------
+        # Back pressure condition
+        wb    = wL
+        wb[3] = flowstate.p_inf  #<- fix the pressure
+        return
+    
+    
+    
     #**************************************************************************
     # Outflow supersonic
     #**************************************************************************
