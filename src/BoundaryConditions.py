@@ -164,6 +164,10 @@ class BC_states(object):
     # Outflow supersonic
     #**************************************************************************
     def outflow_supersonic(self):
+        #---------------------------------------------
+        # Take everything from the interior.
+        
+        wb = wL
         
         return
     
