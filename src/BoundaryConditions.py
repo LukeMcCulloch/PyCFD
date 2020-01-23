@@ -5,8 +5,8 @@ Created on Tue Jan 21 00:36:00 2020
 
 @author: lukemcculloch
 """
+from __future__ import print_function
 import numpy as np
-
 class BC_states(object):
     """Boundary Conditions (BC)
     """
@@ -70,12 +70,25 @@ class BC_states(object):
                     'dirichlet':[]
                     }
         
-        result = getattr(self, bc_state_type)(*vs_cases[bc_state_type])
+        getattr(self, bc_state_type)(*vs_cases[bc_state_type])
+        
+        #Dirichlet assumes the manufactured solution: so, compute wb for (xb,yb)
+        #compute_manufactured_sol_and_f_euler(xb,yb, wb,dummy)
+        
         
         
         return
     
 
+    #**************************************************************************
+    # Default
+    #**************************************************************************
+    def default(self):
+        print( "Boundary condition=",self.bc_state_type,"  not implemented." )
+        print( " --- Stop at get_right_state() in solver B.C.s" )
+        return
+    
+    
     #**************************************************************************
     # Outflow supersonic
     #**************************************************************************
