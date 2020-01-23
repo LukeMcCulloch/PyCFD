@@ -508,7 +508,7 @@ class Solvers(object):
             
             #---------------------------------------------------
             # Get the right state (weak BC!)
-            get_right_state
+            get_right_state()
             
             
         return

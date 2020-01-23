@@ -8,9 +8,12 @@ Created on Tue Jan 21 00:36:00 2020
 import numpy as np
 
 class BC_states(object):
+    """Boundary Conditions (BC)
+    """
     
-    def __init__(self, p2):
-        self.p2 = p2
+    def __init__(self, solver, p2):
+        self.solver = solver
+        
     
     
     def get_right_state(self, xb,yb,ucL,njk,bc_state_type, ucb):
@@ -42,6 +45,8 @@ class BC_states(object):
          array((4,1),float)     :: ucb
         
         """
+        
+        solver = self.solver
         #Local variables
         wL = np.zeros(4,float)
         wb = np.zeros_like(wL)
@@ -51,12 +56,29 @@ class BC_states(object):
         # Get the primitive variables [rho,u,v,p] as input to
         # the following subroutines, which return the boundary
         # state in the primitive variables.
+        wL = solver.u2w(ucL)
+
+        #---------------------------------------------------------
+        # Below, input is wLp = the primitive variabes [rho,u,v,p].
+        # Output is the right state in wRp = [rho,u,v,p].
         
-        wL = u2w(ucL)
+        vs_cases = {'freestream':[wb],
+                    'outflow_subsonic':[wL, wb],
+                    'symmetry_y':[wL,njk,wb],
+                    'slip_wall':[wL,njk, wb],
+                    'outflow_supersonic':[wL, wb],
+                    'dirichlet':[]
+                    }
+        
+        result = getattr(self, bc_state_type)(*vs_cases[bc_state_type])
+        
         
         return
     
-    
-    
+
+    #**************************************************************************
+    # Outflow supersonic
+    #**************************************************************************
+    @staticmethod
     def outflow_supersonic(self):
         return
