@@ -114,7 +114,30 @@ class BC_states(object):
         wb    = wL
         wb[3] = flowstate.p_inf  #<- fix the pressure
         return
-    
+
+
+        #**********************************************************************
+        # Symmetry w.r.t. x-axis, which is called y-symmetry here.
+        #
+        # Note: This is a simplified implementation similar to slip wall condition.
+        #**********************************************************************
+        def symmetry_y(self, wL,njk, wb):
+            #un = wL[1]*njk[0] + wL[2]*njk[1]  #not used
+
+            #-------------------------
+            # Define the right state:
+            
+            wb = wL
+            
+            #-------------------------
+            # Ensure zero y-momentum flux on average:
+            
+            wb[2] = 0.0
+            
+            # (ub,vb) = (uL,vL) - 2*un*njk -> 0.5[(ub,vb)+(uL,vL)]*njk = (0,0).
+            # Since rho_b = rhoL as set in the above, this means the momemtum
+            # in n direction is also zero.
+            return
     
     
     #**************************************************************************
