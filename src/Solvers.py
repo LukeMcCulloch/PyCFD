@@ -767,7 +767,15 @@ class Solvers(object):
         inviscid_flux(self.uL3d,self.uR3d,self.n12_3d, 
                       self.num_flux3d,wsn)
         return
+
+class FlowState(object):
     
+    def __init__(self, rho_inf, u_inf, v_inf, p_inf):
+        self.rho_inf = rho_inf
+        self.u_inf =  u_inf
+        self.v_inf = v_inf
+        self.p_inf = p_inf
+        return
     
 def show_LSQ_grad_area_plots():
     for cc in ssolve.cclsq[55:60]:

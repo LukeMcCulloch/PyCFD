@@ -11,8 +11,9 @@ class BC_states(object):
     """Boundary Conditions (BC)
     """
     
-    def __init__(self, solver, p2):
+    def __init__(self, solver, flowstate, p2):
         self.solver = solver
+        self.flowstate = flowstate
         
     
     
@@ -88,6 +89,18 @@ class BC_states(object):
         print( " --- Stop at get_right_state() in solver B.C.s" )
         return
     
+    
+    
+    #**************************************************************************
+    # Freestream
+    #**************************************************************************
+    def freestream(self, wb):
+        flowstate = self.flowstate
+        wb[0] = flowstate.rho_inf
+        wb[1] = flowstate.u_inf
+        wb[2] = flowstate.v_inf
+        wb[3] = flowstate.p_inf
+        return
     
     #**************************************************************************
     # Outflow supersonic
