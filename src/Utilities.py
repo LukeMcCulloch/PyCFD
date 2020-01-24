@@ -295,3 +295,15 @@ def normalized(vec, zeroError=False):
         raise ValueError("I don't know how to normalize a vector array with > 2 dimensions")
 
     return vec
+
+#******************************************************************************
+# Printing Utilities
+#
+def default_input( message, defaultVal ):
+    """http://stackoverflow.com/
+    questions/5403138/how-to-set-a-default-string-for-raw-input
+    """
+    if defaultVal:
+        return raw_input( "%s [%s]:" % (message,defaultVal) ) or defaultVal
+    else:
+        return raw_input( "%s " % (message) )

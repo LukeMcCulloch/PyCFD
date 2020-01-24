@@ -23,6 +23,8 @@ from flux import roe
 from System2D import Grid
 from BoundaryConditions import BC_states
 
+from Utilities import default_input
+
 nq = 4 # Euler system size
 
 class StencilLSQ(object):
@@ -104,6 +106,7 @@ class Solvers(object):
         
         #--------------------------------------
         # for the moment, default to simple initial conditions
+        self.bc_type = np.chararray(mesh.nBoundaries)
         self.BC = BC_states(solver = self, flowstate = FlowState() ) 
         
         self.second_order = True
@@ -309,7 +312,7 @@ class Solvers(object):
     # This subroutine solves an un steady problem by 2nd-order TVD-RK with a
     # global time step.
     #-------------------------------------------------------------------------#
-    def explicit_unsteady_solver(self, tfinal=None):
+    def explicit_unsteady_solver(self, tfinal=None, dt=.01):
         time = 0.0
         if tfinal is None:
             self.t_final = 1.0
@@ -327,7 +330,7 @@ class Solvers(object):
             
             #------------------------------------------------------------------
             # Increment the physical time and exit if the final time is reached
-            time += dt
+            time += dt #TBD dt was undefined
             
             #------------------------------------------------------------------
             # Update the solution by 2nd-order TVD-RK.: u^n is saved as u0(:,:)
@@ -516,7 +519,7 @@ class Solvers(object):
             self.BC.get_right_state(xm,ym, 
                                     u1, 
                                     self.unit_face_normal, 
-                                    self.bc_type[ib], 
+                                    self.bc_type[ib], #CBD (could be done): store these on the faces instead of seperate
                                     self.ub)
             
             
