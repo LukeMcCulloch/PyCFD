@@ -439,13 +439,14 @@ class Solvers(object):
                 
             # Reconstruct the solution to the face midpoint and compute a numerical flux.
             # (reconstruction is implemented inside "interface_flux".
-            self.interface_flux(u1, u2, 
-                                self.gradw1, self.gradw2,
-                                self.unit_face_normal, #<- unit face normal
-                                c1.centroid,
-                                c2.centroid,
-                                xm, ym,
-                                self.num_flux, self.wsn
+            self.interface_flux(u1, u2,                     #<- Left/right states
+                                self.gradw1, self.gradw2,   #<- Left/right same gradients
+                                self.unit_face_normal,      #<- unit face normal
+                                c1.centroid,                #<- Left cell centroid
+                                c2.centroid,                #<- right cell centroid
+                                xm, ym,                     #<- face midpoint
+                                phi1, phi1,                 #<- Limiter functions
+                                self.num_flux, self.wsn     #<- Output
                                 )
             
             #  Add the flux multiplied by the magnitude of the directed area vector to c1.
@@ -505,14 +506,14 @@ class Solvers(object):
                 phi1 = 1.0
                 phi2 = 1.0
                 
+            #Cell having a boundary face defined by the set of nodes j and j+1.
+            c1 = bface.parentcell
                 
             u1 = self.u[c1.cid] #Conservative variables at c1
             self.gradw1 = self.gradw[c1.cid]
             
             self.unit_face_normal[:] = bface.normal_vector[:]
             
-            #Cell having a boundary face defined by the set of nodes j and j+1.
-            c1 = bface.parentcell
             
             #---------------------------------------------------
             # Get the right state (weak BC!)
@@ -522,7 +523,23 @@ class Solvers(object):
                                     self.bc_type[ib], #CBD (could be done): store these on the faces instead of seperate
                                     self.ub)
             
+            self.gradw2 = self.gradw2 #<- Gradient at the right state. Give the same gradient for now.
             
+            
+            #---------------------------------------------------
+            # Compute a flux at the boundary face.
+            
+            self.interface_flux(u1, u2,                     #<- Left/right states
+                                self.gradw1, self.gradw2,   #<- Left/right same gradients
+                                self.unit_face_normal,      #<- unit face normal
+                                c1.centroid,                #<- Left cell centroid
+                                c2.centroid,                #<- right cell centroid
+                                xm, ym,                     #<- face midpoint
+                                phi1, phi1,                 #<- Limiter functions
+                                self.num_flux, self.wsn     #<- Output
+                                )
+            
+   
         return
     
     
