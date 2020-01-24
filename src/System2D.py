@@ -94,7 +94,7 @@ class Face(object):
         if _parentcell:
             return _parentcell
         else:
-            raise LookupError("Parent was destroyed")
+            raise LookupError("Parent cell was destroyed")
             
     def __del__(self):
         print("delete", self.fid)

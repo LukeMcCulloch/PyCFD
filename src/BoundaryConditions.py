@@ -6,14 +6,31 @@ Created on Tue Jan 21 00:36:00 2020
 @author: lukemcculloch
 """
 from __future__ import print_function
+#
+import weakref
+#
 import numpy as np
 class BC_states(object):
     """Boundary Conditions (BC)
     """
     
-    def __init__(self, solver, flowstate, p2):
-        self.solver = solver
+    def __init__(self, solver, flowstate):
+        #self.solver = solver
+        self._solver =  weakref.ref(solver) if solver else solver
         self.flowstate = flowstate
+        
+    @property
+    def solver(self):
+        if not self._solver:
+            return self._solver
+        _solver = self._solver()
+        if _solver:
+            return _solver
+        else:
+            raise LookupError("solver was destroyed")
+            
+    def __del__(self):
+        print("delete", self.fid)
         
     
     
@@ -163,7 +180,11 @@ class BC_states(object):
     #**************************************************************************
     # Outflow supersonic
     #**************************************************************************
-    def outflow_supersonic(self):
+    def outflow_supersonic(self, wb, wL):
+        """
+            wb = np.array(4, float)
+            wL = np.array(4, float)
+        """
         #---------------------------------------------
         # Take everything from the interior.
         

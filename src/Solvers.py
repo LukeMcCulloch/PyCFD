@@ -102,6 +102,10 @@ class Solvers(object):
         self.mesh = mesh
         self.dim = mesh.dim
         
+        #--------------------------------------
+        # for the moment, default to simple initial conditions
+        self.BC = BC_states(solver = self, flowstate = FlowState() ) 
+        
         self.second_order = True
         self.use_limiter = True
         
@@ -770,7 +774,7 @@ class Solvers(object):
 
 class FlowState(object):
     
-    def __init__(self, rho_inf, u_inf, v_inf, p_inf):
+    def __init__(self, rho_inf=1., u_inf=1., v_inf=1., p_inf=1.):
         self.rho_inf = rho_inf
         self.u_inf =  u_inf
         self.v_inf = v_inf
