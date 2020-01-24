@@ -171,6 +171,7 @@ class Solvers(object):
         #>> residual data
         #------------------------------------------
         self.num_flux = np.zeros(4,float)
+        self.ub = np.zeros(4,float)
         
         # local copies of data
         self.unit_face_normal = np.zeros((2),float)
@@ -420,7 +421,7 @@ class Solvers(object):
             self.gradw1 = self.gradw[c1.cid]
             self.gradw2 = self.gradw[c2.cid]
             
-            self.unit_face_normal = face.normal_vector
+            self.unit_face_normal[:] = face.normal_vector[:]
             
             #Face midpoint at which we compute the flux.
             xm,ym = face.center
@@ -485,13 +486,13 @@ class Solvers(object):
             #
             # c = bcell, the cell having the boundary face j.
             #
-        for i, face in enumerate(self.mesh.boundaryList):
+        for ib, bface in enumerate(self.mesh.boundaryList):
             
-            v1 = face.nodes[0] # Left node of the face
-            v2 = face.nodes[1] # Right node of the face
+            v1 = bface.nodes[0] # Left node of the face
+            v2 = bface.nodes[1] # Right node of the face
             
             #Face midpoint at which we compute the flux.
-            xm,ym = face.center
+            xm,ym = bface.center
             
             #Set limiter functions
             if (self.use_limiter) :
@@ -505,14 +506,18 @@ class Solvers(object):
             u1 = self.u[c1.cid] #Conservative variables at c1
             self.gradw1 = self.gradw[c1.cid]
             
-            self.unit_face_normal = face.normal_vector
+            self.unit_face_normal[:] = bface.normal_vector[:]
             
             #Cell having a boundary face defined by the set of nodes j and j+1.
-            c1 = face.parentcell
+            c1 = bface.parentcell
             
             #---------------------------------------------------
             # Get the right state (weak BC!)
-            get_right_state()
+            self.BC.get_right_state(xm,ym, 
+                                    u1, 
+                                    self.unit_face_normal, 
+                                    self.bc_type[ib], 
+                                    self.ub)
             
             
         return
