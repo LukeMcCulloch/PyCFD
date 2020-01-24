@@ -539,6 +539,20 @@ class Solvers(object):
                                 self.num_flux, self.wsn     #<- Output
                                 )
             
+            #  Add the flux multiplied by the magnitude of the directed area vector to c1.
+
+            self.res[c1.cid,:] = self.res[c1.cid,:]  +  self.num_flux * face.face_nrml_mag
+            self.wsn[c1.cid] += self.wave_speed * face.face_nrml_mag
+
+            #  Subtract the flux multiplied by the magnitude of the directed area vector from c2.
+            #  NOTE: Subtract because the outward face normal is -n for the c2.
+            
+            self.res[c2.cid,:] = self.res[c2.cid,:]  -  self.num_flux * face.face_nrml_mag
+            self.wsn[c2.cid] = self.wsn[c2.cid]    + self.wave_speed * face.face_nrml_mag
+
+            # End of Residual computation: interior faces
+            #--------------------------------------------------------------------------------
+
    
         return
     
