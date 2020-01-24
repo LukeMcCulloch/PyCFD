@@ -538,19 +538,22 @@ class Solvers(object):
                                 phi1, phi1,                 #<- Limiter functions
                                 self.num_flux, self.wsn     #<- Output
                                 )
+            #Note: No gradients available outside the domain, and use the gradient at cell c
+            #      for the right state. This does nothing to inviscid fluxes (see below) but
+            #      is important for viscous fluxes.
             
-            #  Add the flux multiplied by the magnitude of the directed area vector to c1.
+            #Note: Set right centroid = (xm,ym) so that the reconstruction from the right cell
+            #      that doesn't exist is automatically cancelled: wR=wb+gradw*(xm-xc2)=wb.
 
+
+            #---------------------------------------------------
+            #  Add the boundary contributions to the residual.
             self.res[c1.cid,:] = self.res[c1.cid,:]  +  self.num_flux * face.face_nrml_mag
             self.wsn[c1.cid] += self.wave_speed * face.face_nrml_mag
 
-            #  Subtract the flux multiplied by the magnitude of the directed area vector from c2.
-            #  NOTE: Subtract because the outward face normal is -n for the c2.
-            
-            self.res[c2.cid,:] = self.res[c2.cid,:]  -  self.num_flux * face.face_nrml_mag
-            self.wsn[c2.cid] = self.wsn[c2.cid]    + self.wave_speed * face.face_nrml_mag
+            # no c2 on the boundary
 
-            # End of Residual computation: interior faces
+            # End of Residual computation: exterior faces
             #--------------------------------------------------------------------------------
 
    
