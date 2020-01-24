@@ -22,8 +22,10 @@ pi = np.pi
 from flux import roe
 from System2D import Grid
 from BoundaryConditions import BC_states
+from Parameters import Parameters
 
 from Utilities import default_input
+
 
 nq = 4 # Euler system size
 
@@ -108,6 +110,9 @@ class Solvers(object):
         # for the moment, default to simple initial conditions
         self.bc_type = [] #np.zeros(mesh.nBoundaries, str)
         self.BC = BC_states(solver = self, flowstate = FlowState() ) 
+        
+        self.Parameters = Parameters()
+        
         
         self.second_order = True
         self.use_limiter = True
@@ -319,6 +324,13 @@ class Solvers(object):
         else:
             self.t_final = tfinal
         
+        #-----------------------------------------------------------------------------
+        #-----------------------------------------------------------------------------
+        # Physical time-stepping
+        #-----------------------------------------------------------------------------
+        #-----------------------------------------------------------------------------
+
+        
         while (time < self.t_final):
             #------------------------------------------------------------------
             # Compute the residual: res(i,:)
@@ -326,20 +338,27 @@ class Solvers(object):
             
             #------------------------------------------------------------------
             # Compute the global time step, dt. One dt for all cells.
-            self.compute_global_time_step()
+            dt = self.compute_global_time_step()
+            
+            #adjust time step?
+            #code here
             
             #------------------------------------------------------------------
             # Increment the physical time and exit if the final time is reached
             time += dt #TBD dt was undefined
             
-            #------------------------------------------------------------------
+            #-------------------------------------------------------------------
             # Update the solution by 2nd-order TVD-RK.: u^n is saved as u0(:,:)
             #  1. u^*     = u^n - (dt/vol)*Res(u^n)
             #  2. u^{n+1} = 1/2*(u^n + u^*) - 1/2*(dt/vol)*Res(u^*)
             
+            
             #-----------------------------
             #- 1st Stage of Runge-Kutta:
-            
+            #u0 = u
+            """
+                u is solution data -  conservative variables at the cell centers I think
+            """
         return
     
     
@@ -568,7 +587,15 @@ class Solvers(object):
     #
     #-------------------------------------------------------------------------#
     def compute_global_time_step(self):
-        return
+        CFL = self.Parameters.CFL
+        
+        #Initialize dt with the local time step at cell 1.
+        i = 1
+        assert(abs(self.wsn[i]) > 0.),'wsn time step initilization div by zero'
+        physical_time_step = CFL*self.mesh.cells[i].volume / ( 0.5*self.wsn[i] )
+        
+        
+        return physical_time_step
     
     
     #-------------------------------------------------------------------------#
