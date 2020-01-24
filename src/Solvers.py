@@ -106,7 +106,7 @@ class Solvers(object):
         
         #--------------------------------------
         # for the moment, default to simple initial conditions
-        self.bc_type = np.chararray(mesh.nBoundaries)
+        self.bc_type = [] #np.zeros(mesh.nBoundaries, str)
         self.BC = BC_states(solver = self, flowstate = FlowState() ) 
         
         self.second_order = True
