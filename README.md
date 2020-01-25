@@ -8,3 +8,6 @@ Some aspects of computational fluid dynamics, prototyped in Python
 
 1. NumPy
 2. matplotlib
+
+
+![LSQ gradient stencil at the cell colored in green](pics/stencil_57.pdf)
