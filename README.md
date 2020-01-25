@@ -10,4 +10,4 @@ Some aspects of computational fluid dynamics, prototyped in Python
 2. matplotlib
 
 
-![Unstructured stencil LSQ gradient reconstruction](https://raw.githubusercontent.com/LukeMcCulloch/PyCFD/master/pics/stencil_58.pdf)
+![Unstructured stencil LSQ gradient reconstruction](pics/stencil_58.pdf)
