@@ -29,12 +29,13 @@ An unstructured solver for the Euler equations on a 2D grid, prototyped in Pytho
 
 ![LSQ gradient stencil at the cell colored in green](pics/CarteasianCheckMesh.png)
 
+Normals, centroids, face centers, edges, and vertices shown.
 
 # Tri mesh
 
 ![LSQ gradient stencil at the cell colored in green](pics/TriangularCheckMesh.png)
 
-
+Normals, centroids, face centers, edges, and vertices shown.
 
 
 
