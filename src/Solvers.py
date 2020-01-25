@@ -65,7 +65,7 @@ class StencilLSQ(object):
     
     
     def plot_lsq_reconstruction(self, canvas = None,
-                                alpha = .1, saveit = False):
+                                alpha = .1, saveit = True):
         if canvas is None:
             fig, ax = plt.subplots()
             ax.axis('equal')
@@ -83,13 +83,13 @@ class StencilLSQ(object):
         plt.legend(handles=[patch])
         
         if saveit:
-            mytitle = 'stencil_'+str(self.cell.cid)
+            mytitle = '../pics/stencil_'+str(self.cell.cid)
             
-            self.save_pdf(filename=mytitle, ftype = '.pdf')
+            self.save_image(filename=mytitle, ftype = '.png')
         return
     
     
-    def save_pdf(self, filename = None, ftype = '.pdf', closeit=True):
+    def save_image(self, filename = None, ftype = '.pdf', closeit=True):
         """ save pdf file.
         No file extension needed.
         """
