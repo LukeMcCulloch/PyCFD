@@ -82,8 +82,8 @@ class Face(object):
         # Basic geometry
         #
         self.area = np.linalg.norm(self.nodes[1]-self.nodes[0])
-        self.normal_vector, self.face_nrml_mag = self.compute_normal(normalize = True)
-        #self.normal_vector, self.face_nrml_mag = self.compute_normalfancy(normalize = True)
+        self.normal_vector, self.face_nrml_mag = self.compute_normal(normalizeIt = True)
+        #self.normal_vector, self.face_nrml_mag = self.compute_normalfancy(normalizeIt = True)
         
         
     @property
@@ -100,7 +100,7 @@ class Face(object):
         print("delete", self.fid)
         
         
-    def compute_normalfancy(self, normalize=True):
+    def compute_normalfancy(self, normalizeIt=True):
         """
         cross vector with 0 in x2 dir
         with vector with 1 in the x2 dir
@@ -122,14 +122,14 @@ class Face(object):
         return n3[:-1]
         
                       
-    def compute_normal(self, normalize=True):
+    def compute_normal(self, normalizeIt=True):
         """ 2D specific face normals
         normalized(x1,-x0)
         """
         vec = self.nodes[1] - self.nodes[0]
         vec = np.asarray([vec[1],-vec[0]])
         
-        if normalize:
+        if normalizeIt:
             vec, nmag =  normalize2D(vec,return_mag=True)
             #vec =  normalize2D(vec,return_mag=False)
             return vec, nmag

@@ -30,7 +30,7 @@ class BC_states(object):
             raise LookupError("solver was destroyed")
             
     def __del__(self):
-        print("delete", self.fid)
+        print("delete", 'BC_state')
         
     
     
