@@ -358,16 +358,29 @@ class Solvers(object):
             
             #-----------------------------
             #- 1st Stage of Runge-Kutta:
-            #u0 = u
-            """
-                u is solution data -  conservative variables at the cell centers I think
-            """
+            #u0 = u: is solution data -  conservative variables at the cell centers I think
+            
             self.u0 = self.u
             # slow test first
             for i in range(self.mesh.nCells):
                 self.u[i,:] = self.u0[i,:] - \
-                                (dt/self.mesh.cell[i].vol) * self.res[i,:] #This is R.K. intermediate u*.
-                self.w[i.:] = self.u2w( self.u[i,:]  )
+                                (dt/self.mesh.cell[i].volume) * self.res[i,:] #This is R.K. intermediate u*.
+                self.w[i,:] = self.u2w( self.u[i,:]  )
+                
+                
+            #-----------------------------
+            #- 2nd Stage of Runge-Kutta:
+                
+            self.compute_residual()
+            
+            for i in range(self.mesh.nCells):
+                self.u[i,:] = 0.5*( self.u[i,:] + self.u0[i,:] )  - \
+                                0.5*(dt/self.mesh.cells[i].volume) * self.res[i,:]
+                self.w[i,:] = self.u2w( self.u[i,:]  )
+            
+            
+            
+            
         return
     
     
