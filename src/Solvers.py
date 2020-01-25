@@ -121,7 +121,9 @@ class Solvers(object):
         self.u = np.zeros((mesh.nCells,nq),float) # conservative variables at cells/nodes
         self.w = np.zeros((mesh.nCells,nq),float) # primative variables at cells/nodes
         self.gradw = np.zeros((mesh.nCells,nq,self.dim),float) # gradients of w at cells/nodes.
-        # 
+        #
+        self.u0 = np.zeros((mesh.nCells,nq),float) #work array
+        #
         # solution convergence
         self.res = np.zeros((mesh.nCells,nq),float) #residual vector
         self.res_norm = np.zeros((nq,1),float)
@@ -131,7 +133,8 @@ class Solvers(object):
         self.gradw2 = np.zeros((nq,self.dim),float)
         
         # update (pseudo) time step data
-        self.u0 = np.zeros((mesh.nCells,nq),float)
+        #self.u0 = np.zeros((mesh.nCells,nq),float)
+        self.dtau = np.zeros((mesh.nCells),float)
         
         # accessor integers for clarity
         self.ir = 0 # density
@@ -359,6 +362,12 @@ class Solvers(object):
             """
                 u is solution data -  conservative variables at the cell centers I think
             """
+            self.u0 = self.u
+            # slow test first
+            for i in range(self.mesh.nCells):
+                self.u[i,:] = self.u0[i,:] - \
+                                (dt/self.mesh.cell[i].vol) * self.res[i,:] #This is R.K. intermediate u*.
+                self.w[i.:] = self.u2w( self.u[i,:]  )
         return
     
     
