@@ -17,7 +17,7 @@ An unstructured solver for the Euler equations on a 2D grid, prototyped in Pytho
 
 
 # Optional
-1. memory_profiler (optional)
+1. memory_profile
 
 # Some implementation details pictured
 
