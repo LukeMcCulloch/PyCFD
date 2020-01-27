@@ -1,0 +1,24 @@
+&input_parameters
+
+        project_name = "airfoil"
+  steady_or_unsteady = "steady"
+   generate_tec_file = T
+   generate_vtk_file = T
+
+              M_inf = 0.80
+              aoa   = 1.25
+
+      compute_te_mms = F
+
+ inviscid_flux       = "roe"
+ eig_limiting_factor = 0.2, 0.2, 0.2, 0.2, 0.2
+
+                 CFL = 0.9
+       max_iteration = 15000
+           tolerance = 1.0e-05
+
+        second_order = T
+         use_limiter = T
+
+/
+
