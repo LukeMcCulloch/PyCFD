@@ -1,0 +1,5 @@
+ Boundary Segment  Boundary Condition
+                1          dirichlet  !Left
+                2          dirichlet  !Bottom
+                3          dirichlet  !Right
+                4          dirichlet  !Top

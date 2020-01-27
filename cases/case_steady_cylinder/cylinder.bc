@@ -1,0 +1,4 @@
+Boundary Part  Boundary Condition
+            1  slip_wall         !cylinder
+            2  freestream        ! inflow ( left part of outer boundary)
+            3  outflow_subsonic  !outflow (right part of outer boundary)

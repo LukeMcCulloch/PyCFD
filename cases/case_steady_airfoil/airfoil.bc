@@ -1,0 +1,3 @@
+Boundary Part  Boundary Condition
+            1  slip_wall         !airfoil
+            2  freestream        !farfield

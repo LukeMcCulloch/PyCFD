@@ -1,0 +1,5 @@
+ Boundary Segment  Boundary Condition
+                1          freestream  !Left
+                2          freestream  !Bottom
+                3          freestream  !Right
+                4          freestream  !Top
