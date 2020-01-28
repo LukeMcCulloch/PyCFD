@@ -65,7 +65,7 @@ class StencilLSQ(object):
     
     
     def plot_lsq_reconstruction(self, canvas = None,
-                                alpha = .1, saveit = True):
+                                alpha = .1, saveit = False):
         if canvas is None:
             fig, ax = plt.subplots()
             ax.axis('equal')
