@@ -11,7 +11,9 @@ from FileTools import GetLines
 
 def DataHandler(object):
     
-    def __init__(self, project_name,):
+    def __init__(self, project_name, path_to_inputs_folder):
+        
+        self.path_to_inputs_folder = path_to_inputs_folder
         
         #----------------------------------------------------------
         # Input grid file (.ugrid):
@@ -32,5 +34,7 @@ def DataHandler(object):
         #----------------------------------------------------------
         # Output: plot file (ASCII file)
         self.filename_plot_hist = project_name + "._plot_hist.dat"
+        
+        print(" End of file names setup..... ")
         
         pass
