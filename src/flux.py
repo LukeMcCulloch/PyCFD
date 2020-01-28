@@ -93,7 +93,7 @@ sqrt = np.sqrt
 #* converted to python by Luke McCulloch
 #*
 #********************************************************************************
-def roe(ucL, ucR, njk, num_flux,wsn):
+def roe(ucL, ucR, njk, num_flux,wsn, gamma = 1.4):
     """
     3D Roe approximate Riemann Solver for 
     the flux across a face
@@ -124,8 +124,8 @@ def roe(ucL, ucR, njk, num_flux,wsn):
     rhoL, rhoR, pL, pR      = 0.,0.,0.,0.           # Pimitive variables.
     qnL, qnR                = 0.,0.                 # Normal velocities
     aL, aR, HL, HR          = 0.,0.,0.,0.           # Speed of sound, Total enthalpy
-    fL                      = 0.                    # Physical flux evaluated at ucL
-    fR                      = 0.                    # Physical flux evaluated at ucR
+    fL                      = np.zeros(5,float)     # Physical flux evaluated at ucL
+    fR                      = np.zeros(5,float)     # Physical flux evaluated at ucR
     
     RT                      = 0.                    # RT = sqrt(rhoR/rhoL)
     rho,u,v,w,H,a,qn        = 0.,0.,0.,0.,0.,0.,0.  # Roe-averages
@@ -137,7 +137,10 @@ def roe(ucL, ucR, njk, num_flux,wsn):
     ws      = np.zeros(4,float)     # Wave speeds
     dws     = np.zeros(4,float)     # Width of a parabolic fit for entropy fix 
     R       = np.zeros((5,4),float) # Right-eigenvector matrix 
-    diss    = np.zeros(4,float)     # Dissipation term
+    diss    = np.zeros(5,float)     # Dissipation term
+    
+    #eigen limiter
+    eig_limiting_factor = np.asarray([ 0.1, 0.1, 0.1, 0.1, 0.1 ]) #eigenvalue limiting factor
     
     # Face normal vector (unit vector)
     nx,ny,nz = njk
@@ -224,9 +227,11 @@ def roe(ucL, ucR, njk, num_flux,wsn):
     #             or apply very small limiting to entropy and shear waves.
     #
     # Note: ws(1) and ws(2) are the nonlinear waves.
-    dws[:] = eig_limiting_factor[:]*a
-    if ( ws[i] < dws[i] ): 
-        ws[i] = half * ( ws[i]*ws[i]/dws[i]+dws[i] )
+    #dws[:] = eig_limiting_factor[:-1]*a
+    for i in range(4):
+        dws[i] = eig_limiting_factor[i]*a
+        if ( ws[i] < dws[i] ): 
+            ws[i] = half * ( ws[i]*ws[i]/dws[i]+dws[i] )
     
     #np.where( ws<dws, ws, half * ( ws[i]*ws[i]/dws[i]+dws[i] ) )
         
@@ -281,7 +286,7 @@ def roe(ucL, ucR, njk, num_flux,wsn):
     wsn = abs(qn) + a
         
         
-    return
+    return num_flux, wsn
 
 
 #-----------------------------------------------------------------------------#

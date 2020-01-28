@@ -133,7 +133,7 @@ class Solvers(object):
         
         #--------------------------------------
         # for the moment, default to simple initial conditions
-        self.bc_type = [] #np.zeros(mesh.nBoundaries, str)
+        self.bc_type = ["freestream" for el in range(mesh.nBoundaries)] #np.zeros(mesh.nBoundaries, str)
         self.BC = BC_states(solver = self, flowstate = FlowState() ) 
         
         self.Parameters = Parameters()
@@ -208,6 +208,7 @@ class Solvers(object):
         #------------------------------------------
         self.num_flux = np.zeros(4,float)
         self.ub = np.zeros(4,float)
+        self.wave_speed = 0.
         
         # local copies of data
         self.unit_face_normal = np.zeros((2),float)
@@ -482,86 +483,91 @@ class Solvers(object):
         #
         #----------------------------------------------------------------------
         for i,face in enumerate(mesh.faceList):
-            adj_face = face.adjacentface
-            
-            c1 = face.parentcell     # Left cell of the face
-            c2 = adj_face.parentcell # Right cell of the face
-            
-            v1 = face.nodes[0] # Left node of the face
-            v2 = face.nodes[1] # Right node of the face
-            
-            u1 = self.u[c1.cid] #Conservative variables at c1
-            u2 = self.u[c2.cid] #Conservative variables at c2
-            
-            self.gradw1 = self.gradw[c1.cid]
-            self.gradw2 = self.gradw[c2.cid]
-            
-            self.unit_face_normal[:] = face.normal_vector[:]
-            
-            #Face midpoint at which we compute the flux.
-            xm,ym = face.center
-            
-            #Set limiter functions
-            if (self.use_limiter) :
-                phi1 = self.phi[c1.cid]
-                phi2 = self.phi[c2.cid]
+            #TODO: make sure boundary faces are not in the 
+            # main face list
+            if face in self.mesh.boundaryList:
+                pass
             else:
-                phi1 = 1.0
-                phi2 = 1.0
+                adj_face = face.adjacentface
                 
-            # Reconstruct the solution to the face midpoint and compute a numerical flux.
-            # (reconstruction is implemented inside "interface_flux".
-            self.interface_flux(u1, u2,                     #<- Left/right states
-                                self.gradw1, self.gradw2,   #<- Left/right same gradients
-                                self.unit_face_normal,      #<- unit face normal
-                                c1.centroid,                #<- Left cell centroid
-                                c2.centroid,                #<- right cell centroid
-                                xm, ym,                     #<- face midpoint
-                                phi1, phi1,                 #<- Limiter functions
-                                self.num_flux, self.wsn     #<- Output
-                                )
-            
-            #  Add the flux multiplied by the magnitude of the directed area vector to c1.
-
-            self.res[c1.cid,:] = self.res[c1.cid,:]  +  self.num_flux * face.face_nrml_mag
-            self.wsn[c1.cid] += self.wave_speed * face.face_nrml_mag
-
-            #  Subtract the flux multiplied by the magnitude of the directed area vector from c2.
-            #  NOTE: Subtract because the outward face normal is -n for the c2.
-            
-            self.res[c2.cid,:] = self.res[c2.cid,:]  -  self.num_flux * face.face_nrml_mag
-            self.wsn[c2.cid] = self.wsn[c2.cid]    + self.wave_speed * face.face_nrml_mag
-
-            # End of Residual computation: interior faces
-            #--------------------------------------------------------------------------------
-
-
-
-
-            #--------------------------------------------------------------------------------
-            #--------------------------------------------------------------------------------
-            #--------------------------------------------------------------------------------
-            #--------------------------------------------------------------------------------
-            #--------------------------------------------------------------------------------
-            # Residual computation: boundary faces:
-            #
-            # Close the residual by looping over boundary faces and distribute a contribution
-            # to the corresponding cell.
-            
-            # Boundary face j consists of nodes j and j+1.
-            #
-            #  Interior domain      /
-            #                      /
-            #              /\     o
-            #             /  \   /
-            #            / c1 \ /   Outside the domain
-            # --o-------o------o
-            #           j   |  j+1
-            #               |   
-            #               v Face normal for the face j.
-            #
-            # c = bcell, the cell having the boundary face j.
-            #
+                c1 = face.parentcell     # Left cell of the face
+                c2 = adj_face.parentcell # Right cell of the face
+                
+                v1 = face.nodes[0] # Left node of the face
+                v2 = face.nodes[1] # Right node of the face
+                
+                u1 = self.u[c1.cid] #Conservative variables at c1
+                u2 = self.u[c2.cid] #Conservative variables at c2
+                
+                self.gradw1 = self.gradw[c1.cid]
+                self.gradw2 = self.gradw[c2.cid]
+                
+                self.unit_face_normal[:] = face.normal_vector[:]
+                
+                #Face midpoint at which we compute the flux.
+                xm,ym = face.center
+                
+                #Set limiter functions
+                if (self.use_limiter) :
+                    phi1 = self.phi[c1.cid]
+                    phi2 = self.phi[c2.cid]
+                else:
+                    phi1 = 1.0
+                    phi2 = 1.0
+                    
+                    
+                # Reconstruct the solution to the face midpoint and compute a numerical flux.
+                # (reconstruction is implemented inside "interface_flux".
+                self.num_flux, self.wsn = self.interface_flux(u1, u2,                     #<- Left/right states
+                                                              self.gradw1, self.gradw2,   #<- Left/right same gradients
+                                                              self.unit_face_normal,      #<- unit face normal
+                                                              c1.centroid,                #<- Left cell centroid
+                                                              c2.centroid,                #<- right cell centroid
+                                                              xm, ym,                     #<- face midpoint
+                                                              phi1, phi1,                 #<- Limiter functions
+                                                              )
+                
+                #  Add the flux multiplied by the magnitude of the directed area vector to c1.
+    
+                self.res[c1.cid,:] = self.res[c1.cid,:]  +  self.num_flux * face.face_nrml_mag
+                self.wsn[c1.cid] += self.wave_speed * face.face_nrml_mag
+    
+                #  Subtract the flux multiplied by the magnitude of the directed area vector from c2.
+                #  NOTE: Subtract because the outward face normal is -n for the c2.
+                
+                self.res[c2.cid,:] = self.res[c2.cid,:]  -  self.num_flux * face.face_nrml_mag
+                self.wsn[c2.cid] = self.wsn[c2.cid]    + self.wave_speed * face.face_nrml_mag
+    
+                # End of Residual computation: interior faces
+                #--------------------------------------------------------------------------------
+    
+    
+    
+    
+                #--------------------------------------------------------------------------------
+                #--------------------------------------------------------------------------------
+                #--------------------------------------------------------------------------------
+                #--------------------------------------------------------------------------------
+                #--------------------------------------------------------------------------------
+                # Residual computation: boundary faces:
+                #
+                # Close the residual by looping over boundary faces and distribute a contribution
+                # to the corresponding cell.
+                
+                # Boundary face j consists of nodes j and j+1.
+                #
+                #  Interior domain      /
+                #                      /
+                #              /\     o
+                #             /  \   /
+                #            / c1 \ /   Outside the domain
+                # --o-------o------o
+                #           j   |  j+1
+                #               |   
+                #               v Face normal for the face j.
+                #
+                # c = bcell, the cell having the boundary face j.
+                #
         for ib, bface in enumerate(self.mesh.boundaryList):
             
             v1 = bface.nodes[0] # Left node of the face
@@ -589,6 +595,7 @@ class Solvers(object):
             
             #---------------------------------------------------
             # Get the right state (weak BC!)
+            print 'ib = ',ib
             self.BC.get_right_state(xm,ym, 
                                     u1, 
                                     self.unit_face_normal, 
@@ -601,15 +608,14 @@ class Solvers(object):
             #---------------------------------------------------
             # Compute a flux at the boundary face.
             
-            self.interface_flux(u1, u2,                     #<- Left/right states
-                                self.gradw1, self.gradw2,   #<- Left/right same gradients
-                                self.unit_face_normal,      #<- unit face normal
-                                c1.centroid,                #<- Left cell centroid
-                                c2.centroid,                #<- right cell centroid
-                                xm, ym,                     #<- face midpoint
-                                phi1, phi1,                 #<- Limiter functions
-                                self.num_flux, self.wsn     #<- Output
-                                )
+            self.num_flux, self.wsn = self.interface_flux(u1, u2,                     #<- Left/right states
+                                                          self.gradw1, self.gradw2,   #<- Left/right same gradients
+                                                          self.unit_face_normal,      #<- unit face normal
+                                                          c1.centroid,                #<- Left cell centroid
+                                                          c2.centroid,                #<- right cell centroid
+                                                          xm, ym,                     #<- face midpoint
+                                                          phi1, phi1,                 #<- Limiter functions
+                                                          )
             #Note: No gradients available outside the domain, and use the gradient at cell c
             #      for the right state. This does nothing to inviscid fluxes (see below) but
             #      is important for viscous fluxes.
@@ -728,9 +734,9 @@ class Solvers(object):
                 wmax = self.w[cell.cid,ivar]
                 
                 #Loop over LSQ neighbors and find min and max
-                for nghbr_cell_cid in self.cclsq[i].nghbr_lsq:
-                    wmin = min(wmin, self.w[nghbr_cell_cid,ivar])
-                    wmax = max(wmax, self.w[nghbr_cell_cid,ivar])
+                for nghbr_cell in self.cclsq[i].nghbr_lsq:
+                    wmin = min(wmin, self.w[nghbr_cell.cid,ivar])
+                    wmax = max(wmax, self.w[nghbr_cell.cid,ivar])
                 
                 #----------------------------------------------------
                 # Compute phi to enforce maximum principle at vertices (MLP)
@@ -836,18 +842,18 @@ class Solvers(object):
         for ivar in range(nq):
             
             #compute gradients in all cells
-            for cell in self.mesh.cells:
-                i = cell.cid
+            for i, cell in enumerate(self.mesh.cells):
+                ci = cell.cid
                 
-                wi = self.w[i, ivar] #solution at this cell
+                wi = self.w[ci, ivar] #solution at this cell
                 
                 #loop nieghbors
-                for k in self.cclsq[i].nnghbrs_lsq:
-                    nghbr_cell = self.cclsq[i].nghbr_lsq[k]
-                    wk = self.w[nghbr_cell,ivar]    #Solution at the neighbor cell.
+                for k in range(self.cclsq[ci].nnghbrs_lsq):
+                    nghbr_cell = self.cclsq[ci].nghbr_lsq[k]
+                    wk = self.w[nghbr_cell.cid,ivar]    #Solution at the neighbor cell.
                     
-                    self.gradw[i,ivar,0] = self.gradw[i,ivar,0] + self.cclsq[i].cx[k]*(wk-wi)
-                    self.gradw[i,ivar,1] = self.gradw[i,ivar,1] + self.cclsq[i].cy[k]*(wk-wi)
+                    self.gradw[ci,ivar,0] = self.gradw[ci,ivar,0] + self.cclsq[ci].cx[k]*(wk-wi)
+                    self.gradw[ci,ivar,1] = self.gradw[ci,ivar,1] + self.cclsq[ci].cy[k]*(wk-wi)
         return
     
     
@@ -855,13 +861,19 @@ class Solvers(object):
                        u1, u2, 
                        gradw1, gradw2, 
                        n12,                 # Directed area vector (unit vector)
-                       xc1, yc1,            # left centroid
-                       xc2, yc2,            # right centroid
+                       C1,            # left centroid
+                       C2,            # right centroid
                        xm, ym,              # face midpoint
                        phi1, phi2,          # limiter
-                       num_flux,            # numerical flux (output)
-                       wsn                  # max wave speed at face 
                        ):
+        """
+        outputs:
+            num_flux,            # numerical flux (output)
+            wsn                  # max wave speed at face 
+        """
+        
+        xc1, yc1 = C1
+        xc2, yc2 = C2
         zero = 0.0
         inviscid_flux = roe
         
@@ -923,9 +935,10 @@ class Solvers(object):
         #  (1) Roe flux
         #------------------------------------------------------------
         #return inviscid_flux(nx,gamma,uL,uR,f,fL,fR)
-        inviscid_flux(self.uL3d,self.uR3d,self.n12_3d, 
-                      self.num_flux3d,wsn)
-        return
+        num_flux, wsn = inviscid_flux(self.uL3d,self.uR3d,self.n12_3d, 
+                                 self.num_flux3d,self.wsn,self.gamma)
+        return num_flux, wsn
+        
     
     def initial_condition_vortex(self):
         """
@@ -1014,33 +1027,40 @@ class TestInviscidVortex(object):
         # up a level
         uplevel = os.path.join(os.path.dirname( os.getcwd() ))
         path2vortex = uplevel+'\\cases\case_unsteady_vortex'
-        self.DataHandler = DataHandler(project_name = '',
+        self.DHandler = DataHandler(project_name = 'vortex',
                                        path_to_inputs_folder = path2vortex)
+        
+        
         pass
     
 
 if __name__ == '__main__':
     gd = Grid(type_='rect',m=10,n=10,
               winding='ccw')
-    self = Grid(type_='tri',m=10,n=10,
+    mesh = Grid(type_='tri',m=10,n=10,
               winding='ccw')
     
-    cell = self.cellList[44]
+    cell = mesh.cellList[44]
     face = cell.faces[0]
     
     #cell.plot_cell()
     
-    ssolve = Solvers(mesh = self)
+    self = Solvers(mesh = mesh)
     
     #cc = ssolve.cclsq[33]
     #cc.plot_lsq_reconstruction()
     
-    show_LSQ_grad_area_plots()
+    
+    #----------------------------
+    # plot LSQ gradient stencils
+    #show_LSQ_grad_area_plots()
     
     
     # cc = ssolve.cclsq[57]
     # cc.plot_lsq_reconstruction()
     # cell = cc.cell
     # cell.plot_cell()
+    
+    test_vortex = TestInviscidVortex()
     
     

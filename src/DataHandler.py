@@ -9,7 +9,7 @@ Created on Mon Jan 27 22:55:46 2020
 from FileTools import GetLines
 
 
-def DataHandler(object):
+class DataHandler(object):
     
     def __init__(self, project_name, path_to_inputs_folder):
         
@@ -40,3 +40,7 @@ def DataHandler(object):
         print(" End of file names setup..... ")
         
         pass
+    
+    def readinput(self):
+        self.ilines = GetLines(directory = self.path_to_inputs_folder,filename = 'input.nml')
+        return
