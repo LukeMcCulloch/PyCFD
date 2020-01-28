@@ -651,13 +651,45 @@ class Solvers(object):
     def u2w(self, u):
         w = np.zeros((nq),float)
         
-        w[self.ir] = u[0]
-        w[self.iu] = u[1]/u[0]
-        w[self.iv] = u[2]/u[0]
-        w[self.ip] = (self.gamma-1.0)*( u[3] - \
+        iu = self.iu
+        iv = self.iv
+        ir = self.ir
+        ip = self.ip
+        
+        w[ir] = u[0]
+        w[iu] = u[1]/u[0]
+        w[iv] = u[2]/u[0]
+        w[ip] = (self.gamma-1.0)*( u[3] - \
                                        0.5*w[0]*(w[1]*w[1] + w[2]*w[2]) )
         return w
     
+    #-------------------------------------------------------------------------#
+    #
+    # compute u from w
+    # ------------------------------------------------------------------------#
+    #  Input:  w =    primitive variables (rho,     u,     v,     p)
+    # Output:  u = conservative variables (rho, rho*u, rho*v, rho*E)
+    # ------------------------------------------------------------------------#
+    #
+    # Note:    E = p/(gamma-1)/rho + 0.5*(u^2+v^2)
+    #
+    #-------------------------------------------------------------------------#
+    def w2u(self, w):
+        
+        u = np.zeros((nq),float)
+        
+        gamma = self.gamma
+        
+        iu = self.iu
+        iv = self.iv
+        ir = self.ir
+        ip = self.ip
+        
+        u[0] = w[ir]
+        u[1] = w[ir]*w[iu]
+        u[2] = w[ir]*w[iv]
+        u[3] = w[ip]/(gamma-1.0)+0.5*w[ir]*(w[iu]*w[iu]+w[iv]*w[iv])
+        return u
     
     
     #**************************************************************************
@@ -900,12 +932,13 @@ class Solvers(object):
         y0      = -0.5*GridLen
         K       =  5.0
         alpha   =  1.0
+        gamma   = self.gamma
         
         # Set free stream values (the input Mach number is not used in this test).
         self.rho_inf = 1.0
         self.u_inf = 2.0
         self.v_inf = 2.0
-        self.p_inf = 1.0/self.gamma
+        self.p_inf = 1.0/gamma
         
         # Note: Speed of sound a_inf is sqrt(gamma*p_inf/rho_inf) = 1.0.
         for i, cell in enumerate(self.mesh.cells):
@@ -914,7 +947,17 @@ class Solvers(object):
             y = cell.yc - y0
             r = np.sqrt(x**2 + y**2)
             
+            self.w_initial[self.iu] =  self.u_inf - K/(2.0*pi)*y*np.exp(alpha*0.5*(1.-r**2))
+            self.w_initial[self.iv] =  self.v_inf + K/(2.0*pi)*x*np.exp(alpha*0.5*(1.-r**2))
+            temperature =    1.0 - K*(gamma-1.0)/(8.0*alpha*pi**2)*np.exp(alpha*(1.-r**2))
+            self.w_initial[self.ir] = self.rho_inf*temperature**(  1.0/(gamma-1.0)) #Density
+            self.w_initial[self.ip] = self.p_inf  *temperature**(gamma/(gamma-1.0)) #Pressure
             
+            #Store the initial solution
+            self.w[i,:] = self.w_initial[:]
+            
+            # Compute and store conservative variables
+            self.u[i,:] = self.w2u( self.w[i,:] )
             
         return
 
