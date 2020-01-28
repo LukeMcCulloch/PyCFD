@@ -103,6 +103,14 @@ class StencilLSQ(object):
     
 
 class Solvers(object):
+    """
+      2D Euler/NS equations = 4 equations:
+     
+      (1)continuity
+      (2)x-momentum
+      (3)y-momentum
+      (4)energy
+    """
     def __init__(self, mesh):
         self.mesh = mesh
         self.dim = mesh.dim
