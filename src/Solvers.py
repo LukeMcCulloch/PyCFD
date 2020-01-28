@@ -992,7 +992,7 @@ def show_ont_quad_cell():
 
 
 
-class TestInvicidVortex(object):
+class TestInviscidVortex(object):
     
     def __init__(self):
         pass
