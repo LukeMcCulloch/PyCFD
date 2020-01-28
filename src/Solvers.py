@@ -25,6 +25,7 @@ from BoundaryConditions import BC_states
 from Parameters import Parameters
 
 from Utilities import default_input
+from DataHandler import DataHandler
 
 
 nq = 4 # Euler system size
@@ -893,6 +894,7 @@ def show_ont_quad_cell():
     cell = cc.cell
     cell.plot_cell()
     return
+
 
 
 class TestInvicidVortex(object):
