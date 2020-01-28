@@ -518,7 +518,8 @@ class Solvers(object):
                     
                 # Reconstruct the solution to the face midpoint and compute a numerical flux.
                 # (reconstruction is implemented inside "interface_flux".
-                self.num_flux, self.wsn = self.interface_flux(u1, u2,                     #<- Left/right states
+                print 'i = ',i
+                self.num_flux, self.wsn[c1.cid] = self.interface_flux(u1, u2,                     #<- Left/right states
                                                               self.gradw1, self.gradw2,   #<- Left/right same gradients
                                                               self.unit_face_normal,      #<- unit face normal
                                                               c1.centroid,                #<- Left cell centroid
@@ -608,7 +609,7 @@ class Solvers(object):
             #---------------------------------------------------
             # Compute a flux at the boundary face.
             
-            self.num_flux, self.wsn = self.interface_flux(u1, u2,                     #<- Left/right states
+            self.num_flux, self.wsn[c1.cid]  = self.interface_flux(u1, u2,                     #<- Left/right states
                                                           self.gradw1, self.gradw2,   #<- Left/right same gradients
                                                           self.unit_face_normal,      #<- unit face normal
                                                           c1.centroid,                #<- Left cell centroid
@@ -816,7 +817,7 @@ class Solvers(object):
         two = 2.0
         half = 0.5
         Kp = 5.0   #<<<<< Adjustable parameter K
-        diameter = two*(vol/pi)**half
+        diameter = two*(abs(vol)/pi)**half
         eps2 = (Kp*diameter)**3
         vk_limiter = ( (a**2 + eps2) + two*b*a ) /                       \
                         (a**2 + two*b**2 + a*b + eps2)
@@ -937,7 +938,7 @@ class Solvers(object):
         #return inviscid_flux(nx,gamma,uL,uR,f,fL,fR)
         num_flux, wsn = inviscid_flux(self.uL3d,self.uR3d,self.n12_3d, 
                                  self.num_flux3d,self.wsn,self.gamma)
-        return num_flux, wsn
+        return num_flux[:-1], wsn
         
     
     def initial_condition_vortex(self):
