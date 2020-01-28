@@ -196,6 +196,11 @@ class Solvers(object):
         # local copies of data
         self.unit_face_normal = np.zeros((2),float)
         
+        #------------------------------------------
+        #>> exact solution data
+        #------------------------------------------
+        self.w_initial = np.zeros(4, float)
+        
         
         
     def solver_boot(self):
