@@ -890,8 +890,9 @@ class Solvers(object):
         #
         #*******************************************************************************        
         """
-        x0      = -10.0
-        y0      = -10.0
+        GridLen = 20.
+        x0      = -0.5*GridLen
+        y0      = -0.5*GridLen
         K       =  5.0
         alpha   =  1.0
         
@@ -902,6 +903,14 @@ class Solvers(object):
         self.p_inf = 1.0/self.gamma
         
         # Note: Speed of sound a_inf is sqrt(gamma*p_inf/rho_inf) = 1.0.
+        for i, cell in enumerate(self.mesh.cells):
+            
+            x = cell.xc - x0
+            y = cell.yc - y0
+            r = np.sqrt(x**2 + y**2)
+            
+            
+            
         return
 
 class FlowState(object):
