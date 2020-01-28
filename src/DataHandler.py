@@ -11,5 +11,26 @@ from FileTools import GetLines
 
 def DataHandler(object):
     
-    def __init__(self):
+    def __init__(self, project_name,):
+        
+        #----------------------------------------------------------
+        # Input grid file (.ugrid):
+        self.filename_grid = project_name + ".grid"
+        
+        #----------------------------------------------------------
+        # Input boundary condition file (ASCII file)
+        self.filename_bc = project_name + ".bc"
+        
+        #----------------------------------------------------------
+        # Output: plot file (ASCII file)
+        self.filename_plot = project_name + "_plot.dat"
+        
+        #----------------------------------------------------------
+        # Output: .vtk file (ASCII file)
+        self.filename_vtk = project_name + ".vtk"
+        
+        #----------------------------------------------------------
+        # Output: plot file (ASCII file)
+        self.filename_plot_hist = project_name + "._plot_hist.dat"
+        
         pass
