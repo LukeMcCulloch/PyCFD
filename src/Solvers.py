@@ -873,6 +873,36 @@ class Solvers(object):
         inviscid_flux(self.uL3d,self.uR3d,self.n12_3d, 
                       self.num_flux3d,wsn)
         return
+    
+    def initial_condition_vortex(self):
+        """
+        #*******************************************************************************
+        # Set the initial solution for the inviscid vortex test case.
+        #
+        # We initialize the solution with the exact solution. 
+        #
+        # Note: The grid must be generated in the square domain defined by
+        #
+        #       [x,y] = [-20,10]x[-20,10]
+        #
+        #       Initially, the vortex is centered at (x,y)=(-10,-10), and will be
+        #       convected to the origin at the final time t=5.0.
+        #
+        #*******************************************************************************        
+        """
+        x0      = -10.0
+        y0      = -10.0
+        K       =  5.0
+        alpha   =  1.0
+        
+        # Set free stream values (the input Mach number is not used in this test).
+        self.rho_inf = 1.0
+        self.u_inf = 2.0
+        self.v_inf = 2.0
+        self.p_inf = 1.0/self.gamma
+        
+        # Note: Speed of sound a_inf is sqrt(gamma*p_inf/rho_inf) = 1.0.
+        return
 
 class FlowState(object):
     

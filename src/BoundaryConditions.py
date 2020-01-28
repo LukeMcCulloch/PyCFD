@@ -10,8 +10,11 @@ from __future__ import print_function
 import weakref
 #
 import numpy as np
+
+
 class BC_states(object):
-    """Boundary Conditions (BC)
+    """
+        Boundary Conditions (BC)
     """
     
     def __init__(self, solver, flowstate):
