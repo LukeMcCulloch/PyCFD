@@ -13,6 +13,8 @@ def DataHandler(object):
     
     def __init__(self, project_name, path_to_inputs_folder):
         
+        self.GetLines = GetLines
+        
         self.path_to_inputs_folder = path_to_inputs_folder
         
         #----------------------------------------------------------

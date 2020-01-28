@@ -5,6 +5,7 @@ Created on Fri Jan  3 21:15:20 2020
 
 @author: lukemcculloch
 """
+import os
 import weakref
 try:
     from memory_profiler import profile
@@ -38,7 +39,8 @@ class StencilLSQ(object):
     """
     def __init__(self, cell, mesh):
         self.cell = cell #reference to cell
-        self.mesh = mesh #reference to mesh
+        #self.mesh = mesh #reference to mesh
+        self._mesh = weakref.ref(mesh) if mesh else mesh
         #
         self.nnghbrs_lsq = None     #number of lsq neighbors
         self.nghbr_lsq = []         #list of lsq neighbors
@@ -47,6 +49,20 @@ class StencilLSQ(object):
         #
         #self.node   = np.zeros((self.nNodes),float) #node to cell list
         self.construct_vertex_stencil()
+        
+    @property
+    def mesh(self):
+        if not self._mesh:
+            return self._mesh
+        _mesh = self._mesh()
+        if _mesh:
+            return _mesh
+        else:
+            raise LookupError("mesh was destroyed")
+            
+    def __del__(self):
+        print("delete LSQ",self.cell.cid)
+    #    #print("delete", "LSQstencil")
         
         
     def construct_vertex_stencil(self):
@@ -995,6 +1011,11 @@ def show_ont_quad_cell():
 class TestInviscidVortex(object):
     
     def __init__(self):
+        # up a level
+        uplevel = os.path.join(os.path.dirname( os.getcwd() ))
+        path2vortex = uplevel+'\\cases\case_unsteady_vortex'
+        self.DataHandler = DataHandler(project_name = '',
+                                       path_to_inputs_folder = path2vortex)
         pass
     
 

@@ -55,6 +55,7 @@ class Face(object):
     def __init__(self, nodes, parentcell, fid, 
                  nConserved=3):
         self.nodes = nodes
+        #self._nodes = weakref.ref(nodes) if nodes else nodes
         #self.parentcell = parentcell
         self._parentcell = weakref.ref(parentcell) if parentcell else parentcell
         self.fid = fid
@@ -77,7 +78,7 @@ class Face(object):
             node.parent_faces.append(self)
         self.N = 2 #len(nodes)
         self.center = .5*(self.nodes[0] + self.nodes[1])
-        self.cell = parentcell
+        #self.cell = parentcell #FIXME:  _parentcell? -- redundent anyway
         #
         # Basic geometry
         #
@@ -96,8 +97,22 @@ class Face(object):
         else:
             raise LookupError("Parent cell was destroyed")
             
+            
+    #    @property
+    #    def nodes(self):
+    #        if not self._nodes:
+    #            return self._nodes
+    #        _nodes = self._nodes()
+    #        if _nodes:
+    #            return _nodes
+    #        else:
+    #            raise LookupError("node was destroyed")
+            
+            
+            
     def __del__(self):
         print("delete", self.fid)
+        
         
         
     def compute_normalfancy(self, normalizeIt=True):
