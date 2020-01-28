@@ -898,7 +898,7 @@ def show_ont_quad_cell():
 class TestInvicidVortex(object):
     
     def __init__(self):
-        
+        pass
     
 
 if __name__ == '__main__':
