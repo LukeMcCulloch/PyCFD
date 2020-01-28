@@ -682,6 +682,9 @@ class Solvers(object):
         w[ir] = u[0]
         w[iu] = u[1]/u[0]
         w[iv] = u[2]/u[0]
+        # if (u[0] >0):
+        #     w[iu] = u[1]/u[0]
+        #     w[iv] = u[2]/u[0]
         w[ip] = (self.gamma-1.0)*( u[3] - \
                                        0.5*w[0]*(w[1]*w[1] + w[2]*w[2]) )
         return w
@@ -817,7 +820,7 @@ class Solvers(object):
         two = 2.0
         half = 0.5
         Kp = 5.0   #<<<<< Adjustable parameter K
-        diameter = two*(abs(vol)/pi)**half
+        diameter = two*(vol/pi)**half
         eps2 = (Kp*diameter)**3
         vk_limiter = ( (a**2 + eps2) + two*b*a ) /                       \
                         (a**2 + two*b**2 + a*b + eps2)

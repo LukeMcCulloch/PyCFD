@@ -266,13 +266,13 @@ class Cell(object):
         for tris and convex, 2D polyhedra
         """
         if self.N == 3:
-            self.volume = triangle_area(*self.nodes)
+            self.volume = -triangle_area(*self.nodes)
         else:
             vol = 0.
             for i in range(self.N-3+1):
                 nlist1 = self.nodes[i:i+3]
                 vol += triangle_area(*nlist1)
-            self.volume = vol
+            self.volume = -vol
         return 
         
     def set_face_vectors(self, nface, facelist):   #, n, FaceCellMap):
