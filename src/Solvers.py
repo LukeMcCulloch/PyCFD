@@ -454,7 +454,7 @@ class Solvers(object):
         self.gradw[:,:,:] = 0.0
         
         #----------------------------------------------------------------------
-        # Compute gradients at cells.
+        # Compute gradients at cells
         if (self.second_order): self.compute_gradients()
         if (self.use_limiter): self.compute_limiter()
         #----------------------------------------------------------------------
@@ -519,7 +519,7 @@ class Solvers(object):
                 # Reconstruct the solution to the face midpoint and compute a numerical flux.
                 # (reconstruction is implemented inside "interface_flux".
                 print 'i = ',i
-                self.num_flux, self.wsn[c1.cid] = self.interface_flux(u1, u2,                     #<- Left/right states
+                num_flux, wave_speed = self.interface_flux(u1, u2,                     #<- Left/right states
                                                               self.gradw1, self.gradw2,   #<- Left/right same gradients
                                                               self.unit_face_normal,      #<- unit face normal
                                                               c1.centroid,                #<- Left cell centroid
@@ -530,14 +530,14 @@ class Solvers(object):
                 
                 #  Add the flux multiplied by the magnitude of the directed area vector to c1.
     
-                self.res[c1.cid,:] = self.res[c1.cid,:]  +  self.num_flux * face.face_nrml_mag
-                self.wsn[c1.cid] += self.wave_speed * face.face_nrml_mag
+                self.res[c1.cid,:] += num_flux * face.face_nrml_mag
+                self.wsn[c1.cid] += wave_speed * face.face_nrml_mag
     
                 #  Subtract the flux multiplied by the magnitude of the directed area vector from c2.
                 #  NOTE: Subtract because the outward face normal is -n for the c2.
                 
-                self.res[c2.cid,:] = self.res[c2.cid,:]  -  self.num_flux * face.face_nrml_mag
-                self.wsn[c2.cid] = self.wsn[c2.cid]    + self.wave_speed * face.face_nrml_mag
+                self.res[c2.cid,:] -= num_flux * face.face_nrml_mag
+                self.wsn[c2.cid] += wave_speed * face.face_nrml_mag
     
                 # End of Residual computation: interior faces
                 #--------------------------------------------------------------------------------
@@ -609,7 +609,7 @@ class Solvers(object):
             #---------------------------------------------------
             # Compute a flux at the boundary face.
             
-            self.num_flux, self.wsn[c1.cid]  = self.interface_flux(u1, u2,                     #<- Left/right states
+            num_flux, wave_speed = self.interface_flux(u1, u2,                     #<- Left/right states
                                                           self.gradw1, self.gradw2,   #<- Left/right same gradients
                                                           self.unit_face_normal,      #<- unit face normal
                                                           c1.centroid,                #<- Left cell centroid
@@ -627,8 +627,8 @@ class Solvers(object):
 
             #---------------------------------------------------
             #  Add the boundary contributions to the residual.
-            self.res[c1.cid,:] = self.res[c1.cid,:]  +  self.num_flux * face.face_nrml_mag
-            self.wsn[c1.cid] += self.wave_speed * face.face_nrml_mag
+            self.res[c1.cid,:] += num_flux * face.face_nrml_mag
+            self.wsn[c1.cid] += wave_speed * face.face_nrml_mag
 
             # no c2 on the boundary
 
