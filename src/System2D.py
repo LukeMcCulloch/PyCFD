@@ -53,13 +53,14 @@ class Face(object):
     In 2D, a face is an edge
     '''
     def __init__(self, nodes, parentcell, fid, 
-                 nConserved=3):
+                 nConserved=3, isBoundary = False):
         self.nodes = nodes
         #self._nodes = weakref.ref(nodes) if nodes else nodes
         #self.parentcell = parentcell
         self._parentcell = weakref.ref(parentcell) if parentcell else parentcell
         self.fid = fid
         self.adjacentface   = None
+        self.isBoundary     = isBoundary
         #
         # neighbor vectors
         self.e_xi           = None
@@ -715,6 +716,7 @@ class Grid(object):
                 else:
                     # you've got the information to define the boundary 
                     # so do it here!:
+                    face.isBoundary = True
                     self.boundaryList.append(face)
         self.nBoundaries = len(self.boundaryList)
         return

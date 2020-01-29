@@ -485,7 +485,7 @@ class Solvers(object):
         for i,face in enumerate(mesh.faceList):
             #TODO: make sure boundary faces are not in the 
             # main face list
-            if face in self.mesh.boundaryList:
+            if face.isBoundary:
                 pass
             else:
                 adj_face = face.adjacentface
