@@ -987,8 +987,8 @@ class Solvers(object):
         # Note: Speed of sound a_inf is sqrt(gamma*p_inf/rho_inf) = 1.0.
         for i, cell in enumerate(self.mesh.cells):
             
-            x = cell.xc - x0
-            y = cell.yc - y0
+            x = cell.centroid[0] - x0
+            y = cell.centroid[1] - y0
             r = np.sqrt(x**2 + y**2)
             
             self.w_initial[self.iu] =  self.u_inf - K/(2.0*pi)*y*np.exp(alpha*0.5*(1.-r**2))
