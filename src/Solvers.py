@@ -226,7 +226,8 @@ class Solvers(object):
         
         #self.set_initial_solution()
         
-        self.explicit_steady_solver()
+        #self.explicit_steady_solver()
+        self.explicit_unsteady_solver()
         return
         
     
@@ -482,7 +483,8 @@ class Solvers(object):
         # 3. Add it to the residual for 1, and subtract it from the residual for 2.
         #
         #----------------------------------------------------------------------
-        for i,face in enumerate(mesh.faceList):
+        #for i,face in enumerate(mesh.faceList):
+        for i,face in enumerate(mesh.faceList[:2]):
             #TODO: make sure boundary faces are not in the 
             # main face list
             if face.isBoundary:
@@ -680,11 +682,11 @@ class Solvers(object):
         ip = self.ip
         
         w[ir] = u[0]
-        w[iu] = u[1]/u[0]
-        w[iv] = u[2]/u[0]
-        # if (u[0] >0):
-        #     w[iu] = u[1]/u[0]
-        #     w[iv] = u[2]/u[0]
+        #w[iu] = u[1]/u[0]
+        #w[iv] = u[2]/u[0]
+        if (u[0] >0):
+            w[iu] = u[1]/u[0]
+            w[iv] = u[2]/u[0]
         w[ip] = (self.gamma-1.0)*( u[3] - \
                                        0.5*w[0]*(w[1]*w[1] + w[2]*w[2]) )
         return w
@@ -874,6 +876,15 @@ class Solvers(object):
         outputs:
             num_flux,            # numerical flux (output)
             wsn                  # max wave speed at face 
+            
+            
+            gradw1 = self.gradw1
+            gradw2 = self.gradw2
+            n12 = face.normal_vector
+            C1 = c1.centroid
+            C2 = c2.centroid
+            
+            
         """
         
         xc1, yc1 = C1

@@ -106,6 +106,11 @@ def roe(ucL, ucR, njk, num_flux, wsn, gamma = 1.4):
     output:
     num_flux array(4,float)         #Numerical viscous flux
     wsn                             # max wave speed
+    
+    
+    #---------------
+    # checking
+    
     """
     
     #Some constants
