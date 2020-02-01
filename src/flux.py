@@ -110,7 +110,12 @@ def roe(ucL, ucR, njk, num_flux, wsn, gamma = 1.4):
     
     #---------------
     # checking
-    
+    ucL = self.uL3d
+    ucR = self.uR3d
+    njk = self.n12_3d
+    num_flux = self.num_flux3d
+    wsn = self.wsn
+    gamma = 1.4
     """
     
     #Some constants
