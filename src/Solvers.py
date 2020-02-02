@@ -220,14 +220,24 @@ class Solvers(object):
         
         
         
-    def solver_boot(self):
+    def solver_boot(self, flowtype = 'vortex'):
         
         #self.compute_lsq_coefficients()
         
-        #self.set_initial_solution()
+        def NotImp():
+            print("not implemented yet")
+            return
+        
+        
+        switchdict = {
+            'vortex':   self.initial_condition_vortex,
+            'freestream': NotImp #self.set_initial_solution()
+            }
+        #switchdict.get(flowtype, "not implemented, at all")
+        switchdict[flowtype]()
         
         #self.explicit_steady_solver()
-        self.explicit_unsteady_solver()
+        #self.explicit_unsteady_solver()
         return
         
     
@@ -971,6 +981,7 @@ class Solvers(object):
         #
         #*******************************************************************************        
         """
+        print( "setting: initial_condition_vortex")
         GridLen = 20.
         x0      = -0.5*GridLen
         y0      = -0.5*GridLen
@@ -1079,3 +1090,6 @@ if __name__ == '__main__':
     test_vortex = TestInviscidVortex()
     
     
+    """
+    self.solver_boot()
+    """
