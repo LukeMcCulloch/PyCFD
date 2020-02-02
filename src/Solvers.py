@@ -423,7 +423,7 @@ class Solvers(object):
             # slow test first
             for i in range(self.mesh.nCells):
                 self.u[i,:] = self.u0[i,:] - \
-                                (dt/self.mesh.cell[i].volume) * self.res[i,:] #This is R.K. intermediate u*.
+                                (dt/self.mesh.cells[i].volume) * self.res[i,:] #This is R.K. intermediate u*.
                 self.w[i,:] = self.u2w( self.u[i,:]  )
                 
                 
@@ -1108,5 +1108,6 @@ if __name__ == '__main__':
     
     
     """
-    self.solver_boot()
+    self.solver_boot(flowtype = 'vortex')
+    self.solver_solve()
     """
