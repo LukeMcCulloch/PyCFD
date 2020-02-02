@@ -379,7 +379,8 @@ class Solvers(object):
         
         debugging:
            
-            self.t_final = 1.0
+        self.t_final = 1.0
+        time = 0.0
             
         """
         time = 0.0
@@ -419,7 +420,7 @@ class Solvers(object):
             #- 1st Stage of Runge-Kutta:
             #u0 = u: is solution data -  conservative variables at the cell centers I think
             
-            self.u0 = self.u
+            self.u0[:] = self.u[:]
             # slow test first
             for i in range(self.mesh.nCells):
                 self.u[i,:] = self.u0[i,:] - \
@@ -510,13 +511,15 @@ class Solvers(object):
         # 3. Add it to the residual for 1, and subtract it from the residual for 2.
         #
         #----------------------------------------------------------------------
-        #for i,face in enumerate(mesh.faceList):
-        for i,face in enumerate(mesh.faceList[:2]):
+        savei = 0
+        for i,face in enumerate(mesh.faceList):
+            #for i,face in enumerate(mesh.faceList[:2]):
             #TODO: make sure boundary faces are not in the 
             # main face list
             if face.isBoundary:
                 pass
             else:
+                savei = i
                 adj_face = face.adjacentface
                 
                 c1 = face.parentcell     # Left cell of the face
