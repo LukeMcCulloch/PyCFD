@@ -243,13 +243,13 @@ class Solvers(object):
         self.solver_initialized = True
         return
     
-    def solver_solve(self):
+    def solver_solve(self, tfinal=1.0, dt=.01):
         if not self.solver_initialized :
             print("You must initialize the solver first!")
             print("call solver_boot() on this object to initialize solver")
             return
         #self.explicit_steady_solver()
-        self.explicit_unsteady_solver()
+        self.explicit_unsteady_solver(tfinal=tfinal, dt=dt)
         return
         
     
@@ -395,6 +395,7 @@ class Solvers(object):
 
         
         while (time < self.t_final):
+            print time
             #------------------------------------------------------------------
             # Compute the residual: res(i,:)
             self.compute_residual()
@@ -550,7 +551,7 @@ class Solvers(object):
                     
                 # Reconstruct the solution to the face midpoint and compute a numerical flux.
                 # (reconstruction is implemented inside "interface_flux".
-                print 'i = ',i
+                #print 'i = ',i
                 num_flux, wave_speed = self.interface_flux(u1, u2,                     #<- Left/right states
                                                               self.gradw1, self.gradw2,   #<- Left/right same gradients
                                                               self.unit_face_normal,      #<- unit face normal
@@ -628,7 +629,7 @@ class Solvers(object):
             
             #---------------------------------------------------
             # Get the right state (weak BC!)
-            print 'ib = ',ib
+            #print 'ib = ',ib
             self.BC.get_right_state(xm,ym, 
                                     u1, 
                                     self.unit_face_normal, 
@@ -1112,5 +1113,5 @@ if __name__ == '__main__':
     
     """
     self.solver_boot(flowtype = 'vortex')
-    self.solver_solve()
+    self.solver_solve( tfinal=.01, dt=.01)
     """
