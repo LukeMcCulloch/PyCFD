@@ -128,6 +128,7 @@ class Solvers(object):
       (4)energy
     """
     def __init__(self, mesh):
+        self.solver_initialized = False
         self.mesh = mesh
         self.dim = mesh.dim
         
@@ -238,6 +239,17 @@ class Solvers(object):
         
         #self.explicit_steady_solver()
         #self.explicit_unsteady_solver()
+        
+        self.solver_initialized = True
+        return
+    
+    def solver_solve(self):
+        if not self.solver_initialized :
+            print("You must initialize the solver first!")
+            print("call solver_boot() on this object to initialize solver")
+            return
+        #self.explicit_steady_solver()
+        self.explicit_unsteady_solver()
         return
         
     
@@ -362,12 +374,17 @@ class Solvers(object):
     # This subroutine solves an un steady problem by 2nd-order TVD-RK with a
     # global time step.
     #-------------------------------------------------------------------------#
-    def explicit_unsteady_solver(self, tfinal=None, dt=.01):
-        time = 0.0
-        if tfinal is None:
+    def explicit_unsteady_solver(self, tfinal=1.0, dt=.01):
+        """
+        
+        debugging:
+           
             self.t_final = 1.0
-        else:
-            self.t_final = tfinal
+            
+        """
+        time = 0.0
+        
+        self.t_final = tfinal
         
         #-----------------------------------------------------------------------------
         #-----------------------------------------------------------------------------
