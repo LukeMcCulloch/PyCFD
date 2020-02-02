@@ -999,7 +999,7 @@ class Solvers(object):
         #*******************************************************************************        
         """
         print( "setting: initial_condition_vortex")
-        GridLen = 20.
+        GridLen = .5
         x0      = -0.5*GridLen
         y0      = -0.5*GridLen
         K       =  5.0
