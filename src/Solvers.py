@@ -17,6 +17,7 @@ except:
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+from pylab import * #quiver...
 
 pi = np.pi
 
@@ -27,6 +28,9 @@ from Parameters import Parameters
 
 from Utilities import default_input
 from DataHandler import DataHandler
+
+import FileTools as FT
+from PlotGrids import PlotGrid
 
 
 nq = 4 # Euler system size
@@ -1099,6 +1103,49 @@ class Solvers(object):
             self.u[i,:] = self.w2u( self.w[i,:] )
             
         return
+    
+    def plot_solution(self):
+        return
+    
+    def write_flow_at_cell_centers(self):
+        self.solution_dir = '../pics/solution'
+        location = []
+        #lx = []
+        #ly = []
+        u = []
+        w = []
+        for i, cell in enumerate(self.mesh.cells):
+            #lx.append(str(cell.centroid[0]))
+            #ly.append(str(cell.centroid[1]))
+            location.append(' '.join(
+                    [str(el) for el in cell.centroid])+' \n' )
+            u.append(' '.join(
+                    [ str(el) for el in self.u[cell.cid]])+' \n' )
+            w.append(' '.join(
+                    [str(el) for el in self.w[cell.cid]])+' \n' )
+        FT.WriteLines(directory=self.solution_dir,
+                      filename='cellcenters.dat',
+                      lines = location)
+        FT.WriteLines(directory=self.solution_dir,
+                      filename='u_at_cellcenters.dat',
+                      lines = u)
+        FT.WriteLines(directory=self.solution_dir,
+                      filename='w_at_cellcenters.dat',
+                      lines = w)
+        return
+    
+    def plot_flow_at_cell_centers_from_file(self):
+        self.solution_dir = '../pics/solution'
+        coords_ = np.loadtxt(self.solution_dir+'/cellcenters.dat')
+        u_ = np.loadtxt(self.solution_dir+'/u_at_cellcenters.dat')
+        w_ = np.loadtxt(self.solution_dir+'/w_at_cellcenters.dat')
+        
+        M = np.sqrt(pow(w_[:,0], 2) + pow(w_[:,0], 2))
+        
+        figure()
+        Q = quiver( coords_[:,0],coords_[:,1], 
+                   w_[:,0], w_[:,1], M, units='x', pivot='tip',width=.005, scale=3.3/.15)
+        return
 
 class FlowState(object):
     
@@ -1109,13 +1156,13 @@ class FlowState(object):
         self.p_inf = p_inf
         return
     
-def show_LSQ_grad_area_plots():
-    for cc in ssolve.cclsq[55:60]:
+def show_LSQ_grad_area_plots(solver):
+    for cc in solver.cclsq[55:60]:
         cc.plot_lsq_reconstruction()
     return
 
-def show_one_tri_cell():
-    cc = ssolve.cclsq[57]
+def show_one_tri_cell(solver):
+    cc = solver.cclsq[57]
     cc.plot_lsq_reconstruction()
     cell = cc.cell
     cell.plot_cell()
@@ -1163,7 +1210,7 @@ if __name__ == '__main__':
     
     #----------------------------
     # plot LSQ gradient stencils
-    #show_LSQ_grad_area_plots()
+    #show_LSQ_grad_area_plots(self)
     
     
     # cc = ssolve.cclsq[57]
@@ -1176,5 +1223,5 @@ if __name__ == '__main__':
     
     """
     self.solver_boot(flowtype = 'vortex')
-    self.solver_solve( tfinal=.0048, dt=.01)
+    self.solver_solve( tfinal=1.0, dt=.01)
     """
