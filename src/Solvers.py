@@ -764,11 +764,8 @@ class Solvers(object):
         ip = self.ip
         
         w[ir] = u[0]
-        #w[iu] = u[1]/u[0]
-        #w[iv] = u[2]/u[0]
-        if (u[0] >0):
-            w[iu] = u[1]/u[0]
-            w[iv] = u[2]/u[0]
+        w[iu] = u[1]/u[0]
+        w[iv] = u[2]/u[0]
         w[ip] = (self.gamma-1.0)*( u[3] - \
                                        0.5*w[0]*(w[1]*w[1] + w[2]*w[2]) )
         return w
