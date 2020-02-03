@@ -1070,13 +1070,14 @@ class Solvers(object):
         #*******************************************************************************        
         """
         print( "setting: initial_condition_vortex")
-        #GridLen = 1.0
-        GridLen = 1.0/100.
-        x0      = 0.5#*GridLen
-        y0      = 0.5#*GridLen
-        K       =  5.0
-        alpha   =  3.0
+        GridLen = 1.0
+        #GridLen = 1.0/10.
+        x0      = 0.5*GridLen
+        y0      = 0.5*GridLen
+        K       =  10.0
+        alpha   =  1.0
         gamma   = self.gamma
+        frac = 2.
         
         # Set free stream values (the input Mach number is not used in this test).
         self.rho_inf = 1.0
@@ -1089,11 +1090,13 @@ class Solvers(object):
             
             x = cell.centroid[0] - x0
             y = cell.centroid[1] - y0
+            assert(x<GridLen)
+            assert(y<GridLen)
             r = np.sqrt(x**2 + y**2)
             
-            self.w_initial[self.iu] =  self.u_inf - K/(2.0*pi)*y*np.exp(alpha*0.5*(1.-r**2))
-            self.w_initial[self.iv] =  self.v_inf + K/(2.0*pi)*x*np.exp(alpha*0.5*(1.-r**2))
-            temperature =    1.0 - K*(gamma-1.0)/(8.0*alpha*pi**2)*np.exp(alpha*(1.-r**2))
+            self.w_initial[self.iu] =  self.u_inf - K/(frac*pi)*y*np.exp(alpha*0.5*(1.-r**2.))
+            self.w_initial[self.iv] =  self.v_inf + K/(frac*pi)*x*np.exp(alpha*0.5*(1.-r**2.))
+            temperature =    1.0 - K*(gamma-1.0)/(8.0*alpha*pi**2.)*np.exp(alpha*(1.-r**2.))
             self.w_initial[self.ir] = self.rho_inf*temperature**(  1.0/(gamma-1.0)) #Density
             self.w_initial[self.ip] = self.p_inf  *temperature**(gamma/(gamma-1.0)) #Pressure
             
