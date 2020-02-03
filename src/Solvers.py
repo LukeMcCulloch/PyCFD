@@ -560,13 +560,13 @@ class Solvers(object):
                 # (reconstruction is implemented inside "interface_flux".
                 #print 'i = ',i
                 num_flux, wave_speed = self.interface_flux(u1, u2,                     #<- Left/right states
-                                                              self.gradw1, self.gradw2,   #<- Left/right same gradients
-                                                              self.unit_face_normal,      #<- unit face normal
-                                                              c1.centroid,                #<- Left cell centroid
-                                                              c2.centroid,                #<- right cell centroid
-                                                              xm, ym,                     #<- face midpoint
-                                                              phi1, phi1,                 #<- Limiter functions
-                                                              )
+                                                           self.gradw1, self.gradw2,   #<- Left/right same gradients
+                                                           self.unit_face_normal,      #<- unit face normal
+                                                           c1.centroid,                #<- Left cell centroid
+                                                           c2.centroid,                #<- right cell centroid
+                                                           xm, ym,                     #<- face midpoint
+                                                           phi1, phi1,                 #<- Limiter functions
+                                                           )
                 test = np.any(np.isnan(num_flux)) or np.isnan(wave_speed)
                 if test:
                     self.save = [i, face]
@@ -678,14 +678,14 @@ class Solvers(object):
             #---------------------------------------------------
             # Compute a flux at the boundary face.
             
-            num_flux, wave_speed = self.interface_flux(u1, u2,                     #<- Left/right states
-                                                          self.gradw1, self.gradw2,   #<- Left/right same gradients
-                                                          self.unit_face_normal,      #<- unit face normal
-                                                          c1.centroid,                #<- Left cell centroid
-                                                          [xm, ym],                #<- make up a right cell centroid
-                                                          xm, ym,                     #<- face midpoint
-                                                          phi1, phi1,                 #<- Limiter functions
-                                                          )
+            num_flux, wave_speed = self.interface_flux(u1, u2,                      #<- Left/right states
+                                                       self.gradw1, self.gradw2,    #<- Left/right same gradients
+                                                       self.unit_face_normal,       #<- unit face normal
+                                                       c1.centroid,                 #<- Left cell centroid
+                                                       [xm, ym],                    #<- make up a right cell centroid
+                                                       xm, ym,                      #<- face midpoint
+                                                       phi1, phi1,                  #<- Limiter functions
+                                                       )
             test = np.any(np.isnan(self.wsn))  or np.isnan(wave_speed)
             if test:
                 self.save = [ib, bface]
