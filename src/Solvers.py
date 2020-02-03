@@ -1113,5 +1113,5 @@ if __name__ == '__main__':
     
     """
     self.solver_boot(flowtype = 'vortex')
-    self.solver_solve( tfinal=.01, dt=.01)
+    self.solver_solve( tfinal=.0048, dt=.01)
     """

@@ -110,6 +110,7 @@ def roe(ucL, ucR, njk, num_flux, wsn, gamma = 1.4):
     
     #---------------
     # debugging
+    sqrt = np.sqrt
     ucL = self.uL3d
     ucR = self.uR3d
     njk = self.n12_3d
@@ -166,8 +167,8 @@ def roe(ucL, ucR, njk, num_flux, wsn, gamma = 1.4):
     vL = ucL[2]/ucL[0]
     wL = ucL[3]/ucL[0]
     qnL = uL*nx + vL*ny + wL*nz
-    #pL = (gamma-one)*( ucL[4] - half*rhoL*(uL*uL+vL*vL+wL*wL) )
-    pL = abs((gamma-one)*( ucL[4] - half*rhoL*(uL*uL+vL*vL+wL*wL) ))
+    pL = (gamma-one)*( ucL[4] - half*rhoL*(uL*uL+vL*vL+wL*wL) )
+    #pL = abs((gamma-one)*( ucL[4] - half*rhoL*(uL*uL+vL*vL+wL*wL) ))
     aL = sqrt(gamma*pL/rhoL)
     HL = aL*aL/(gamma-one) + half*(uL*uL+vL*vL+wL*wL)
     
@@ -178,10 +179,10 @@ def roe(ucL, ucR, njk, num_flux, wsn, gamma = 1.4):
     vR = ucR[2]/ucR[0]
     wR = ucR[3]/ucR[0]
     qnR = uR*nx + vR*ny + wR*nz
-    #pR = (gamma-one)*( ucR[4] - half*rhoR*(uR*uR+vR*vR+wR*wR) )
-    #aR = sqrt(gamma*pR/rhoR)
-    pR = abs( (gamma-one)*( ucR[4] - half*rhoR*(uR*uR+vR*vR+wR*wR) ) )
-    aR = sqrt(abs(gamma*pR/rhoR))
+    pR = (gamma-one)*( ucR[4] - half*rhoR*(uR*uR+vR*vR+wR*wR) )
+    aR = sqrt(gamma*pR/rhoR)
+    #pR = abs( (gamma-one)*( ucR[4] - half*rhoR*(uR*uR+vR*vR+wR*wR) ) )
+    #aR = sqrt(abs(gamma*pR/rhoR))
     HR = aR*aR/(gamma-one) + half*(uR*uR+vR*vR+wR*wR)
     
     #Compute the physical flux: fL = Fn(UL) and fR = Fn(UR)
