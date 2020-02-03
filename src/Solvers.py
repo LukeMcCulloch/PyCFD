@@ -1070,7 +1070,7 @@ class Solvers(object):
         #*******************************************************************************        
         """
         print( "setting: initial_condition_vortex")
-        GridLen = .5
+        GridLen = 1.0
         x0      = -0.5*GridLen
         y0      = -0.5*GridLen
         K       =  5.0
@@ -1104,7 +1104,12 @@ class Solvers(object):
             
         return
     
+    def write_solution(self):
+        self.write_flow_at_cell_centers()
+        return
+    
     def plot_solution(self):
+        self.plot_flow_at_cell_centers()
         return
     
     def write_flow_at_cell_centers(self):
@@ -1134,17 +1139,47 @@ class Solvers(object):
                       lines = w)
         return
     
+    def plot_flow_at_cell_centers(self):
+        coords_ = []
+        for i, cell in enumerate(self.mesh.cells):
+            coords_.append(cell.centroid)
+        coords_ = np.asarray(coords_)
+        u_ = self.u
+        w_ = self.w
+        
+        Mc = np.sqrt(pow(w_[:,0], 2) + pow(w_[:,0], 2))
+        
+        figure()
+        Q = quiver( coords_[:,0],coords_[:,1], 
+                   w_[:,0], w_[:,1], Mc, units='x', pivot='tip',width=.005, scale=3.3/.15)
+        
+        
+        Mu = np.sqrt(pow(u_[:,0], 2) + pow(u_[:,0], 2))
+        figure()
+        Q = quiver( coords_[:,0],coords_[:,1], 
+                   u_[:,0], u_[:,1], Mu, units='x', pivot='tip',width=.005, scale=3.3/.15)
+        
+        return
+    
+    
     def plot_flow_at_cell_centers_from_file(self):
         self.solution_dir = '../pics/solution'
         coords_ = np.loadtxt(self.solution_dir+'/cellcenters.dat')
         u_ = np.loadtxt(self.solution_dir+'/u_at_cellcenters.dat')
         w_ = np.loadtxt(self.solution_dir+'/w_at_cellcenters.dat')
         
-        M = np.sqrt(pow(w_[:,0], 2) + pow(w_[:,0], 2))
+        Mc = np.sqrt(pow(w_[:,0], 2) + pow(w_[:,0], 2))
         
         figure()
         Q = quiver( coords_[:,0],coords_[:,1], 
-                   w_[:,0], w_[:,1], M, units='x', pivot='tip',width=.005, scale=3.3/.15)
+                   w_[:,0], w_[:,1], Mc, units='x', pivot='tip',width=.005, scale=3.3/.15)
+        
+        
+        Mu = np.sqrt(pow(u_[:,0], 2) + pow(u_[:,0], 2))
+        figure()
+        Q = quiver( coords_[:,0],coords_[:,1], 
+                   u_[:,0], u_[:,1], Mu, units='x', pivot='tip',width=.005, scale=3.3/.15)
+        
         return
 
 class FlowState(object):
@@ -1223,5 +1258,5 @@ if __name__ == '__main__':
     
     """
     self.solver_boot(flowtype = 'vortex')
-    self.solver_solve( tfinal=1.0, dt=.01)
+    self.solver_solve( tfinal=.01, dt=.01)
     """
