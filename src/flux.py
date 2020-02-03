@@ -111,12 +111,16 @@ def roe(ucL, ucR, njk, num_flux, wsn, gamma = 1.4):
     #---------------
     # debugging
     sqrt = np.sqrt
+    
     ucL = self.uL3d
     ucR = self.uR3d
     njk = self.n12_3d
     num_flux = self.num_flux3d
     wsn = self.wsn
     gamma = 1.4
+    
+    
+    
     
     """
     
@@ -168,8 +172,9 @@ def roe(ucL, ucR, njk, num_flux, wsn, gamma = 1.4):
     wL = ucL[3]/ucL[0]
     qnL = uL*nx + vL*ny + wL*nz
     pL = (gamma-one)*( ucL[4] - half*rhoL*(uL*uL+vL*vL+wL*wL) )
-    #pL = abs((gamma-one)*( ucL[4] - half*rhoL*(uL*uL+vL*vL+wL*wL) ))
     aL = sqrt(gamma*pL/rhoL)
+    #pL = abs((gamma-one)*( ucL[4] - half*rhoL*(uL*uL+vL*vL+wL*wL) ))
+    #aL = sqrt(abs(gamma*pL/rhoL) )
     HL = aL*aL/(gamma-one) + half*(uL*uL+vL*vL+wL*wL)
     
     #  Right state

@@ -61,8 +61,9 @@ class StencilLSQ(object):
             raise LookupError("mesh was destroyed")
             
     def __del__(self):
-        print("delete LSQ",self.cell.cid)
-    #    #print("delete", "LSQstencil")
+        pass
+        #print("delete LSQ",self.cell.cid)
+        #print("delete", "LSQstencil")
         
         
     def construct_vertex_stencil(self):
@@ -514,12 +515,13 @@ class Solvers(object):
         #
         #----------------------------------------------------------------------
         savei = 0
-        print 'do interior residual'
+        #print 'do interior residual'
         for i,face in enumerate(mesh.faceList):
             """
-            debugging:
+            #debugging:
             i = self.save[0]
             face = self.save[1]
+            
             """
             #for i,face in enumerate(mesh.faceList[:2]):
             #TODO: make sure boundary faces are not in the 
@@ -527,7 +529,7 @@ class Solvers(object):
             if face.isBoundary:
                 pass
             else:
-                savei = i
+                #savei = i
                 adj_face = face.adjacentface
                 
                 c1 = face.parentcell     # Left cell of the face
@@ -561,11 +563,11 @@ class Solvers(object):
                 #print 'i = ',i
                 num_flux, wave_speed = self.interface_flux(u1, u2,                     #<- Left/right states
                                                            self.gradw1, self.gradw2,   #<- Left/right same gradients
-                                                           self.unit_face_normal,      #<- unit face normal
+                                                           face.normal_vector,      #<- unit face normal
                                                            c1.centroid,                #<- Left cell centroid
                                                            c2.centroid,                #<- right cell centroid
                                                            xm, ym,                     #<- face midpoint
-                                                           phi1, phi1,                 #<- Limiter functions
+                                                           phi1, phi2,                 #<- Limiter functions
                                                            )
                 test = np.any(np.isnan(num_flux)) or np.isnan(wave_speed)
                 if test:
@@ -627,18 +629,15 @@ class Solvers(object):
                 # c = bcell, the cell having the boundary face j.
                 #
         savei = 0
-        print 'do boundary residual'
+        #print 'do boundary residual'
         for ib, bface in enumerate(self.mesh.boundaryList):
             """
-            ib = 4
-            bface = self.mesh.boundaryList[4]
-            
-            ib = 0
-            bface = self.mesh.boundaryList[ib]
-            
-            ib+=1
-            bface = self.mesh.boundaryList[ib]
+            ib = self.save[0]
+            bface = self.save[1]
             """
+            #Cell having a boundary face defined by the set of nodes j and j+1.
+            c1 = bface.parentcell
+            
             savei = ib
             v1 = bface.nodes[0] # Left node of the face
             v2 = bface.nodes[1] # Right node of the face
@@ -654,8 +653,6 @@ class Solvers(object):
                 phi1 = 1.0
                 phi2 = 1.0
                 
-            #Cell having a boundary face defined by the set of nodes j and j+1.
-            c1 = bface.parentcell
                 
             u1 = self.u[c1.cid] #Conservative variables at c1
             self.gradw1 = self.gradw[c1.cid]
@@ -684,13 +681,26 @@ class Solvers(object):
                                                        c1.centroid,                 #<- Left cell centroid
                                                        [xm, ym],                    #<- make up a right cell centroid
                                                        xm, ym,                      #<- face midpoint
-                                                       phi1, phi1,                  #<- Limiter functions
+                                                       phi1, phi2,                  #<- Limiter functions
                                                        )
             test = np.any(np.isnan(self.wsn))  or np.isnan(wave_speed)
             if test:
                 self.save = [ib, bface]
             assert(not test), "Found a NAN in boundary residual"
-            print ib, num_flux, wave_speed
+            #print ib, num_flux, wave_speed
+            
+            """
+            debugging:
+                
+            print u1, u2
+            print self.gradw1
+            print self.gradw2
+            print self.unit_face_normal
+            print c1.centroid
+            print [xm, ym]
+            print xm,ym
+            print phi1,phi2
+            """
             #Note: No gradients available outside the domain, and use the gradient at cell c
             #      for the right state. This does nothing to inviscid fluxes (see below) but
             #      is important for viscous fluxes.
@@ -949,13 +959,19 @@ class Solvers(object):
             num_flux,            # numerical flux (output)
             wsn                  # max wave speed at face 
             
-            
+            #interior
             gradw1 = self.gradw1
             gradw2 = self.gradw2
             n12 = face.normal_vector
             C1 = c1.centroid
             C2 = c2.centroid
             
+            #boundary
+            gradw1 = self.gradw1
+            gradw2 = self.gradw2
+            n12 = face.normal_vector
+            C1 = c1.centroid
+            C2 = [xm, ym]
             
         """
         
@@ -1022,8 +1038,14 @@ class Solvers(object):
         #  (1) Roe flux
         #------------------------------------------------------------
         #return inviscid_flux(nx,gamma,uL,uR,f,fL,fR)
-        num_flux, wsn = inviscid_flux(self.uL3d,self.uR3d,self.n12_3d, 
-                                 self.num_flux3d,self.wsn,self.gamma)
+        num_flux, wsn = inviscid_flux(self.uL3d,
+                                      self.uR3d,
+                                      self.n12_3d, 
+                                      self.num_flux3d,
+                                      self.wsn,
+                                      self.gamma)
+        
+        
         return num_flux[:-1], wsn
         
     
