@@ -1035,15 +1035,18 @@ class Solvers(object):
         #  (1) Roe flux
         #------------------------------------------------------------
         #return inviscid_flux(nx,gamma,uL,uR,f,fL,fR)
-        num_flux, wsn = inviscid_flux(self.uL3d,
+        self.num_flux3d, wsn = inviscid_flux(self.uL3d,
                                       self.uR3d,
                                       self.n12_3d, 
                                       self.num_flux3d,
                                       self.wsn,
                                       self.gamma)
         
-        
-        return num_flux[:-1], wsn
+        self.num_flux[0] = self.num_flux3d[0]
+        self.num_flux[1] = self.num_flux3d[1]
+        self.num_flux[2] = self.num_flux3d[2]
+        self.num_flux[3] = self.num_flux3d[4]
+        return self.num_flux[:], wsn
         
     
     def initial_condition_vortex(self):
