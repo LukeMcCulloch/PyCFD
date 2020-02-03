@@ -394,6 +394,7 @@ class Solvers(object):
         #-----------------------------------------------------------------------------
 
         
+        #for jj in range(1): #debugging!
         while (time < self.t_final):
             print time
             #------------------------------------------------------------------
@@ -513,7 +514,13 @@ class Solvers(object):
         #
         #----------------------------------------------------------------------
         savei = 0
+        print 'do interior residual'
         for i,face in enumerate(mesh.faceList):
+            """
+            debugging:
+            i = self.save[0]
+            face = self.save[1]
+            """
             #for i,face in enumerate(mesh.faceList[:2]):
             #TODO: make sure boundary faces are not in the 
             # main face list
@@ -560,7 +567,24 @@ class Solvers(object):
                                                               xm, ym,                     #<- face midpoint
                                                               phi1, phi1,                 #<- Limiter functions
                                                               )
+                test = np.any(np.isnan(num_flux)) or np.isnan(wave_speed)
+                if test:
+                    self.save = [i, face]
+                assert(not test), "Found a NAN in interior residual"
+                """
+                debugging:
+                    
+                print u1, u2
+                print self.gradw1
+                print self.gradw2
+                print self.unit_face_normal
+                print c1.centroid
+                print c2.centroid
+                print xm,ym
+                print phi1,phi2
+                """
                 
+                #print i, num_flux, wave_speed
                 #  Add the flux multiplied by the magnitude of the directed area vector to c1.
     
                 self.res[c1.cid,:] += num_flux * face.face_nrml_mag
@@ -602,8 +626,20 @@ class Solvers(object):
                 #
                 # c = bcell, the cell having the boundary face j.
                 #
+        savei = 0
+        print 'do boundary residual'
         for ib, bface in enumerate(self.mesh.boundaryList):
+            """
+            ib = 4
+            bface = self.mesh.boundaryList[4]
             
+            ib = 0
+            bface = self.mesh.boundaryList[ib]
+            
+            ib+=1
+            bface = self.mesh.boundaryList[ib]
+            """
+            savei = ib
             v1 = bface.nodes[0] # Left node of the face
             v2 = bface.nodes[1] # Right node of the face
             
@@ -646,10 +682,15 @@ class Solvers(object):
                                                           self.gradw1, self.gradw2,   #<- Left/right same gradients
                                                           self.unit_face_normal,      #<- unit face normal
                                                           c1.centroid,                #<- Left cell centroid
-                                                          c2.centroid,                #<- right cell centroid
+                                                          [xm, ym],                #<- make up a right cell centroid
                                                           xm, ym,                     #<- face midpoint
                                                           phi1, phi1,                 #<- Limiter functions
                                                           )
+            test = np.any(np.isnan(self.wsn))  or np.isnan(wave_speed)
+            if test:
+                self.save = [ib, bface]
+            assert(not test), "Found a NAN in boundary residual"
+            print ib, num_flux, wave_speed
             #Note: No gradients available outside the domain, and use the gradient at cell c
             #      for the right state. This does nothing to inviscid fluxes (see below) but
             #      is important for viscous fluxes.
