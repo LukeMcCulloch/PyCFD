@@ -1070,11 +1070,12 @@ class Solvers(object):
         #*******************************************************************************        
         """
         print( "setting: initial_condition_vortex")
-        GridLen = 1.0
-        x0      = -0.5*GridLen
-        y0      = -0.5*GridLen
+        #GridLen = 1.0
+        GridLen = 1.0/100.
+        x0      = 0.5#*GridLen
+        y0      = 0.5#*GridLen
         K       =  5.0
-        alpha   =  1.0
+        alpha   =  3.0
         gamma   = self.gamma
         
         # Set free stream values (the input Mach number is not used in this test).
@@ -1131,9 +1132,11 @@ class Solvers(object):
         FT.WriteLines(directory=self.solution_dir,
                       filename='cellcenters.dat',
                       lines = location)
+        #conservative solution
         FT.WriteLines(directory=self.solution_dir,
                       filename='u_at_cellcenters.dat',
                       lines = u)
+        #primative variables:
         FT.WriteLines(directory=self.solution_dir,
                       filename='w_at_cellcenters.dat',
                       lines = w)
@@ -1149,16 +1152,21 @@ class Solvers(object):
         
         Mc = np.sqrt(pow(w_[:,0], 2) + pow(w_[:,0], 2))
         
+        # plot primative variables
         figure()
         Q = quiver( coords_[:,0],coords_[:,1], 
                    w_[:,0], w_[:,1], Mc, units='x', pivot='tip',width=.005, scale=3.3/.15)
         
         
+        # plot conservative u,v
         Mu = np.sqrt(pow(u_[:,0], 2) + pow(u_[:,0], 2))
         figure()
         Q = quiver( coords_[:,0],coords_[:,1], 
                    u_[:,0], u_[:,1], Mu, units='x', pivot='tip',width=.005, scale=3.3/.15)
         
+        # plot conservative rho
+        
+        # plot conservative E
         return
     
     
@@ -1256,7 +1264,9 @@ if __name__ == '__main__':
     test_vortex = TestInviscidVortex()
     
     
-    """
+    #"""
     self.solver_boot(flowtype = 'vortex')
-    self.solver_solve( tfinal=.01, dt=.01)
-    """
+    #self.solver_solve( tfinal=.005, dt=.01)
+    self.solver_solve( tfinal=1., dt=.01)
+    self.plot_solution()
+    #"""
