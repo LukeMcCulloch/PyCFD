@@ -137,11 +137,6 @@ class Solvers(object):
         self.mesh = mesh
         self.dim = mesh.dim
         
-        #--------------------------------------
-        # for the moment, default to simple initial conditions
-        self.bc_type = ["freestream" for el in range(mesh.nBoundaries)] #np.zeros(mesh.nBoundaries, str)
-        self.BC = BC_states(solver = self, flowstate = FlowState() ) 
-        
         self.Parameters = Parameters()
         
         
@@ -223,6 +218,11 @@ class Solvers(object):
         #>> exact solution data
         #------------------------------------------
         self.w_initial = np.zeros(4, float)
+        
+        #--------------------------------------
+        # for the moment, default to simple initial conditions
+        self.bc_type = ["freestream" for el in range(mesh.nBoundaries)] #np.zeros(mesh.nBoundaries, str)
+        self.BC = BC_states(solver = self, flowstate = FlowState() ) 
         
         
         
@@ -667,7 +667,7 @@ class Solvers(object):
             #---------------------------------------------------
             # Get the right state (weak BC!)
             #print 'ib = ',ib
-            self.BC.get_right_state(xm,ym, 
+            self.ub = self.BC.get_right_state(xm,ym, 
                                     u1, 
                                     self.unit_face_normal, 
                                     self.bc_type[ib], #CBD (could be done): store these on the faces instead of seperate
@@ -678,8 +678,8 @@ class Solvers(object):
             
             #---------------------------------------------------
             # Compute a flux at the boundary face.
-            
-            num_flux, wave_speed = self.interface_flux(u1, u2,                      #<- Left/right states
+            #print 'ub = ',self.ub
+            num_flux, wave_speed = self.interface_flux(u1, self.ub,                      #<- Left/right states
                                                        self.gradw1, self.gradw2,    #<- Left/right same gradients
                                                        self.unit_face_normal,       #<- unit face normal
                                                        c1.centroid,                 #<- Left cell centroid
@@ -1239,9 +1239,9 @@ class TestInviscidVortex(object):
     
 
 if __name__ == '__main__':
-    gd = Grid(type_='rect',m=10,n=10,
-              winding='ccw')
-    mesh = Grid(type_='tri',m=10,n=10,
+    # gd = Grid(type_='rect',m=10,n=10,
+    #           winding='ccw')
+    mesh = Grid(type_='tri',m=20,n=20,
               winding='ccw')
     
     cell = mesh.cellList[44]

@@ -100,8 +100,13 @@ class BC_states(object):
         #compute_manufactured_sol_and_f_euler(xb,yb, wb,dummy)
         
         
-        
-        return
+        #---------------------------------------------------------
+        # Return the right state in conservative variables:
+        #                                 [rho,rho*u,rho*v,rho*E]
+        ucb = self.solver.w2u(wb)
+        #print('wb',wb)
+        #print('ucb',ucb)
+        return ucb
     
 
     #**************************************************************************
@@ -118,11 +123,14 @@ class BC_states(object):
     # Freestream
     #**************************************************************************
     def freestream(self, wb):
+        #print("freestream")
+        #print( 'got wb',wb)
         flowstate = self.flowstate
         wb[0] = flowstate.rho_inf
         wb[1] = flowstate.u_inf
         wb[2] = flowstate.v_inf
         wb[3] = flowstate.p_inf
+        #print( 'set wb',wb)
         return
     
     
