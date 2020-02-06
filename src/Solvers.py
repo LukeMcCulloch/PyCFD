@@ -1269,7 +1269,7 @@ class TestInviscidVortex(object):
 if __name__ == '__main__':
     # gd = Grid(type_='rect',m=10,n=10,
     #           winding='ccw')
-    mesh = Grid(type_='tri',m=20,n=20,
+    mesh = Grid(type_='tri',m=50,n=50,
               winding='ccw')
     
     cell = mesh.cellList[44]
@@ -1299,6 +1299,6 @@ if __name__ == '__main__':
     #"""
     self.solver_boot(flowtype = 'vortex')
     #self.solver_solve( tfinal=.005, dt=.01)
-    self.solver_solve( tfinal=.1, dt=.01)
+    self.solver_solve( tfinal=1., dt=.01)
     self.plot_solution()
     #"""
