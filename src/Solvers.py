@@ -1271,7 +1271,7 @@ class TestInviscidVortex(object):
 if __name__ == '__main__':
     # gd = Grid(type_='rect',m=10,n=10,
     #           winding='ccw')
-    mesh = Grid(type_='rect',m=42,n=21,
+    mesh = Grid(type_='tri',m=42,n=21,
               winding='ccw')
     
     cell = mesh.cellList[44]
