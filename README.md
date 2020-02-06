@@ -52,6 +52,15 @@ Here are plots of density and pressure, done with two different methods of inter
 
 ![DensityPress](pics/solution/DensityAndPressure.png)
 
+
+Hmm... That was for a tri-mesh.  Here is the same on a quad mesh:
+
+
+![StrongVortex](pics/solution/AlmostVortexQuad.png)
+
+
+![DensityPress](pics/solution/DensityAndPressureQuad.png)
+
 Cheers,
 
 Luke
