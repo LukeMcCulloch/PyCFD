@@ -1054,7 +1054,7 @@ class Solvers(object):
         return self.num_flux[:], wsn
         
     
-    def initial_condition_vortex(self):
+    def initial_condition_vortex(self, vortex_strength=15.):
         """
         #*******************************************************************************
         # Set the initial solution for the inviscid vortex test case.
@@ -1074,7 +1074,7 @@ class Solvers(object):
         #GridLen = 1.0
         x0      = -10.0 #0.5*GridLen
         y0      = -5.0 #0.5*GridLen
-        K       =  25.0
+        K       =  vortex_strength
         alpha   =  1.0
         gamma   = self.gamma
         frac = 2.
@@ -1271,7 +1271,7 @@ class TestInviscidVortex(object):
 if __name__ == '__main__':
     # gd = Grid(type_='rect',m=10,n=10,
     #           winding='ccw')
-    mesh = Grid(type_='rect',m=50,n=50,
+    mesh = Grid(type_='rect',m=42,n=21,
               winding='ccw')
     
     cell = mesh.cellList[44]
@@ -1301,6 +1301,6 @@ if __name__ == '__main__':
     #"""
     self.solver_boot(flowtype = 'vortex')
     #self.solver_solve( tfinal=.005, dt=.01)
-    self.solver_solve( tfinal=.01, dt=.01)
+    self.solver_solve( tfinal=2., dt=.01)
     self.plot_solution()
     #"""
