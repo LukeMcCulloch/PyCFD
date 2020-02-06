@@ -652,7 +652,7 @@ class Solvers(object):
             #Set limiter functions
             if (self.use_limiter) :
                 phi1 = self.phi[c1.cid]
-                phi2 = self.phi[c2.cid]
+                phi2 = 1.0
             else:
                 phi1 = 1.0
                 phi2 = 1.0
@@ -1271,6 +1271,6 @@ if __name__ == '__main__':
     #"""
     self.solver_boot(flowtype = 'vortex')
     #self.solver_solve( tfinal=.005, dt=.01)
-    self.solver_solve( tfinal=.0, dt=.01)
+    self.solver_solve( tfinal=.1, dt=.01)
     self.plot_solution()
     #"""

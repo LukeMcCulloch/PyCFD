@@ -37,7 +37,10 @@ class BC_states(object):
         
     
     
-    def get_right_state(self, xb,yb,ucL,njk,bc_state_type, ucb):
+    def get_right_state(self, 
+                        xb, yb,
+                        ucL, njk,
+                        bc_state_type, ucb):
         """
         # ---------------------------------------------------------------------
         #
