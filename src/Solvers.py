@@ -18,6 +18,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from pylab import * #quiver...
+#
+import matplotlib.tri as tri #plot unstructured data
+# see https://matplotlib.org/gallery/images_contours_and_fields/irregulardatagrid.html
+
 
 pi = np.pi
 
@@ -1161,7 +1165,7 @@ class Solvers(object):
         #            w_[:,0], w_[:,1], Mc, units='x', pivot='tip',width=.005, scale=3.3/.15)
         
         Q = quiver( coords_[:,0],coords_[:,1], 
-                   w_[:,1], w_[:,2], Mc, units='x', pivot='tip')
+                   w_[:,1], w_[:,2], Mc, units='x', pivot='tip',scale=1./.15)
         
         #--------------------------------------------------------------
         #
@@ -1173,34 +1177,83 @@ class Solvers(object):
         
         Q = quiver( coords_[:,0],coords_[:,1], 
                    u_[:,1], u_[:,2], Mc, 
-                   units='xy', angles='xy', pivot='tail')
+                   units='xy', angles='xy', pivot='tail',scale=1./.15)
         # plot conservative rho
+        
+        
+        
+        #--------------------------------------------------------------
+        # plot density and pressure
+        fig, (ax1, ax2) = plt.subplots(nrows=2)
         
         
         #--------------------------------------------------------------
         # plot density
         
-        ## needs to map the 
-        # fig, ax = plt.subplots()
-        # ax.axis('equal')
-        # c = ax.contour(coords_[:,0],coords_[:,1],u_[:,0],30)
-        # plt.clabel(c, inline=1, fontsize=5)
-        # plt.xlabel(r"$x$")
-        # plt.ylabel(r"$y$")
-        # mytitle = r"density Function"
-        # plt.title(mytitle)
-        # # we switch on a grid in the figure for orientation
-        # plt.grid()
-        # # colorbar
-        # CB = plt.colorbar(c, shrink=0.8, extend='both')
-        # plt.axis('equal')
-        # plt.plot(bx,by)
-        # plt.show()
+        # -----------------------
+        # Interpolation on a grid
+        # -----------------------
+        # A contour plot of irregularly spaced data coordinates
+        # via interpolation on a grid.
+        
+        # Create grid values first.
+        npts = len(coords_)
+        ngridx = self.mesh.m
+        ngridy = self.mesh.n
+        xi = np.linspace(self.mesh.xb, self.mesh.xe, ngridx)
+        yi = np.linspace(self.mesh.yb, self.mesh.ye, ngridy)
+        
+        # Perform linear interpolation of the data (x,y)
+        # on a grid defined by (xi,yi)
+        triang = tri.Triangulation(coords_[:,0], coords_[:,1])
+        interpolator = tri.LinearTriInterpolator(triang, u_[:,0])
+        Xi, Yi = np.meshgrid(xi, yi)
+        density = interpolator(Xi, Yi)
+        
+        # Note that scipy.interpolate provides means to interpolate data on a grid
+        # as well. The following would be an alternative to the four lines above:
+        #from scipy.interpolate import griddata
+        #zi = griddata((x, y), z, (xi[None,:], yi[:,None]), method='linear')
+        
+        ax1.contour(xi, yi, density, levels=14, linewidths=0.5, colors='k')
+        #cntr1 = ax1.contourf(xi, yi, zi, levels=14, cmap="RdBu_r")
+        cntr1 = ax1.contourf(xi, yi, density, cmap="RdBu_r")
         
         
+        fig.colorbar(cntr1, ax=ax1)
+        #ax1.plot(coords_[:,0], coords_[:,1], 'ko', ms=3)
+        #ax1.set(xlim=(-2, 2), ylim=(-2, 2))
+        ax1.set_title('Density (%d points, %d grid points)' %
+                      (npts, ngridx * ngridy))
         # 
         #--------------------------------------------------------------
-        # plot conservative E
+        # plot pressure
+        
+        # Perform linear interpolation of the data (x,y)
+        # on a grid defined by (xi,yi)
+        #        triang = tri.Triangulation(coords_[:,0], coords_[:,1])
+        #        interpolator = tri.LinearTriInterpolator(triang, u_[:,3])
+        #        Xi, Yi = np.meshgrid(xi, yi)
+        #        press = interpolator(Xi, Yi)
+        
+        # ----------
+        # Tricontour
+        # ----------
+        # Directly supply the unordered, irregularly spaced coordinates
+        # to tricontour.
+        
+        ax2.tricontour(coords_[:,0], coords_[:,1], u_[:,3], 
+                       levels=14, linewidths=0.5, colors='k')
+        cntr2 = ax2.tricontourf(coords_[:,0], coords_[:,1], u_[:,3], 
+                                cmap="RdBu_r") #levels=14, cmap="RdBu_r")
+        
+        fig.colorbar(cntr2, ax=ax2)
+        #ax2.plot(coords_[:,0], coords_[:,1], 'ko', ms=3)
+        #ax2.set(xlim=(-2, 2), ylim=(-2, 2))
+        ax2.set_title('Pressure (%d points)' % npts)
+        
+        plt.subplots_adjust(hspace=0.5)
+        plt.show()
         return
     
     
@@ -1301,6 +1354,6 @@ if __name__ == '__main__':
     #"""
     self.solver_boot(flowtype = 'vortex')
     #self.solver_solve( tfinal=.005, dt=.01)
-    self.solver_solve( tfinal=2., dt=.01)
+    self.solver_solve( tfinal=.1, dt=.01)
     self.plot_solution()
     #"""
