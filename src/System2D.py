@@ -404,17 +404,22 @@ class Cell(object):
             norm0 = .5*face.normal_vector*face.area**2 + face.center
             #norm0 = norm0*face.area
             
-            #ax.plot([ norm0[0],face.center[0] ],
-            #        [ norm0[1],face.center[1] ],
-            #        color='purple',
-            #        marker='o',
-            #        alpha = alpha)
+            
+            fnorm = face.normal_vector
+            norm = 2.*np.linalg.norm(face.normal_vector)*face.area
+            
             
             #scalearrow = np.linalg.norm(norm0)
-            plt.arrow(face.center[0],
-                      face.center[1],
-                      norm0[0]-face.center[0] ,
-                      norm0[1]-face.center[1] )
+            # plt.arrow(face.center[0],
+            #           face.center[1],
+            #           norm0[0]-face.center[0] ,
+            #           norm0[1]-face.center[1] )
+            
+            
+            plt.arrow(x=face.center[0],
+                      y=face.center[1],
+                      dx=fnorm[0]/norm ,
+                      dy=fnorm[1]/norm )
         return ax
         
     def plot_cell(self, canvas = None,
@@ -467,7 +472,12 @@ class Grid(object):
     
     ccw-winding: normals point out
     """
-    def __init__(self, mesh=None, m=10,n=10,
+    def __init__(self, mesh=None, 
+                 xb = -20.,
+                 yb = -10.,
+                 xe = 20.,
+                 ye = 10.,
+                 m=10,n=10,
                  type_='rect', winding='ccw'):
         
         self.gridtype = {'rect':0,
@@ -476,6 +486,11 @@ class Grid(object):
         self.nCells = 0
         self.nFaces = 0
         self.nNodes = m*n
+        
+        self.xb = xb
+        self.xe = xe
+        self.yb = yb
+        self.ye = ye
         
         self.nodeList = []
         self.cellList = []
@@ -500,8 +515,10 @@ class Grid(object):
             self.m = shp[1]
             self.n = shp[2]
             
-        mms = np.linspace(0.,1.,m)
-        nms = np.linspace(0.,1.,n)
+        #mms = np.linspace(0.,1.,m)
+        #nms = np.linspace(0.,1.,n)
+        mms = np.linspace(self.xb,self.xe,m)
+        nms = np.linspace(self.yb,self.ye,n)
         self.mesh = mesh
         #
         """
@@ -818,6 +835,7 @@ if __name__ == '__main__':
     
     
     plotTri = PlotGrid(self)
+    #"""
     axTri = plotTri.plot_cells()
     axTri = plotTri.plot_centroids(axTri)
     axTri = plotTri.plot_face_centers(axTri)
@@ -828,3 +846,4 @@ if __name__ == '__main__':
     axRect = plotRect.plot_centroids(axRect)
     axRect = plotRect.plot_face_centers(axRect)
     axRect = plotRect.plot_normals(axRect)
+    #"""

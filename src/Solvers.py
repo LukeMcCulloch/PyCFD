@@ -1070,11 +1070,10 @@ class Solvers(object):
         #*******************************************************************************        
         """
         print( "setting: initial_condition_vortex")
-        GridLen = 1.0
-        #GridLen = 1.0/10.
-        x0      = 0.5*GridLen
-        y0      = 0.5*GridLen
-        K       =  10.0
+        #GridLen = 1.0
+        x0      = -10.0 #0.5*GridLen
+        y0      = -10.0 #0.5*GridLen
+        K       =  5.0
         alpha   =  1.0
         gamma   = self.gamma
         frac = 2.
@@ -1090,8 +1089,6 @@ class Solvers(object):
             
             x = cell.centroid[0] - x0
             y = cell.centroid[1] - y0
-            assert(x<GridLen)
-            assert(y<GridLen)
             r = np.sqrt(x**2 + y**2)
             
             self.w_initial[self.iu] =  self.u_inf - K/(frac*pi)*y*np.exp(alpha*0.5*(1.-r**2.))
@@ -1157,16 +1154,20 @@ class Solvers(object):
         
         # plot primative variables
         figure()
-        Q = quiver( coords_[:,0],coords_[:,1], 
-                   w_[:,0], w_[:,1], Mc, units='x', pivot='tip',width=.005, scale=3.3/.15)
+        # Q = quiver( coords_[:,0],coords_[:,1], 
+        #            w_[:,0], w_[:,1], Mc, units='x', pivot='tip',width=.005, scale=3.3/.15)
         
+        Q = quiver( coords_[:,0],coords_[:,1], 
+                   u_[:,0], u_[:,1])
         
         # plot conservative u,v
         Mu = np.sqrt(pow(u_[:,0], 2) + pow(u_[:,0], 2))
         figure()
-        Q = quiver( coords_[:,0],coords_[:,1], 
-                   u_[:,0], u_[:,1], Mu, units='x', pivot='tip',width=.005, scale=3.3/.15)
+        # Q = quiver( coords_[:,0],coords_[:,1], 
+        #            u_[:,0], u_[:,1], Mu, units='x', pivot='tip',width=.005, scale=3.3/.15)
         
+        Q = quiver( coords_[:,0],coords_[:,1], 
+                   u_[:,0], u_[:,1])
         # plot conservative rho
         
         # plot conservative E
@@ -1250,7 +1251,7 @@ if __name__ == '__main__':
     
     self = Solvers(mesh = mesh)
     
-    #cc = ssolve.cclsq[33]
+    #cc = self.cclsq[33]
     #cc.plot_lsq_reconstruction()
     
     
@@ -1270,6 +1271,6 @@ if __name__ == '__main__':
     #"""
     self.solver_boot(flowtype = 'vortex')
     #self.solver_solve( tfinal=.005, dt=.01)
-    self.solver_solve( tfinal=1., dt=.01)
+    self.solver_solve( tfinal=.0, dt=.01)
     self.plot_solution()
     #"""

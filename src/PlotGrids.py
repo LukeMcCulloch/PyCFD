@@ -101,6 +101,10 @@ class PlotGrid(object):
     
     def plot_normals(self, canvas = None,
                        alpha=.4):
+        """
+        debugging:
+            ax = axTri
+        """
         if canvas is None:
             fig, ax = plt.subplots()
         else:
@@ -117,9 +121,10 @@ class PlotGrid(object):
                 # print '\n center'
                 # print face.center
                 
-                norm0 = .5*face.normal_vector*face.area**2 + face.center
+                fnorm = face.normal_vector
+                #norm0 = .5*face.normal_vector*face.area**2 + face.center
                 #norm0 = norm0*face.area
-                
+                norm = 2.*np.linalg.norm(face.normal_vector)*face.area
                 #ax.plot([ norm0[0],face.center[0] ],
                 #        [ norm0[1],face.center[1] ],
                 #        color='purple',
@@ -127,10 +132,19 @@ class PlotGrid(object):
                 #        alpha = alpha)
                 
                 #scalearrow = np.linalg.norm(norm0)
-                plt.arrow(face.center[0],
-                          face.center[1],
-                          norm0[0]-face.center[0] ,
-                          norm0[1]-face.center[1] )
+                #dx =  (fnorm[0]-face.center[0])/norm
+                #dy =  (fnorm[1]-face.center[1])/norm
+                
+                plt.arrow(x=face.center[0],
+                          y=face.center[1],
+                          dx=fnorm[0]/norm ,
+                          dy=fnorm[1]/norm )
+                
+                # bad!
+                # plt.arrow(x=face.center[0],
+                #           y=face.center[1],
+                #           dx=dx ,
+                #           dy=dy )
         return ax
     
     def plot_cell(self, cell, canvas = None,
