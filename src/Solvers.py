@@ -1072,7 +1072,7 @@ class Solvers(object):
         print( "setting: initial_condition_vortex")
         #GridLen = 1.0
         x0      = -10.0 #0.5*GridLen
-        y0      = -10.0 #0.5*GridLen
+        y0      = -5.0 #0.5*GridLen
         K       =  5.0
         alpha   =  1.0
         gamma   = self.gamma
@@ -1150,16 +1150,20 @@ class Solvers(object):
         u_ = self.u
         w_ = self.w
         
-        Mc = np.sqrt(pow(w_[:,0], 2) + pow(w_[:,0], 2))
         
-        # plot primative variables
+        #--------------------------------------------------------------
+        #
+        # plot primative variables u,v
+        Mc = np.sqrt(pow(w_[:,1], 2) + pow(w_[:,2], 2))
         figure()
         # Q = quiver( coords_[:,0],coords_[:,1], 
         #            w_[:,0], w_[:,1], Mc, units='x', pivot='tip',width=.005, scale=3.3/.15)
         
         Q = quiver( coords_[:,0],coords_[:,1], 
-                   u_[:,0], u_[:,1])
+                   w_[:,1], w_[:,2], w_[:,0], units='x', pivot='tip')
         
+        #--------------------------------------------------------------
+        #
         # plot conservative u,v
         Mu = np.sqrt(pow(u_[:,0], 2) + pow(u_[:,0], 2))
         figure()
@@ -1167,9 +1171,33 @@ class Solvers(object):
         #            u_[:,0], u_[:,1], Mu, units='x', pivot='tip',width=.005, scale=3.3/.15)
         
         Q = quiver( coords_[:,0],coords_[:,1], 
-                   u_[:,0], u_[:,1])
+                   u_[:,1], u_[:,2], u_[:,0], units='x', pivot='tip')
         # plot conservative rho
         
+        
+        #--------------------------------------------------------------
+        # plot density
+        
+        ## needs to map the 
+        # fig, ax = plt.subplots()
+        # ax.axis('equal')
+        # c = ax.contour(coords_[:,0],coords_[:,1],u_[:,0],30)
+        # plt.clabel(c, inline=1, fontsize=5)
+        # plt.xlabel(r"$x$")
+        # plt.ylabel(r"$y$")
+        # mytitle = r"density Function"
+        # plt.title(mytitle)
+        # # we switch on a grid in the figure for orientation
+        # plt.grid()
+        # # colorbar
+        # CB = plt.colorbar(c, shrink=0.8, extend='both')
+        # plt.axis('equal')
+        # plt.plot(bx,by)
+        # plt.show()
+        
+        
+        # 
+        #--------------------------------------------------------------
         # plot conservative E
         return
     
