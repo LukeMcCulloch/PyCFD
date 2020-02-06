@@ -48,6 +48,10 @@ Update:  getting quite a bit closer.  Need to check through everything as time p
 
 ![StrongVortex](pics/solution/AlmostVortex.png)
 
+Here are plots of density and pressure, done with two different methods of interpolating unstructured data to a cartesian grid for plotting.  Not sure which is better just yet.
+
+![DensityPress](pics/solution/DensityAndPressure.png)
+
 Cheers,
 
 Luke
