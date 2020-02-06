@@ -241,6 +241,7 @@ class Solvers(object):
             }
         #switchdict.get(flowtype, "not implemented, at all")
         switchdict[flowtype]()
+        self.plot_flow_at_cell_centers()
         
         #self.explicit_steady_solver()
         #self.explicit_unsteady_solver()
@@ -1073,7 +1074,7 @@ class Solvers(object):
         #GridLen = 1.0
         x0      = -10.0 #0.5*GridLen
         y0      = -5.0 #0.5*GridLen
-        K       =  5.0
+        K       =  25.0
         alpha   =  1.0
         gamma   = self.gamma
         frac = 2.
@@ -1160,18 +1161,19 @@ class Solvers(object):
         #            w_[:,0], w_[:,1], Mc, units='x', pivot='tip',width=.005, scale=3.3/.15)
         
         Q = quiver( coords_[:,0],coords_[:,1], 
-                   w_[:,1], w_[:,2], w_[:,0], units='x', pivot='tip')
+                   w_[:,1], w_[:,2], Mc, units='x', pivot='tip')
         
         #--------------------------------------------------------------
         #
         # plot conservative u,v
-        Mu = np.sqrt(pow(u_[:,0], 2) + pow(u_[:,0], 2))
+        Mu = np.sqrt(pow(u_[:,1], 2) + pow(u_[:,2], 2))
         figure()
         # Q = quiver( coords_[:,0],coords_[:,1], 
         #            u_[:,0], u_[:,1], Mu, units='x', pivot='tip',width=.005, scale=3.3/.15)
         
         Q = quiver( coords_[:,0],coords_[:,1], 
-                   u_[:,1], u_[:,2], u_[:,0], units='x', pivot='tip')
+                   u_[:,1], u_[:,2], Mc, 
+                   units='xy', angles='xy', pivot='tail')
         # plot conservative rho
         
         
@@ -1269,7 +1271,7 @@ class TestInviscidVortex(object):
 if __name__ == '__main__':
     # gd = Grid(type_='rect',m=10,n=10,
     #           winding='ccw')
-    mesh = Grid(type_='tri',m=50,n=50,
+    mesh = Grid(type_='rect',m=50,n=50,
               winding='ccw')
     
     cell = mesh.cellList[44]
@@ -1299,6 +1301,6 @@ if __name__ == '__main__':
     #"""
     self.solver_boot(flowtype = 'vortex')
     #self.solver_solve( tfinal=.005, dt=.01)
-    self.solver_solve( tfinal=1., dt=.01)
+    self.solver_solve( tfinal=.01, dt=.01)
     self.plot_solution()
     #"""
