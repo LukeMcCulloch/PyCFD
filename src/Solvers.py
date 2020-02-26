@@ -1076,17 +1076,17 @@ class Solvers(object):
         #  (1) Roe flux
         #------------------------------------------------------------
         #return inviscid_flux(nx,gamma,uL,uR,f,fL,fR)
-        self.num_flux3d, wsn = inviscid_flux(self.uL3d,
-                                      self.uR3d,
-                                      self.n12_3d, 
-                                      self.num_flux3d,
-                                      self.wsn,
-                                      self.gamma)
+        self.num_flux3d, wsn = inviscid_flux(self.uL3d, # conservative u's left cell off the face
+                                              self.uR3d, # conservative u's right cell off the face
+                                              self.n12_3d, #normal vector
+                                              self.num_flux3d, #numerical flux
+                                              self.wsn, #wave speed
+                                              self.gamma)
         
-        self.num_flux[0] = self.num_flux3d[0]
-        self.num_flux[1] = self.num_flux3d[1]
-        self.num_flux[2] = self.num_flux3d[2]
-        self.num_flux[3] = self.num_flux3d[4]
+        self.num_flux[0] = self.num_flux3d[0] # rho flux'
+        self.num_flux[1] = self.num_flux3d[1] # mmtm-x flux'
+        self.num_flux[2] = self.num_flux3d[2] # mmtm-y flux'
+        self.num_flux[3] = self.num_flux3d[4] # energy flux
         return self.num_flux[:], wsn
         
     
