@@ -919,6 +919,38 @@ class Solvers(object):
     
     # survey of gradient reconstruction methods
     # https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/20140011550.pdf
+    #
+    # compose the finite difference 1st order gradient
+    # from each element of the stencil.
+    #
+    # There are many more cells in the neighborhood than are needed to 
+    # compute a gradient, so write the overdetermined 
+    # system Ax=b 
+    # 
+    # where 
+    # 
+    # A is the matrix of spatial differences between noe centers
+    #   (in this case an Ncells x 2D matrix)
+    #
+    # B is the vector of primative variable differences, phi_i - phi_o
+    #   between the values at surrounding nodes, and the node in question
+    #
+    # x is just the finite difference we seek:
+    #      [ d phi_o / d x , d phi_o / d y ] = ( A.T A ).inv A.T B
+    #
+    # Q: Why are we doing this?  
+    #
+    #       A: to extrapolate solutions linearly from the cell centroids
+    #           to the faces (face midpoints)
+    #
+    # Q: Why are we doing that?
+    #
+    #       A: This slope will allow us to reconstruct 
+    #           the fluxes at the cell boundaries in second order 
+    #           accurate fashion.  (we will use limiters to achieve monotonicity)
+    #
+    #           Then bob's your uncle, solve the Riemann problem
+    # 
     def compute_gradients(self):
         """
         #*******************************************************************************
