@@ -81,8 +81,9 @@ from matplotlib.path import Path
 import matplotlib.patches as patches
 from matplotlib.patches import Ellipse, Polygon
 from pylab import *
-from IPython.html.widgets import interact
-#from ipywidgets import StaticInteract, RangeWidget, RadioWidget, DropDownWidget
+#from IPython.html.widgets import interact
+from ipywidgets import interact
+#from IPython.html.widgets import StaticInteract, RangeWidget, RadioWidget, DropDownWidget
 
 # Plot diagram for transverse solver
  
@@ -135,5 +136,9 @@ def plot_trans_diag(dt,transverse_solver_up,transverse_solver_down):
 if __name__ == '__main__':
     plot_trans_diag(.01, 'On', 'On')
     
-#StaticInteract(plot_trans_diag, dt=RangeWidget(0.0,0.008,0.0004), transverse_solver_up=RadioWidget(['On','Off']),
+#staticinteract(plot_trans_diag, dt=rangewidget(0.0,0.008,0.0004), transverse_solver_up=radiowidget(['on','off']),
 #               transverse_solver_down=RadioWidget(['On','Off']))
+#interact(plot_trans_diag, 
+#         dt=widgets,.FloatRangeSlider(0.0,0.008,0.0004), 
+#         transverse_solver_up=radiowidget(['on','off']),
+#         transverse_solver_down=RadioWidget(['On','Off']))
