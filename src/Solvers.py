@@ -241,7 +241,7 @@ class Solvers(object):
         
         switchdict = {
             'vortex':   self.initial_condition_vortex,
-            'freestream': NotImp #self.set_initial_solution()
+            'freestream': self.set_initial_solution
             }
         #switchdict.get(flowtype, "not implemented, at all")
         switchdict[flowtype]()
@@ -413,7 +413,7 @@ class Solvers(object):
             
             #------------------------------------------------------------------
             # Compute the global time step, dt. One dt for all cells.
-            dt = self.compute_global_time_step()
+            dt = self.compute_global_time_step()#*.5
             
             #adjust time step?
             #code here
@@ -583,17 +583,17 @@ class Solvers(object):
                     self.save = [i, face]
                 assert(not test), "Found a NAN in interior residual"
                 """
-                debugging:
+                #debugging:
                     
-                print u1, u2
-                print self.gradw1
-                print self.gradw2
-                print self.unit_face_normal
-                print c1.centroid
-                print c2.centroid
-                print xm,ym
-                print phi1,phi2
-                """
+                print( u1, u2     )
+                print( self.gradw1    )
+                print( self.gradw2    )
+                print( self.unit_face_normal    )
+                print( c1.centroid    )
+                print( c2.centroid    )
+                print( xm,ym    )
+                print( phi1,phi2    )
+                #"""
                 
                 #print i, num_flux, wave_speed
                 #  Add the flux multiplied by the magnitude of the directed area vector to c1.
@@ -710,6 +710,18 @@ class Solvers(object):
             print xm,ym
             print phi1,phi2
             """
+            """
+            #debugging:
+                
+            print( u1, u2     )
+            print( self.gradw1    )
+            print( self.gradw2    )
+            print( self.unit_face_normal    )
+            print( c1.centroid    )
+            print( c2.centroid    )
+            print( xm,ym    )
+            print( phi1,phi2    )
+            #"""
             #Note: No gradients available outside the domain, and use the gradient at cell c
             #      for the right state. This does nothing to inviscid fluxes (see below) but
             #      is important for viscous fluxes.
@@ -1090,6 +1102,42 @@ class Solvers(object):
         return self.num_flux[:], wsn
         
     
+    def set_initial_solution(self, M_inf = 1.0, aoa = 0.0):
+        """
+        #*******************************************************************************
+        # Set the initial solution.
+        #
+        # We initialize the solution with a free stream condition defined by the Mach
+        # number and the angle of attack specified by the input parameters: M_inf and aoa.
+        #
+        #*******************************************************************************     
+        """
+        print( "setting: set_initial_solution freestream")
+        
+        # Set free stream values based on the input Mach number.
+        self.rho_inf = 1.0
+        self.u_inf = M_inf*np.cos(aoa *np.pi/180.0) #aoa converted from degree to radian
+        self.v_inf = 0.0#M_inf*np.sin(aoa *np.pi/180.0) #aoa converted from degree to radian
+        self.p_inf = 1.0/self.gamma
+        
+        # Note: Speed of sound a_inf is sqrt(gamma*p_inf/rho_inf) = 1.0.
+        for i, cell in enumerate(self.mesh.cells):
+            
+            
+            self.w_initial[self.ir] =  self.rho_inf #Density
+            self.w_initial[self.iu] =  self.u_inf   #u_inf
+            self.w_initial[self.iv] =  self.v_inf   #v_inf
+            self.w_initial[self.ip] =  self.p_inf   #Pressure 
+            
+            #Store the initial solution
+            self.w[i,:] = self.w_initial[:]
+            
+            # Compute and store conservative variables
+            self.u[i,:] = self.w2u( self.w[i,:] )
+            
+        return
+        
+    
     def initial_condition_vortex(self, vortex_strength=15.):
         """
         #*******************************************************************************
@@ -1109,7 +1157,7 @@ class Solvers(object):
         print( "setting: initial_condition_vortex")
         #GridLen = 1.0
         x0      = -10.0 #0.5*GridLen
-        y0      = -5.0 #0.5*GridLen
+        y0      =  5.0 #0.5*GridLen
         K       =  vortex_strength
         alpha   =  1.0
         gamma   = self.gamma
@@ -1117,8 +1165,8 @@ class Solvers(object):
         
         # Set free stream values (the input Mach number is not used in this test).
         self.rho_inf = 1.0
-        self.u_inf = 2.0
-        self.v_inf = 2.0
+        self.u_inf = 1.0
+        self.v_inf = 0.0
         self.p_inf = 1.0/gamma
         
         # Note: Speed of sound a_inf is sqrt(gamma*p_inf/rho_inf) = 1.0.
@@ -1344,19 +1392,30 @@ class TestInviscidVortex(object):
     
     def __init__(self):
         # up a level
-        uplevel = os.path.join(os.path.dirname( os.getcwd() ))
-        path2vortex = uplevel+'\\cases\case_unsteady_vortex'
+        #uplevel = os.path.join(os.path.dirname(__file__), '..','cases')
+        uplevel = os.path.join(os.path.dirname(os.getcwd()), 'cases')
+        #path2vortex = uplevel+'\\cases\case_unsteady_vortex'
+        path2vortex = os.path.join(uplevel, 'case_unsteady_vortex')
         self.DHandler = DataHandler(project_name = 'vortex',
                                        path_to_inputs_folder = path2vortex)
         
         
-        pass
+        self.grid = Grid(generated=False,
+                         dhandle = self.DHandler,
+                         type_='quad',
+                         winding='ccw')
     
 
 if __name__ == '__main__':
     # gd = Grid(type_='rect',m=10,n=10,
     #           winding='ccw')
-    mesh = Grid(type_='quad',m=42,n=21,
+    
+    #mesh = Grid(type_='tri',m=42,n=21,
+    #          winding='ccw')
+    
+    #mesh = Grid(type_='quad',m=42,n=21,
+    #          winding='ccw')
+    mesh = Grid(generated=True,type_='quad',m=42,n=21,
               winding='ccw')
     
     cell = mesh.cellList[44]
@@ -1366,7 +1425,7 @@ if __name__ == '__main__':
     
     self = Solvers(mesh = mesh)
     
-    #cc = self.cclsq[33]
+    #cc = self.cclsq[35]
     #cc.plot_lsq_reconstruction()
     
     
@@ -1384,8 +1443,23 @@ if __name__ == '__main__':
     
     
     #"""
-    self.solver_boot(flowtype = 'vortex')
+    self.solver_boot(flowtype = 'freestream')
+    #self.solver_boot(flowtype = 'vortex')
     #self.solver_solve( tfinal=.005, dt=.01)
-    self.solver_solve( tfinal=.1, dt=.01)
-    self.plot_solution()
+    #self.solver_solve( tfinal=0.25, dt=.0025)
+    
+    #self.solver_solve( tfinal=0.25, dt=.01)
+    #self.plot_solution()
     #"""
+    
+    '''
+    # if memory issues are encountered:
+    del(self)
+    del(mesh)
+    #'''
+    
+    '''
+    #
+    self = test_vortex.grid
+    #
+    '''

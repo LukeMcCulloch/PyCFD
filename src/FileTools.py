@@ -7,7 +7,11 @@ Created on Tue Jan 07 09:49:19 2014
 
 import sys
 import os
-
+import platform
+if platform.system() == 'Windows':
+    slash = '\\'
+else:
+    slash = '/'
 
 def fileTools():
     read = 'r'
@@ -43,17 +47,33 @@ def GetLines(directory,filename):
     rootFldr = directory
     defaultFileName = filename
     FilePath, FileName = GetFile(rootFldr, defaultFileName )
-    fileHandle = open(FilePath+'\\'+FileName, access_mode[0], buffering)
+    fileHandle = open(FilePath+slash+FileName, access_mode[0], buffering)
     lines = fileHandle.readlines()
     fileHandle.close()
     return lines
     
+
+
+def GetLineByLine(directory,filename):
+    """ 
+        inputs  :   string(directory)
+                    string(filename)
+                    
+        outputs :   list[lines of the file]
+    """
+    access_mode, buffering = fileTools()    
+    rootFldr = directory
+    defaultFileName = filename
+    FilePath, FileName = GetFile(rootFldr, defaultFileName )
+    fileHandle = open(FilePath+slash+FileName, access_mode[0], buffering)
+    return fileHandle
+
 def WriteLines(directory, filename, lines):
     access_mode, buffering = fileTools()    
     rootFldr = directory
     defaultFileName = filename
     FilePath, FileName = GetFile(rootFldr, defaultFileName )
-    fileHandle = open(FilePath+'\\'+FileName, access_mode[1], buffering)
+    fileHandle = open(FilePath+slash+FileName, access_mode[1], buffering)
     for line in lines:
         fileHandle.write(line)
     fileHandle.close()

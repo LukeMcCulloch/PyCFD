@@ -20,6 +20,8 @@ from PlotGrids import PlotGrid
 
 from Utilities import normalize, normalized, norm, dot, cross, \
     normalize2D, normalized2D, triangle_area
+    
+from FileTools import GetLines, GetLineByLine
 
 class Node(Overload):
     def __init__(self, vector, nid, nConserved=3):
@@ -343,7 +345,7 @@ class Cell(object):
 #        return
     
     def plot_centroid(self, canvas = None,
-                       alpha=.1):
+                       alpha=.4):
         if canvas is None:
             fig, ax = plt.subplots()
         else:
@@ -352,7 +354,7 @@ class Cell(object):
         cell = self
         ax.plot(cell.centroid[0],
                 cell.centroid[1],
-                color='green',
+                color='black',
                 marker='o',
                 alpha = alpha,)
         name = str(cell.cid)
@@ -387,7 +389,8 @@ class Cell(object):
         return ax
     
     def plot_normals(self, canvas = None,
-                       alpha=.4):
+                       alpha=.4,
+                       scale = .25):
         if canvas is None:
             fig, ax = plt.subplots()
         else:
@@ -418,8 +421,8 @@ class Cell(object):
             
             plt.arrow(x=face.center[0],
                       y=face.center[1],
-                      dx=fnorm[0]/norm ,
-                      dy=fnorm[1]/norm )
+                      dx=scale*fnorm[0]/norm ,
+                      dy=scale*fnorm[1]/norm )
         return ax
         
     def plot_cell(self, canvas = None,
@@ -472,25 +475,24 @@ class Grid(object):
     
     ccw-winding: normals point out
     """
-    def __init__(self, mesh=None, 
+    def __init__(self, 
+                 generated=True,
+                 dhandle = False,
+                 mesh=None, 
                  xb = -20.,
                  yb = -10.,
                  xe = 20.,
                  ye = 10.,
                  m=10,n=10,
-                 type_='rect', winding='ccw'):
+                 type_='rect', 
+                 winding='ccw'):
         
+        self.generated = generated
         self.gridtype = {'rect':0,
                          'tri':1}
         self.dim = 2    #2D grid
         self.nCells = 0
         self.nFaces = 0
-        self.nNodes = m*n
-        
-        self.xb = xb
-        self.xe = xe
-        self.yb = yb
-        self.ye = ye
         
         self.nodeList = []
         self.cellList = []
@@ -503,55 +505,137 @@ class Grid(object):
         self.EToE = None # cell to cell
         self.VToE = None # vertex to cell incidence
         
-        self.type = type_
-        if mesh is None:
-            mesh = np.zeros((2,m,n),float) # C-ordering.  last index is most rapid
-            self.dim = 2
-            self.m = m
-            self.n = n
-        else:
-            shp = np.shape(mesh)
-            self.dim = shp[0]
-            self.m = shp[1]
-            self.n = shp[2]
-            
-        #mms = np.linspace(0.,1.,m)
-        #nms = np.linspace(0.,1.,n)
-        mms = np.linspace(self.xb,self.xe,m)
-        nms = np.linspace(self.yb,self.ye,n)
-        self.mesh = mesh
-        #
-        """
-        Nodes are defined first
-        """
-        nid = 0
         self.nodes = []
-        for i in range(self.m):
-            self.nodes.append([])
-            for j in  range(self.n):
-                self.mesh[0,i,j] = mms[i]
-                self.mesh[1,i,j] = nms[j]
-                node = Node(self.mesh[:,i,j], nid)
-                nid += 1
-                self.nodes[i].append(node) #to become 2D array (nicer for building the grid)
-                self.nodeList.append(node) #will stay as list
+        self.cells = []
+        
+        if self.generated:
+            self.nNodes = m*n
+            
+            self.xb = xb
+            self.xe = xe
+            self.yb = yb
+            self.ye = ye
+            
+            
+            self.type = type_
+            if mesh is None:
+                mesh = np.zeros((2,m,n),float) # C-ordering.  last index is most rapid
+                self.dim = 2
+                self.m = m
+                self.n = n
+            else:
+                shp = np.shape(mesh)
+                self.dim = shp[0]
+                self.m = shp[1]
+                self.n = shp[2]
                 
-        self.nodes = np.asarray(self.nodes)
-        self.nodes_array = np.asarray(self.nodeList) #is this at all faster?
+            #mms = np.linspace(0.,1.,m)
+            #nms = np.linspace(0.,1.,n)
+            mms = np.linspace(self.xb,self.xe,m)
+            nms = np.linspace(self.yb,self.ye,n)
+            self.mesh = mesh
+            #
+            """
+            Nodes are defined first
+            """
+            nid = 0
+            for i in range(self.m):
+                self.nodes.append([])
+                for j in  range(self.n):
+                    self.mesh[0,i,j] = mms[i]
+                    self.mesh[1,i,j] = nms[j]
+                    node = Node(self.mesh[:,i,j], nid)
+                    nid += 1
+                    self.nodes[i].append(node) #to become 2D array (nicer for building the grid)
+                    self.nodeList.append(node) #will stay as list
+                    
+            self.nodes = np.asarray(self.nodes)
+            self.nodes_array = np.asarray(self.nodeList) #is this at all faster?
         
-        
-        # now cells and faces:
-        self.FaceCellMap = {}
-        self.make_cells(winding = winding)
-        # maps
-        self.make_FaceCellMap()
-        
-        self.make_neighbors()
-        
-        # build incidence tables
-        self.buildCellToFaceIncidence() # self.EToF
-        self.buildFaceToNodeIncidence() # self.FToV
-        self.buildVertexToCellIncidence() # self.VToC
+        else: #read text files...
+            self.elm = []
+            handle = GetLineByLine(directory = dhandle.path_to_inputs_folder,
+                                       filename = dhandle.filename_grid)
+            print('\n\nReading the grid file....{}'.format(
+                  dhandle.filename_grid))
+            nnodes, ntria, nquad = (handle.readline()).split()
+            nnodes = int(nnodes)
+            ntria = int(ntria)
+            nquad = int(nquad)
+            print('nnodes {}, ntria {}, nquad {}'.format(
+                nnodes, ntria, nquad))
+            self.mesh = np.zeros((2,m,n),float) 
+            
+            nid = 0
+            for i in range(nnodes):
+                node = (handle.readline()).split()
+                node = [float(nd) for nd in node]
+                node = Node(node,nid)
+                self.nodes.append(node)
+                #self.nodes[i].append(node) #to become 2D array (nicer for building the grid)
+                self.nodeList.append(node) #will stay as list
+                nid += 1
+            self.nodes = np.asarray(self.nodes)
+            self.nodes_array = np.asarray(self.nodeList) 
+            
+            
+            
+            #cid = 0
+            #if ntria>0:
+            for i in range(ntria):
+                elm = (handle.readline()).split()
+                
+                elm = [float(nd) for nd in elm]
+                self.elm.append(elm)
+                cell = Cell(self.nodes(elm,
+                                       cid = self.nCells,
+                                       nface = self.nFaces,
+                                       facelist = self.faceList)
+                            )
+                
+                self.cells.append(cell)
+                self.cellList.append(self.cells[-1])
+                self.nCells +=1
+                self.nFaces += 3
+                
+    
+            self.elm = np.asarray(self.elm)
+            
+            for i in range(nquad):
+                elm = (handle.readline()).split()
+                
+                elm = [float(nd) for nd in elm]
+                
+                
+                cell = Cell(self.nodes(elm,
+                                       cid = self.nCells,
+                                       nface = self.nFaces,
+                                       facelist = self.faceList)
+                            )
+                
+                self.cells.append(cell)
+                self.cellList.append(self.cells[-1])
+                self.nFaces += 4
+                self.nCells +=1
+            self.elm = np.asarray(self.elm)
+            
+            handle.close()
+            self.cells = np.asarray(self.cells)
+            
+            
+        if self.generated:
+            # now cells and faces:
+            self.FaceCellMap = {}
+            self.make_cells(winding = winding)
+            # maps
+            self.make_FaceCellMap()
+            
+            self.make_neighbors()
+            
+            # build incidence tables
+            self.buildCellToFaceIncidence() # self.EToF
+            self.buildFaceToNodeIncidence() # self.FToV
+            self.buildVertexToCellIncidence() # self.VToC
     
     def make_cells(self, winding ='cw'):
         """
@@ -567,7 +651,7 @@ class Grid(object):
     
     
     def make_rect_cells(self, winding='ccw'):
-        self.cells = []
+        #self.cells = []
         
         if winding=='cw':
             for i in range(self.m-1):
@@ -587,7 +671,7 @@ class Grid(object):
                     self.nFaces += 4
                     self.nCells +=1
                 
-        else: #(winding is clockwise)
+        else: #(winding is ccw)
             for i in range(self.m-1):
                 #self.cells.append([])
                 for j in  range(self.n-1):
@@ -611,7 +695,7 @@ class Grid(object):
     
     
     def make_tri_cells(self, winding='ccw'):
-        self.cells = []
+        #self.cells = []
         
         if winding=='cw':
             for i in range(self.m-1):
@@ -642,7 +726,7 @@ class Grid(object):
                     self.nCells += 1
                     self.nFaces += 3
                     
-        else: #(winding is clockwise)
+        else: #(winding is ccw)
             for i in range(self.m-1):
                 #self.cells.append([])
                 for j in  range(self.n-1):
@@ -847,3 +931,6 @@ if __name__ == '__main__':
     axRect = plotRect.plot_face_centers(axRect)
     axRect = plotRect.plot_normals(axRect)
     #"""
+    
+    del(self)
+    del(gd)

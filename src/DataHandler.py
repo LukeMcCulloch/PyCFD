@@ -6,7 +6,7 @@ Created on Mon Jan 27 22:55:46 2020
 @author: lukemcculloch
 """
 
-from FileTools import GetLines
+from FileTools import GetLines, GetLineByLine
 
 
 class DataHandler(object):
@@ -16,6 +16,10 @@ class DataHandler(object):
         self.GetLines = GetLines
         
         self.path_to_inputs_folder = path_to_inputs_folder
+        
+        self.makeDictionary()
+        self.readinput()
+        project_name = self.inputParameters['project_name']
         
         #----------------------------------------------------------
         # Input grid file (.ugrid):
@@ -38,9 +42,25 @@ class DataHandler(object):
         self.filename_plot_hist = project_name + "._plot_hist.dat"
         
         print(" End of file names setup..... ")
+    
+    def makeDictionary(self):
         
-        pass
+        self.inputParameters = {'project_name' : False,
+                              'steady_or_unsteady' : False,
+                              't_final' : False,
+                              'generate_tec_file' : False,
+                              'generate_vtk_file' : False,
+                              'M_inf' : False,
+                              'aoa' : False,
+                              'inviscid_flux' : False,
+                              'eig_limiting_factor' : False,
+                              'CFL' : False,
+                              'second_order' : False}
     
     def readinput(self):
         self.ilines = GetLines(directory = self.path_to_inputs_folder,filename = 'input.nml')
+        for line in self.ilines:
+            tokens = line.split()
+            if len(tokens)>2:
+                self.inputParameters[tokens[0]] = tokens[2]
         return

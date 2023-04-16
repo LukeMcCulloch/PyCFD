@@ -1,8 +1,8 @@
 &input_parameters
 
-        project_name = "vortex"
-  steady_or_unsteady = "unsteady"
-             t_final = 5.0
+        project_name = vortex
+  steady_or_unsteady = unsteady
+             t_final = 10.0
 
    generate_tec_file = T
    generate_vtk_file = T
@@ -10,7 +10,7 @@
                M_inf = 0.3
                  aoa = 0.0
 
- inviscid_flux       = "roe"
+ inviscid_flux       = roe
  eig_limiting_factor = 0.2, 0.2, 0.2, 0.2, 0.2
 
                  CFL = 0.9
