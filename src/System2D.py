@@ -589,7 +589,7 @@ class Grid(object):
             for i in range(ntria-1):
                 elm = (handle.readline()).split()
                 
-                elm = [int(nd) for nd in elm]
+                elm = [int(nd)-1 for nd in elm]
                 self.elm.append(elm)
                 #print('elm = ',elm)
                 nodesOfImport = [self.nodes[elm[0]],
