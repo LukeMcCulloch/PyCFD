@@ -59,7 +59,7 @@ class Face(object):
     '''
     def __init__(self, nodes, parentcell, fid, 
                  nConserved=3, isBoundary = False):
-        self.nodes = nodes
+        self.nodes = nodes # Node data type
         #self._nodes = weakref.ref(nodes) if nodes else nodes
         #self.parentcell = parentcell
         self._parentcell = weakref.ref(parentcell) if parentcell else parentcell
@@ -240,7 +240,7 @@ class Cell(object):
     """
     def __init__(self, nodes, cid, nface,
                  nConserved=3, facelist=None): #, FaceCellMap):
-        self.nodes = nodes
+        self.nodes = nodes #Node data type
         self.N = len(self.nodes)
         self.num_faces = self.N
         self.volume = 0.
@@ -589,7 +589,7 @@ class Grid(object):
             for i in range(ntria-1):
                 elm = (handle.readline()).split()
                 
-                elm = [int(nd)-1 for nd in elm]
+                elm = [int(nd)-1 for nd in elm]#mesh indicies start from 1 so convert to c indexing
                 self.elm.append(elm)
                 #print('elm = ',elm)
                 nodesOfImport = [self.nodes[elm[0]],
@@ -624,7 +624,7 @@ class Grid(object):
             for i in range(nquad-1):
                 elm = (handle.readline()).split()
                 
-                elm = [float(nd) for nd in elm]
+                elm = [int(nd)-1 for nd in elm] #mesh indicies start from 1 so convert to c indexing
                 
                 
                 cell = Cell(
