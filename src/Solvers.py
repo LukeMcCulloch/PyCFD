@@ -1439,17 +1439,16 @@ if __name__ == '__main__':
     # cell = cc.cell
     # cell.plot_cell()
     
-    test_vortex = TestInviscidVortex()
     
     
     #"""
     self.solver_boot(flowtype = 'freestream')
     #self.solver_boot(flowtype = 'vortex')
     #self.solver_solve( tfinal=.005, dt=.01)
-    #self.solver_solve( tfinal=0.25, dt=.0025)
+    self.solver_solve( tfinal=0.25, dt=.0025)
     
-    #self.solver_solve( tfinal=0.25, dt=.01)
-    #self.plot_solution()
+    self.solver_solve( tfinal=0.25, dt=.01)
+    self.plot_solution()
     #"""
     
     '''
@@ -1458,8 +1457,3 @@ if __name__ == '__main__':
     del(mesh)
     #'''
     
-    '''
-    #
-    self = test_vortex.grid
-    #
-    '''

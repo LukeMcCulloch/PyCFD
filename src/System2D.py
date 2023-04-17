@@ -5,6 +5,7 @@ Created on Fri Jan  3 15:35:53 2020
 @author: Luke.McCulloch
 """
 import weakref
+import os
 try:
     from memory_profiler import profile
     MEM_PROFILE = True
@@ -22,6 +23,8 @@ from Utilities import normalize, normalized, norm, dot, cross, \
     normalize2D, normalized2D, triangle_area
     
 from FileTools import GetLines, GetLineByLine
+
+from DataHandler import DataHandler
 
 class Node(Overload):
     def __init__(self, vector, nid, nConserved=3):
@@ -507,6 +510,7 @@ class Grid(object):
         
         self.nodes = []
         self.cells = []
+        self.FaceCellMap = {}
         
         if self.generated:
             self.nNodes = m*n
@@ -570,7 +574,7 @@ class Grid(object):
             for i in range(nnodes):
                 node = (handle.readline()).split()
                 node = [float(nd) for nd in node]
-                node = Node(node,nid)
+                node = Node(np.asarray(node),nid)
                 self.nodes.append(node)
                 #self.nodes[i].append(node) #to become 2D array (nicer for building the grid)
                 self.nodeList.append(node) #will stay as list
@@ -582,15 +586,31 @@ class Grid(object):
             
             #cid = 0
             #if ntria>0:
-            for i in range(ntria):
+            for i in range(ntria-1):
                 elm = (handle.readline()).split()
                 
-                elm = [float(nd) for nd in elm]
+                elm = [int(nd) for nd in elm]
                 self.elm.append(elm)
-                cell = Cell(self.nodes(elm,
-                                       cid = self.nCells,
-                                       nface = self.nFaces,
-                                       facelist = self.faceList)
+                #print('elm = ',elm)
+                nodesOfImport = [self.nodes[elm[0]],
+                             self.nodes[elm[1]],
+                             self.nodes[elm[2]]
+                            ]
+                #print('nodes of import = ',nodesOfImport)
+                #print('node.vector  = ',nodesOfImport[0].vector)
+                #for el in nodesOfImport:
+                #    print('type(el.vector) = ',type(el.vector))
+                #    print('el.vector = ',el.vector)
+                centroid = sum([el.vector for el in nodesOfImport]) 
+                #print('centroid = ',centroid)
+                cell = Cell(
+                            [self.nodes[elm[0]],
+                             self.nodes[elm[1]],
+                             self.nodes[elm[2]]
+                            ],
+                            cid = self.nCells,
+                            nface = self.nFaces,
+                            facelist = self.faceList
                             )
                 
                 self.cells.append(cell)
@@ -601,16 +621,21 @@ class Grid(object):
     
             self.elm = np.asarray(self.elm)
             
-            for i in range(nquad):
+            for i in range(nquad-1):
                 elm = (handle.readline()).split()
                 
                 elm = [float(nd) for nd in elm]
                 
                 
-                cell = Cell(self.nodes(elm,
-                                       cid = self.nCells,
-                                       nface = self.nFaces,
-                                       facelist = self.faceList)
+                cell = Cell(
+                            [self.nodes[elm[0]],
+                             self.nodes[elm[1]],
+                             self.nodes[elm[2]],
+                             self.nodes[elm[3]]
+                            ],
+                            cid = self.nCells,
+                            nface = self.nFaces,
+                            facelist = self.faceList
                             )
                 
                 self.cells.append(cell)
@@ -636,6 +661,7 @@ class Grid(object):
             self.buildCellToFaceIncidence() # self.EToF
             self.buildFaceToNodeIncidence() # self.FToV
             self.buildVertexToCellIncidence() # self.VToC
+        return
     
     def make_cells(self, winding ='cw'):
         """
@@ -903,7 +929,25 @@ class Grid(object):
     #-------------------------------------------------------------------------#
     # Done with checks
     #-------------------------------------------------------------------------#
+
+class TestInviscidVortex(object):
+    
+    def __init__(self):
+        # up a level
+        #uplevel = os.path.join(os.path.dirname(__file__), '..','cases')
+        uplevel = os.path.join(os.path.dirname(os.getcwd()), 'cases')
+        #path2vortex = uplevel+'\\cases\case_unsteady_vortex'
+        path2vortex = os.path.join(uplevel, 'case_unsteady_vortex')
+        self.DHandler = DataHandler(project_name = 'vortex',
+                                       path_to_inputs_folder = path2vortex)
         
+        
+        self.grid = Grid(generated=False,
+                         dhandle = self.DHandler,
+                         type_='tri',
+                         winding='ccw')
+    
+    
 if __name__ == '__main__':
     gd = Grid(type_='rect',m=10,n=10)
     self = Grid(type_='tri',m=10,n=10)
@@ -919,7 +963,7 @@ if __name__ == '__main__':
     
     
     plotTri = PlotGrid(self)
-    #"""
+    """
     axTri = plotTri.plot_cells()
     axTri = plotTri.plot_centroids(axTri)
     axTri = plotTri.plot_face_centers(axTri)
@@ -932,5 +976,14 @@ if __name__ == '__main__':
     axRect = plotRect.plot_normals(axRect)
     #"""
     
-    del(self)
-    del(gd)
+    #del(self)
+    #del(gd)
+    
+    
+    test_vortex = TestInviscidVortex()
+    
+    #'''
+    #
+    self = test_vortex.grid
+    #
+    #'''
