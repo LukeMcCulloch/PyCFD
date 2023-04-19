@@ -1,6 +1,6 @@
 &input_parameters
 
-      project_name = "test"
+      project_name = test
 
  generate_tec_file = T
  generate_vtk_file = T
@@ -10,7 +10,7 @@
 
   compute_te_mms = T
 
-        inviscid_flux = "roe"
+        inviscid_flux = roe
   eig_limiting_factor = 0.1, 0.1, 0.1, 0.1, 0.1
 
 /

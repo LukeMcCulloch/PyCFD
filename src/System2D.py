@@ -586,7 +586,7 @@ class Grid(object):
             
             #cid = 0
             #if ntria>0:
-            for i in range(ntria-1):
+            for i in range(ntria):
                 elm = (handle.readline()).split()
                 
                 elm = [int(nd)-1 for nd in elm]#mesh indicies start from 1 so convert to c indexing
@@ -621,7 +621,7 @@ class Grid(object):
     
             self.elm = np.asarray(self.elm)
             
-            for i in range(nquad-1):
+            for i in range(nquad):
                 elm = (handle.readline()).split()
                 
                 elm = [int(nd)-1 for nd in elm] #mesh indicies start from 1 so convert to c indexing
@@ -644,8 +644,45 @@ class Grid(object):
                 self.nCells +=1
             self.elm = np.asarray(self.elm)
             
-            handle.close()
             self.cells = np.asarray(self.cells)
+            
+            print('\n Total Numbers')
+            print('          nodes = {}'.format(nnodes))
+            print('      triangles = {}'.format(nnodes))
+            print('          quads = {}'.format(nnodes))
+            
+            #read boundary data
+            nbound = int((handle.readline()).split()[0]) #number of boundaries each with possible different conditions
+            self.bound = []
+            self.boundcount = []
+            
+            print('\n Boundary nodes:')
+            print('    segments = {}'.format(nbound))
+            for i in range(nbound):#loop over the  different boundaries
+                nbn = (handle.readline()).split()
+                if len(nbn)>0: 
+                    nbn = nbn[0]
+                    self.boundcount.append(int(nbn))
+                
+            handle.readline()
+            #nface = 0
+            for i in range(nbound):#loop over the  different boundaries
+                self.bound.append([])
+                for j in range(self.boundcount[i]): #read in this many nodes on this boundary
+                    thing = (handle.readline()).split()
+                    if len(thing)>0:
+                        thing = int(thing[0])
+                        self.bound[i].append(thing)
+                # bface = Face([self.nodes[i],
+                #                  self.nodes[(i+1)%self.N] 
+                #                 ],
+                #                 parentcell=self,
+                #                 fid = nface
+                #                 )
+                #     nface += 1
+            
+            self.bound = np.asarray(self.bound)
+            handle.close()
             
             
         if self.generated:
@@ -948,6 +985,24 @@ class TestInviscidVortex(object):
                          winding='ccw')
     
     
+class TestTEgrid(object):
+    
+    def __init__(self):
+        # up a level
+        #uplevel = os.path.join(os.path.dirname(__file__), '..','cases')
+        uplevel = os.path.join(os.path.dirname(os.getcwd()), 'cases')
+        #path2vortex = uplevel+'\\cases\case_unsteady_vortex'
+        path2vortex = os.path.join(uplevel, 'case_verification_te')
+        self.DHandler = DataHandler(project_name = 'te_test',
+                                       path_to_inputs_folder = path2vortex)
+        
+        
+        self.grid = Grid(generated=False,
+                         dhandle = self.DHandler,
+                         type_='tri',
+                         winding='ccw')
+    
+    
 if __name__ == '__main__':
     gd = Grid(type_='rect',m=10,n=10)
     self = Grid(type_='tri',m=10,n=10)
@@ -980,10 +1035,11 @@ if __name__ == '__main__':
     #del(gd)
     
     
-    test_vortex = TestInviscidVortex()
+    #test = TestInviscidVortex()
+    test = TestTEgrid()
     
     #'''
     #
-    self = test_vortex.grid
+    self = test.grid
     #
     #'''

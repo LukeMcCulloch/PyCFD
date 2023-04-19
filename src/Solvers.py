@@ -1445,7 +1445,7 @@ if __name__ == '__main__':
     self.solver_boot(flowtype = 'freestream')
     #self.solver_boot(flowtype = 'vortex')
     #self.solver_solve( tfinal=.005, dt=.01)
-    self.solver_solve( tfinal=0.25, dt=.0025)
+    #self.solver_solve( tfinal=0.25, dt=.0025)
     
     self.solver_solve( tfinal=0.25, dt=.01)
     self.plot_solution()
