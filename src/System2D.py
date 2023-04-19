@@ -227,6 +227,29 @@ class Face(object):
     
     
         
+class BGrid(object):
+    '''
+    ----------------------------------------------------------
+     Data type for boundary quantities (for both node/cell-centered schemes)
+     Note: Each boundary segment has the following data.
+    ----------------------------------------------------------
+    '''
+    def __init__(self, bc_type, nbnodes, bnode):
+        self.bc_type = bc_type #type of boundary nodes for this segment
+        self.nbnodes = nbnodes #number of boundary nodes for this segment
+        self.bnode = bnode     #list of boundary nodes for this segment
+        
+        #to be constructed from the code
+        self.nbfaces = None # number of boundary faces
+        self.bfnx    = None #x-component of the face outward normal
+        self.bfny    = None #y-component of the face outward normal
+        self.bfn     = None #magnitude of the face normal vector
+        self.bnx     = None #x-component of the outward normal
+        self.bny     = None #y-component of the outward normal
+        self.bn      = None #magnitude of the normal vector
+        self.belm    = None #list of elm adjacent to boundary face
+        self.kth_nghbr_of_1 = None
+        self.kth_nghbr_of_2 = None
     
         
         
@@ -656,23 +679,23 @@ class Grid(object):
             self.bound = []
             self.boundcount = []
             
-            print('\n Boundary nodes:')
-            print('    segments = {}'.format(nbound))
             for i in range(nbound):#loop over the  different boundaries
                 nbn = (handle.readline()).split()
                 if len(nbn)>0: 
                     nbn = nbn[0]
                     self.boundcount.append(int(nbn))
                 
-            handle.readline()
+            handle.readline()#hard coded line break is a smell!
             #nface = 0
             for i in range(nbound):#loop over the  different boundaries
-                self.bound.append([])
+                self.bound.append(BGrid('unknownType', 
+                                        nbnodes=self.boundcount[i], 
+                                        bnode = []))
                 for j in range(self.boundcount[i]): #read in this many nodes on this boundary
                     thing = (handle.readline()).split()
                     if len(thing)>0:
                         thing = int(thing[0])
-                        self.bound[i].append(thing)
+                        self.bound[i].bnode.append(thing)
                 # bface = Face([self.nodes[i],
                 #                  self.nodes[(i+1)%self.N] 
                 #                 ],
@@ -683,6 +706,11 @@ class Grid(object):
             
             self.bound = np.asarray(self.bound)
             handle.close()
+            print('\n Boundary nodes:')
+            print('    segments = {}'.format(nbound))
+            for i in range(nbound):
+                print(' boundary, {},   bnodes = {}'.format(i,self.bound[i].bnode))
+                print('                bfaces = {}'.format(self.bound[i].nbnodes-1))
             
             
         if self.generated:
