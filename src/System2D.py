@@ -583,6 +583,9 @@ class Grid(object):
             self.elm = []
             handle = GetLineByLine(directory = dhandle.path_to_inputs_folder,
                                        filename = dhandle.filename_grid)
+            
+            handleBC = GetLineByLine(directory = dhandle.path_to_inputs_folder,
+                                       filename = dhandle.filename_bc)
             print('\n\nReading the grid file....{}'.format(
                   dhandle.filename_grid))
             nnodes, ntria, nquad = (handle.readline()).split()
@@ -705,14 +708,20 @@ class Grid(object):
                 #     nface += 1
             
             self.bound = np.asarray(self.bound)
-            handle.close()
+            handle.close() #done with  grid file read
             print('\n Boundary nodes:')
             print('    segments = {}'.format(nbound))
             for i in range(nbound):
                 print(' boundary, {},   bnodes = {}'.format(i,self.bound[i].bnode))
                 print('                bfaces = {}'.format(self.bound[i].nbnodes-1))
+                
+            '''
+            read Boundary Conditions
+            '''
+            print('\n\nReading the boundary condition file {}\n'.format(dhandle.filename_bc))
             
             
+            handleBC.close() #done with  grid file read
         if self.generated:
             # now cells and faces:
             self.FaceCellMap = {}
