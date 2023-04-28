@@ -40,8 +40,16 @@ class Node(Overload):
         self.nConserved     = nConserved
         self.Q              = np.zeros((nConserved,1),float)
         
-    #def __call__(self):
-    #    return self.vector
+    def __repr__(self):
+        '''initialization and value'''
+        #print('{}'.format(self.vector))
+        return str('node({}) = {}'.format(self.nid,self.vector))
+        #return self.vector
+    
+    def __str__(self):
+        '''print() value '''
+        return str(self.vector)
+        #return self.vector
     
     def compute_nodal_phi(self):
         """
@@ -250,6 +258,8 @@ class BGrid(object):
         self.belm    = None #list of elm adjacent to boundary face
         self.kth_nghbr_of_1 = None
         self.kth_nghbr_of_2 = None
+        
+        
     
         
         
@@ -607,6 +617,9 @@ class Grid(object):
                 nid += 1
             self.nodes = np.asarray(self.nodes)
             self.nodes_array = np.asarray(self.nodeList) 
+            self.nNodes = nnodes
+            self.ntria = ntria
+            self.nquad = nquad
             
             
             
@@ -697,7 +710,7 @@ class Grid(object):
                 for j in range(self.boundcount[i]): #read in this many nodes on this boundary
                     thing = (handle.readline()).split()
                     if len(thing)>0:
-                        thing = int(thing[0])
+                        thing = int(thing[0])-1
                         self.bound[i].bnode.append(thing)
                 # bface = Face([self.nodes[i],
                 #                  self.nodes[(i+1)%self.N] 
@@ -718,10 +731,28 @@ class Grid(object):
             '''
             read Boundary Conditions
             '''
-            print('\n\nReading the boundary condition file {}\n'.format(dhandle.filename_bc))
-            
-            
+            handleBC.readline()#hard coded line break is a smell!
+            print('\n\nReading the boundary condition file.... {}\n'.format(dhandle.filename_bc))
+            for i in range(nbound):
+                thing = (handleBC.readline()).split()
+                if len(thing)>0:
+                    self.bound[i].bc_type = thing[1]
+                    print(' boundary, {},   bc_type = {}'.format(i,self.bound[i].bc_type))
+                
             handleBC.close() #done with  grid file read
+            
+            # now cells and faces:
+            self.FaceCellMap = {}
+            # maps
+            self.make_FaceCellMap()
+            
+            self.make_neighbors()
+            
+            # build incidence tables
+            self.buildCellToFaceIncidence() # self.EToF
+            self.buildFaceToNodeIncidence() # self.FToV
+            self.buildVertexToCellIncidence() # self.VToC
+            
         if self.generated:
             # now cells and faces:
             self.FaceCellMap = {}
@@ -1080,3 +1111,19 @@ if __name__ == '__main__':
     self = test.grid
     #
     #'''
+    plotter = PlotGrid(self)
+    
+    #"""
+    ax = plotter.plot_cells()
+    ax = plotter.plot_centroids(ax)
+    ax = plotter.plot_face_centers(ax)
+    ax = plotter.plot_normals(ax)
+    ax = plotter.plot_boundary(ax)
+    #"""
+    
+    """
+    ax = plotter.plot_boundary()
+    ax = plotter.plot_centroids(ax)
+    ax = plotter.plot_face_centers(ax)
+    ax = plotter.plot_normals(ax)
+    #"""

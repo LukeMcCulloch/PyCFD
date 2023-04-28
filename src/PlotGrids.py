@@ -169,4 +169,53 @@ class PlotGrid(object):
                         alpha = alpha)
                 
         return ax
-
+    
+    def plot_boundary(self, canvas = None, alpha=.1):
+        '''
+        plot boundary 
+        '''
+        if canvas is None:
+            fig, ax = plt.subplots()
+            ax.axis('equal')
+        else:
+            ax = canvas
+        grid = self.grid
+        
+        for seg in grid.bound:
+            self.plot_bgrid(seg, ax, alpha)
+            
+        return ax
+    
+    def plot_bgrid(self, seg, canvas = None, alpha=.1):
+        '''
+        plot boundary segment
+        '''
+        if canvas is None:
+            fig, ax = plt.subplots()
+            ax.axis('equal')
+        else:
+            ax = canvas
+        grid = self.grid
+        
+        for i in range(1,seg.nbnodes):
+            n0 = grid.nodes[seg.bnode[i-1]]
+            n1 = grid.nodes[seg.bnode[i]]
+            
+            
+            
+            ax.plot(n0.x0,n0.x1,
+                    color='red',
+                    marker='o',
+                    alpha = alpha)
+            ax.plot(n1.x0,n1.x1,
+                    color='red',
+                    marker='o',
+                    alpha = alpha)
+            
+            x = [n0.x0,n1.x0]
+            y = [n0.x1,n1.x1]
+            ax.plot(x, y,
+                    color='black',
+                    alpha = alpha)
+        
+        return ax

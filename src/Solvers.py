@@ -402,7 +402,12 @@ class Solvers(object):
         # Physical time-stepping
         #-----------------------------------------------------------------------------
         #-----------------------------------------------------------------------------
-
+        
+        #--------------------------------------------------------------------------------
+        # First, make sure that normal mass flux is zero at all solid boundary nodes.
+        # NOTE: Necessary because initial solution may generate the normal component.
+        #--------------------------------------------------------------------------------
+        #self.eliminate_normal_mass_flux()
         
         #for jj in range(1): #debugging!
         while (time < self.t_final):
@@ -613,30 +618,30 @@ class Solvers(object):
     
     
     
-                #--------------------------------------------------------------------------------
-                #--------------------------------------------------------------------------------
-                #--------------------------------------------------------------------------------
-                #--------------------------------------------------------------------------------
-                #--------------------------------------------------------------------------------
-                # Residual computation: boundary faces:
-                #
-                # Close the residual by looping over boundary faces and distribute a contribution
-                # to the corresponding cell.
-                
-                # Boundary face j consists of nodes j and j+1.
-                #
-                #  Interior domain      /
-                #                      /
-                #              /\     o
-                #             /  \   /
-                #            / c1 \ /   Outside the domain
-                # --o-------o------o
-                #           j   |  j+1
-                #               |   
-                #               v Face normal for the face j.
-                #
-                # c = bcell, the cell having the boundary face j.
-                #
+        #--------------------------------------------------------------------------------
+        #--------------------------------------------------------------------------------
+        #--------------------------------------------------------------------------------
+        #--------------------------------------------------------------------------------
+        #--------------------------------------------------------------------------------
+        # Residual computation: boundary faces:
+        #
+        # Close the residual by looping over boundary faces 
+        # and distribute a contribution to the corresponding cell.
+        
+        # Boundary face j consists of nodes j and j+1.
+        #
+        #  Interior domain      /
+        #                      /
+        #              /\     o
+        #             /  \   /
+        #            / c1 \ /   Outside the domain
+        # --o-------o------o
+        #           j   |  j+1
+        #               |   
+        #               v Face normal for the face j.
+        #
+        # c = bcell, the cell having the boundary face j.
+        #
         savei = 0
         #print 'do boundary residual'
         for ib, bface in enumerate(self.mesh.boundaryList):
@@ -1404,6 +1409,45 @@ class TestInviscidVortex(object):
                          dhandle = self.DHandler,
                          type_='quad',
                          winding='ccw')
+        
+
+    
+    
+class TestTEgrid(object):
+    
+    def __init__(self):
+        # up a level
+        #uplevel = os.path.join(os.path.dirname(__file__), '..','cases')
+        uplevel = os.path.join(os.path.dirname(os.getcwd()), 'cases')
+        #path2vortex = uplevel+'\\cases\case_unsteady_vortex'
+        path2vortex = os.path.join(uplevel, 'case_verification_te')
+        self.DHandler = DataHandler(project_name = 'te_test',
+                                       path_to_inputs_folder = path2vortex)
+        
+        
+        self.grid = Grid(generated=False,
+                         dhandle = self.DHandler,
+                         type_='tri',
+                         winding='ccw')
+    
+        
+        
+class TestTEgrid(object):
+    
+    def __init__(self):
+        # up a level
+        #uplevel = os.path.join(os.path.dirname(__file__), '..','cases')
+        uplevel = os.path.join(os.path.dirname(os.getcwd()), 'cases')
+        #path2vortex = uplevel+'\\cases\case_unsteady_vortex'
+        path2vortex = os.path.join(uplevel, 'case_verification_te')
+        self.DHandler = DataHandler(project_name = 'te_test',
+                                       path_to_inputs_folder = path2vortex)
+        
+        
+        self.grid = Grid(generated=False,
+                         dhandle = self.DHandler,
+                         type_='tri',
+                         winding='ccw')
     
 
 if __name__ == '__main__':
@@ -1423,7 +1467,11 @@ if __name__ == '__main__':
     
     #cell.plot_cell()
     
-    self = Solvers(mesh = mesh)
+    
+    
+    #test = TestInviscidVortex()
+    test = TestTEgrid()
+    self = Solvers(mesh = test.grid)
     
     #cc = self.cclsq[35]
     #cc.plot_lsq_reconstruction()
