@@ -124,8 +124,8 @@ class Face(object):
             
             
             
-    def __del__(self):
-        print("delete", self.fid)
+    #def __del__(self):
+    #    print("delete", self.fid)
         
         
         

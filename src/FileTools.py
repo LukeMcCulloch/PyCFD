@@ -65,6 +65,8 @@ def GetLineByLine(directory,filename):
     rootFldr = directory
     defaultFileName = filename
     FilePath, FileName = GetFile(rootFldr, defaultFileName )
+    print('opening mesh case:')
+    print(FilePath+slash+FileName)
     fileHandle = open(FilePath+slash+FileName, access_mode[0], buffering)
     return fileHandle
 

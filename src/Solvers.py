@@ -241,7 +241,10 @@ class Solvers(object):
         
         switchdict = {
             'vortex':   self.initial_condition_vortex,
-            'freestream': self.set_initial_solution
+            'freestream': self.initial_solution_freestream,
+            'airfoil':self.initial_solution_freestream,
+            'cylinder':self.initial_solution_freestream,
+            'shock-diffraction':self.initial_solution_shock_diffraction
             }
         #switchdict.get(flowtype, "not implemented, at all")
         switchdict[flowtype]()
@@ -1107,7 +1110,7 @@ class Solvers(object):
         return self.num_flux[:], wsn
         
     
-    def set_initial_solution(self, M_inf = 1.0, aoa = 0.0):
+    def initial_solution_freestream(self, M_inf = 1.0, aoa = 0.0):
         """
         #*******************************************************************************
         # Set the initial solution.
@@ -1192,6 +1195,67 @@ class Solvers(object):
             
             # Compute and store conservative variables
             self.u[i,:] = self.w2u( self.w[i,:] )
+            
+        return
+    
+    def initial_solution_shock_diffraction():
+        '''
+        ********************************************************************************
+        * Initial solution for the shock diffraction problem:
+        *
+        * NOTE: So, this is NOT a general purpose subroutine.
+        *       For other problems, specify M_inf in the main program, and
+        *       modify this subroutine to set up an appropriate initial solution.
+        
+          Shock Diffraction Problem:
+        
+                                     Wall
+                             --------------------
+         Post-shock (inflow) |                  |
+         (rho,u,v,p)_inf     |->Shock (M_shock) |            o: Corner node
+            M_inf            |                  |
+                      .......o  Pre-shock       |Outflow
+                        Wall |  (rho0,u0,v0,p0) |
+                             |                  |
+                             |                  |
+                             --------------------
+                                   Outflow
+        
+        ********************************************************************************
+        '''
+        self.gamma = 1.4
+        gamma = self.gamma
+        
+        # Pre-shock state: uniform state; no disturbance has reahced yet.
+        one = 1.0
+        zero = 0.0
+        two = 2.0
+        rho0 = one
+        u0 = zero
+        v0 = zero
+        p0 = one/gamma
+        
+        for i, cell in enumerate(self.mesh.cells):
+            
+            # Incoming shock speed
+            
+            M_shock = 5.09
+            u_shock = M_shock * np.sqrt(gamma*p0/rho0)
+            
+            # Post-shock state: These values will be used in the inflow boundary condition.
+            rho_inf = rho0 * (gamma + one)*M_shock**2/( (gamma - one)*M_shock**2 + two )
+            p_inf =   p0 * (   two*gamma*M_shock**2 - (gamma - one) )/(gamma + one)
+            u_inf = (one - rho0/rho_inf)*u_shock
+            self.M_inf = u_inf / np.sqrt(gamma*p_inf/rho_inf)
+            self.v_inf = zero
+            
+            # Set the initial solution: set the pre-shock state inside the domain.
+            
+            #node[i].w = np.asarray([ rho0, u0, v0, p0 ])
+            #node[i].u = self.w2u( node(i).w )
+            
+            self.w[i,:] = np.asarray([ rho0, u0, v0, p0 ])
+            self.u[i,:] = self.w2u(self.w[i,:])
             
         return
     
@@ -1400,16 +1464,69 @@ class TestInviscidVortex(object):
         #uplevel = os.path.join(os.path.dirname(__file__), '..','cases')
         uplevel = os.path.join(os.path.dirname(os.getcwd()), 'cases')
         #path2vortex = uplevel+'\\cases\case_unsteady_vortex'
-        path2vortex = os.path.join(uplevel, 'case_unsteady_vortex')
+        path2case = os.path.join(uplevel, 'case_unsteady_vortex')
         self.DHandler = DataHandler(project_name = 'vortex',
-                                       path_to_inputs_folder = path2vortex)
+                                       path_to_inputs_folder = path2case)
+        
+        
+        self.grid = Grid(generated=False,
+                         dhandle = self.DHandler,
+                         type_='tri',
+                         winding='ccw')
+        
+        
+
+# class TestSteadyCylinder(object):
+    
+#     def __init__(self):
+#         # up a level
+#         #uplevel = os.path.join(os.path.dirname(__file__), '..','cases')
+#         uplevel = os.path.join(os.path.dirname(os.getcwd()), 'cases')
+#         #path2vortex = uplevel+'\\cases\case_unsteady_vortex'
+#         path2case = os.path.join(uplevel, 'case_steady_cylinder')
+#         self.DHandler = DataHandler(project_name = 'cylinder',
+#                                        path_to_inputs_folder = path2case)
+        
+        
+#         self.grid = Grid(generated=False,
+#                          dhandle = self.DHandler,
+#                          type_='tri',
+#                          winding='ccw')
+        
+class TestSteadyCylinder(object):
+    
+    def __init__(self):
+        # up a level
+        #uplevel = os.path.join(os.path.dirname(__file__), '..','cases')
+        uplevel = os.path.join(os.path.dirname(os.getcwd()), 'cases')
+        #path2vortex = uplevel+'\\cases\case_unsteady_vortex'
+        path2case = os.path.join(uplevel, 'case_steady_cylinder')
+        self.DHandler = DataHandler(project_name = 'cylinder',
+                                       path_to_inputs_folder = path2case)
+        
+        
+        self.grid = Grid(generated=False,
+                         dhandle = self.DHandler,
+                         type_='tri',
+                         winding='ccw')
+        
+        
+class TestSteadyAirfoil(object):
+    
+    def __init__(self):
+        # up a level
+        #uplevel = os.path.join(os.path.dirname(__file__), '..','cases')
+        uplevel = os.path.join(os.path.dirname(os.getcwd()), 'cases')
+        #path2vortex = uplevel+'\\cases\case_unsteady_vortex'
+        path2case = os.path.join(uplevel, 'case_steady_airfoil')
+        self.DHandler = DataHandler(project_name = 'airfoil',
+                                       path_to_inputs_folder = path2case)
         
         
         self.grid = Grid(generated=False,
                          dhandle = self.DHandler,
                          type_='quad',
                          winding='ccw')
-        
 
     
     
@@ -1420,34 +1537,34 @@ class TestTEgrid(object):
         #uplevel = os.path.join(os.path.dirname(__file__), '..','cases')
         uplevel = os.path.join(os.path.dirname(os.getcwd()), 'cases')
         #path2vortex = uplevel+'\\cases\case_unsteady_vortex'
-        path2vortex = os.path.join(uplevel, 'case_verification_te')
-        self.DHandler = DataHandler(project_name = 'te_test',
-                                       path_to_inputs_folder = path2vortex)
+        path2case = os.path.join(uplevel, 'case_verification_te')
+        self.DHandler = DataHandler(project_name = 'test',
+                                       path_to_inputs_folder = path2case)
         
         
         self.grid = Grid(generated=False,
                          dhandle = self.DHandler,
-                         type_='tri',
+                         type_='quad',
                          winding='ccw')
     
         
         
-class TestQEgrid(object):
+# class TestQEgrid(object):
     
-    def __init__(self):
-        # up a level
-        #uplevel = os.path.join(os.path.dirname(__file__), '..','cases')
-        uplevel = os.path.join(os.path.dirname(os.getcwd()), 'cases')
-        #path2vortex = uplevel+'\\cases\case_unsteady_vortex'
-        path2vortex = os.path.join(uplevel, 'case_verification_te')
-        self.DHandler = DataHandler(project_name = 'te_test',
-                                        path_to_inputs_folder = path2vortex)
+#     def __init__(self):
+#         # up a level
+#         #uplevel = os.path.join(os.path.dirname(__file__), '..','cases')
+#         uplevel = os.path.join(os.path.dirname(os.getcwd()), 'cases')
+#         #path2vortex = uplevel+'\\cases\case_unsteady_vortex'
+#         path2vortex = os.path.join(uplevel, 'case_verification_te')
+#         self.DHandler = DataHandler(project_name = 'te_test',
+#                                         path_to_inputs_folder = path2vortex)
         
         
-        self.grid = Grid(generated=False,
-                          dhandle = self.DHandler,
-                          type_='quad',
-                          winding='ccw')
+#         self.grid = Grid(generated=False,
+#                           dhandle = self.DHandler,
+#                           type_='quad',
+#                           winding='ccw')
     
 
 if __name__ == '__main__':
@@ -1470,39 +1587,44 @@ if __name__ == '__main__':
     
     
     #test = TestInviscidVortex()
+    #test = TestSteadyAirfoil()
+    test = TestSteadyCylinder()
     #test = TestTEgrid()
-    test = TestQEgrid()
-    self = Solvers(mesh = test.grid)
     
-    #cc = self.cclsq[35]
-    #cc.plot_lsq_reconstruction()
-    
-    
-    #----------------------------
-    # plot LSQ gradient stencils
-    #show_LSQ_grad_area_plots(self)
-    
-    
-    # cc = ssolve.cclsq[57]
-    # cc.plot_lsq_reconstruction()
-    # cell = cc.cell
-    # cell.plot_cell()
-    
-    
-    
-    #"""
-    self.solver_boot(flowtype = 'freestream')
-    #self.solver_boot(flowtype = 'vortex')
-    #self.solver_solve( tfinal=.005, dt=.01)
-    #self.solver_solve( tfinal=0.25, dt=.0025)
-    
-    self.solver_solve( tfinal=10.0, dt=.01)
-    self.plot_solution()
-    #"""
-    
-    '''
-    # if memory issues are encountered:
-    del(self)
-    del(mesh)
-    #'''
-    
+    if True:
+        
+        #'''
+        self = Solvers(mesh = test.grid)
+        
+        #cc = self.cclsq[35]
+        #cc.plot_lsq_reconstruction()
+        
+        
+        #----------------------------
+        # plot LSQ gradient stencils
+        #show_LSQ_grad_area_plots(self)
+        
+        
+        # cc = ssolve.cclsq[57]
+        # cc.plot_lsq_reconstruction()
+        # cell = cc.cell
+        # cell.plot_cell()
+        
+        #'''
+        
+        #"""
+        self.solver_boot(flowtype = 'freestream')
+        #self.solver_boot(flowtype = 'vortex')
+        #self.solver_solve( tfinal=.005, dt=.01)
+        #self.solver_solve( tfinal=0.25, dt=.0025)
+        
+        self.solver_solve( tfinal=0.05, dt=.01)
+        self.plot_solution()
+        #"""
+        
+        '''
+        # if memory issues are encountered:
+        del(self)
+        del(mesh)
+        #'''
+        

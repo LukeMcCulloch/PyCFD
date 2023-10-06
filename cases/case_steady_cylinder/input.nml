@@ -1,7 +1,7 @@
 &input_parameters
 
-        project_name = "cylinder"
-  steady_or_unsteady = "steady"
+        project_name = cylinder
+  steady_or_unsteady = steady
    generate_tec_file = T
    generate_vtk_file = T
 
@@ -10,7 +10,7 @@
 
       compute_te_mms = F
 
- inviscid_flux       = "roe"
+ inviscid_flux       = roe
  eig_limiting_factor = 0.2, 0.2, 0.2, 0.2, 0.2
 
                  CFL = 0.9
