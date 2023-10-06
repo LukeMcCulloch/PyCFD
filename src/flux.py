@@ -359,7 +359,7 @@ def roe1D(nx,gamma,uL,uR,f,fL,fR) :
         L31, L32, L33 = phi2 + uu*aa, -aa - gm*uu, gm
 
         for m in range(3):
-			V[m] = 0.5*(uR[i,m]-uL[i,m])
+            V[m] = 0.5*(uR[i,m]-uL[i,m])
             
 
         dd[0] = D11*(L11*V[0] + L12*V[1] + L13*V[2])

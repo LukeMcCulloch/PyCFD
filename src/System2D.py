@@ -10,7 +10,7 @@ try:
     from memory_profiler import profile
     MEM_PROFILE = True
 except:
-    print 'please install memory_profiler'
+    print( 'please install memory_profiler' )
     MEM_PROFILE = False
 #
 import numpy as np
@@ -335,18 +335,18 @@ class Cell(object):
     
     def print_vertices(self):
         for vert in self.nodes:
-            print vert.vector
+            print(vert.vector )
         return
     
     
     def print_faces(self, normals=False):
         for face in self.faces:
-            print 'face'
+            print('face' )
             for vert in face.nodes:
-                print vert.vector
+                print( vert.vector )
             if normals:
-                print 'face normal'
-                print face.compute_normal()
+                print('face normal' )
+                print( face.compute_normal() )
         return
     
     def compute_compact_gradient_reconstruction_A_matrix(self):
@@ -434,11 +434,11 @@ class Cell(object):
         
         cell = self
         for face in cell.faces:
-            # print 'new face'
-            # print '\n Normal vector'
-            # print face.normal_vector
-            # print '\n center'
-            # print face.center
+            # print('new face'
+            # print('\n Normal vector'
+            # print(face.normal_vector
+            # print('\n center'
+            # print(face.center
             
             norm0 = .5*face.normal_vector*face.area**2 + face.center
             #norm0 = norm0*face.area
@@ -520,11 +520,18 @@ class Grid(object):
                  xe = 20.,
                  ye = 10.,
                  m=10,n=10,
-                 type_='rect', 
+                 type_='quad', 
                  winding='ccw'):
         
+        self.m = m
+        self.n = n
+        self.xb = xb
+        self.xe = xe
+        self.yb = yb
+        self.ye = ye
+        
         self.generated = generated
-        self.gridtype = {'rect':0,
+        self.gridtype = {'quad':0,
                          'tri':1}
         self.dim = 2    #2D grid
         self.nCells = 0
@@ -558,8 +565,6 @@ class Grid(object):
             if mesh is None:
                 mesh = np.zeros((2,m,n),float) # C-ordering.  last index is most rapid
                 self.dim = 2
-                self.m = m
-                self.n = n
             else:
                 shp = np.shape(mesh)
                 self.dim = shp[0]
@@ -590,6 +595,7 @@ class Grid(object):
             self.nodes_array = np.asarray(self.nodeList) #is this at all faster?
         
         else: #read text files...
+            self.generated = generated
             self.elm = []
             handle = GetLineByLine(directory = dhandle.path_to_inputs_folder,
                                        filename = dhandle.filename_grid)
@@ -1016,7 +1022,7 @@ class Grid(object):
         v1 = self.sum_volume_green_gauss()
         v2 = self.sum_volume_cell_sum()
         if (abs(v1-v2)>tol):
-            print " Volume difference is larger than round-off error... Something is wrong. Stop."
+            print(" Volume difference is larger than round-off error... Something is wrong. Stop." )
         return
     
     def sum_volume_green_gauss(self):
@@ -1078,8 +1084,8 @@ if __name__ == '__main__':
     cell = self.cellList[44]
     face = cell.faces[0]
     
-    #print face.e_eta
-    #print face.e_xi
+    #print(face.e_eta
+    #print(face.e_xi
     
     #cell = self.cellList[0]
     #face = cell.faces[0]

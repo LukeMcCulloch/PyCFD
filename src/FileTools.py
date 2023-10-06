@@ -84,11 +84,11 @@ def main():
     #filename =   'lnhinp.demo10'
     #directory = 'C:\Users\luke.mcculloch\Documents\My Codes\Bentley\MOSES-SACS\TOW_testing\Transport\Tow\test11'
     #directory = 'C:\test11'
-    directory = 'C:\Users\luke.mcculloch\Documents\My Codes\Bentley\MOSES-SACS\SACSBargetoMOSESbarge'
+    directory = r'C:\Users\luke.mcculloch\Documents\My Codes\Bentley\MOSES-SACS\SACSBargetoMOSESbarge'
     filename =   'log00001.txt'
     testlines = GetLines(directory,filename)
     for line in testlines:
-        print line
+        print( line )
     return testlines
     
 if __name__=='__main__':

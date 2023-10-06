@@ -11,7 +11,7 @@ try:
     from memory_profiler import profile
     MEM_PROFILE = True
 except:
-    print 'please install memory_profiler'
+    print( 'please install memory_profiler')
     MEM_PROFILE = False
 #
 import numpy as np
@@ -248,7 +248,7 @@ class Solvers(object):
         self.plot_flow_at_cell_centers()
         
         #self.explicit_steady_solver()
-        #self.explicit_unsteady_solver()
+        self.explicit_unsteady_solver()
         
         self.solver_initialized = True
         return
@@ -273,8 +273,8 @@ class Solvers(object):
         at the cell in question
         """
         
-        print "--------------------------------------------------"
-        print " Computing LSQ coefficients... "
+        print( "--------------------------------------------------" )
+        print( " Computing LSQ coefficients... " )
         
         ix = 0
         iy = 1
@@ -366,14 +366,14 @@ class Solvers(object):
                 wy += self.cclsq[i].cy[k] * ( (2.0*xk+yk) - (2.0*xi+yi))
             
             if (abs(wx-2.0) > tol) or (abs(wy-1.0) > tol) :
-                print " wx = ", wx, " exact ux = 2.0"
-                print " wy = ", wy, " exact uy = 1.0"
+                print( " wx = ", wx, " exact ux = 2.0" )
+                print( " wy = ", wy, " exact uy = 1.0" )
                 verifcation_error = True
                 
         if verifcation_error:
-            print " LSQ coefficients are not correct. See above. Stop."
+            print(" LSQ coefficients are not correct. See above. Stop." )
         else:
-            print " Verified: LSQ coefficients are exact for a linear function."
+            print(" Verified: LSQ coefficients are exact for a linear function." )
         return
     
     
@@ -411,7 +411,7 @@ class Solvers(object):
         
         #for jj in range(1): #debugging!
         while (time < self.t_final):
-            print time
+            print(time)
             #------------------------------------------------------------------
             # Compute the residual: res(i,:)
             self.compute_residual()
@@ -529,7 +529,7 @@ class Solvers(object):
         #
         #----------------------------------------------------------------------
         savei = 0
-        #print 'do interior residual'
+        #print('do interior residual'
         for i,face in enumerate(mesh.faceList):
             """
             #debugging:
@@ -574,7 +574,7 @@ class Solvers(object):
                     
                 # Reconstruct the solution to the face midpoint and compute a numerical flux.
                 # (reconstruction is implemented inside "interface_flux".
-                #print 'i = ',i
+                #print('i = ',i
                 num_flux, wave_speed = self.interface_flux(u1, u2,                     #<- Left/right states
                                                            self.gradw1, self.gradw2,   #<- Left/right same gradients
                                                            face.normal_vector,      #<- unit face normal
@@ -600,7 +600,7 @@ class Solvers(object):
                 print( phi1,phi2    )
                 #"""
                 
-                #print i, num_flux, wave_speed
+                #print(i, num_flux, wave_speed
                 #  Add the flux multiplied by the magnitude of the directed area vector to c1.
     
                 self.res[c1.cid,:] += num_flux * face.face_nrml_mag
@@ -643,7 +643,7 @@ class Solvers(object):
         # c = bcell, the cell having the boundary face j.
         #
         savei = 0
-        #print 'do boundary residual'
+        #print('do boundary residual'
         for ib, bface in enumerate(self.mesh.boundaryList):
             """
             ib = self.save[0]
@@ -676,7 +676,7 @@ class Solvers(object):
             
             #---------------------------------------------------
             # Get the right state (weak BC!)
-            #print 'ib = ',ib
+            #print('ib = ',ib
             self.ub = self.BC.get_right_state(xm,ym, 
                                     u1, 
                                     self.unit_face_normal, 
@@ -688,7 +688,7 @@ class Solvers(object):
             
             #---------------------------------------------------
             # Compute a flux at the boundary face.
-            #print 'ub = ',self.ub
+            #print('ub = ',self.ub
             num_flux, wave_speed = self.interface_flux(u1, self.ub,                      #<- Left/right states
                                                        self.gradw1, self.gradw2,    #<- Left/right same gradients
                                                        self.unit_face_normal,       #<- unit face normal
@@ -701,19 +701,19 @@ class Solvers(object):
             if test:
                 self.save = [ib, bface]
             assert(not test), "Found a NAN in boundary residual"
-            #print ib, num_flux, wave_speed
+            #print(ib, num_flux, wave_speed
             
             """
             debugging:
                 
-            print u1, u2
-            print self.gradw1
-            print self.gradw2
-            print self.unit_face_normal
-            print c1.centroid
-            print [xm, ym]
-            print xm,ym
-            print phi1,phi2
+            print(u1, u2
+            print(self.gradw1
+            print(self.gradw2
+            print(self.unit_face_normal
+            print(c1.centroid
+            print([xm, ym]
+            print(xm,ym
+            print(phi1,phi2
             """
             """
             #debugging:
@@ -1432,7 +1432,7 @@ class TestTEgrid(object):
     
         
         
-class TestTEgrid(object):
+class TestQEgrid(object):
     
     def __init__(self):
         # up a level
@@ -1441,17 +1441,17 @@ class TestTEgrid(object):
         #path2vortex = uplevel+'\\cases\case_unsteady_vortex'
         path2vortex = os.path.join(uplevel, 'case_verification_te')
         self.DHandler = DataHandler(project_name = 'te_test',
-                                       path_to_inputs_folder = path2vortex)
+                                        path_to_inputs_folder = path2vortex)
         
         
         self.grid = Grid(generated=False,
-                         dhandle = self.DHandler,
-                         type_='tri',
-                         winding='ccw')
+                          dhandle = self.DHandler,
+                          type_='quad',
+                          winding='ccw')
     
 
 if __name__ == '__main__':
-    # gd = Grid(type_='rect',m=10,n=10,
+    # gd = Grid(type_='quad',m=10,n=10,
     #           winding='ccw')
     
     #mesh = Grid(type_='tri',m=42,n=21,
@@ -1470,7 +1470,8 @@ if __name__ == '__main__':
     
     
     #test = TestInviscidVortex()
-    test = TestTEgrid()
+    #test = TestTEgrid()
+    test = TestQEgrid()
     self = Solvers(mesh = test.grid)
     
     #cc = self.cclsq[35]
@@ -1495,7 +1496,7 @@ if __name__ == '__main__':
     #self.solver_solve( tfinal=.005, dt=.01)
     #self.solver_solve( tfinal=0.25, dt=.0025)
     
-    self.solver_solve( tfinal=0.25, dt=.01)
+    self.solver_solve( tfinal=10.0, dt=.01)
     self.plot_solution()
     #"""
     
