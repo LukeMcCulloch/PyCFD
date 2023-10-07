@@ -36,6 +36,8 @@ from DataHandler import DataHandler
 import FileTools as FT
 from PlotGrids import PlotGrid
 
+from Debugging import dbInterfaceFlux, dbRoeFlux
+
 
 nq = 4 # Euler system size
 
@@ -580,15 +582,39 @@ class Solvers(object):
                 #print('i = ',i
                 num_flux, wave_speed = self.interface_flux(u1, u2,                     #<- Left/right states
                                                            self.gradw1, self.gradw2,   #<- Left/right same gradients
-                                                           face.normal_vector,      #<- unit face normal
+                                                           face.normal_vector,         #<- unit face normal
                                                            c1.centroid,                #<- Left cell centroid
                                                            c2.centroid,                #<- right cell centroid
                                                            xm, ym,                     #<- face midpoint
                                                            phi1, phi2,                 #<- Limiter functions
                                                            )
                 test = np.any(np.isnan(num_flux)) or np.isnan(wave_speed)
+                self.dbugIF = dbInterfaceFlux(u1, u2,                     #<- Left/right states
+                                    self.gradw1, self.gradw2,   #<- Left/right same gradients
+                                    face,                       #<- unit face //normal
+                                    c1,                         #<- Left cell // centroid
+                                    c2,                         #<- right cell // centroid
+                                    xm, ym,                     #<- face midpoint
+                                    phi1, phi2,                 #<- Limiter functions)
+                                    )
                 if test:
-                    self.save = [i, face]
+                    self.dbugIF = dbInterfaceFlux(u1, u2,                     #<- Left/right states
+                                        self.gradw1, self.gradw2,   #<- Left/right same gradients
+                                        face,                       #<- unit //face normal
+                                        c1,                         #<- Left cell centroid
+                                        c2,                         #<- right cell centroid
+                                        xm, ym,                     #<- face midpoint
+                                        phi1, phi2,                 #<- Limiter functions)
+                                        )
+                    print('NAN on the interior')
+                    print(i, num_flux, wave_speed)
+                    self.save = [i, face, wave_speed]
+                    #self.save = [i, face]
+                    '''
+                    i = self.save[0]
+                    face = self.save[1]
+                    wave_speed = self.save[2]
+                    '''
                 assert(not test), "Found a NAN in interior residual"
                 """
                 #debugging:
@@ -601,6 +627,30 @@ class Solvers(object):
                 print( c2.centroid    )
                 print( xm,ym    )
                 print( phi1,phi2    )
+                
+                print(self.dbugIF)
+                u1 = self.dbugIF.u1
+                u2 = self.dbugIF.u2
+                face = self.dbugIF.face
+                c1 = self.dbugIF.c1
+                c2 = self.dbugIF.c2
+                xm = self.dbugIF.xm
+                ym = self.dbugIF.ym
+                phi1 = self.dbugIF.phi1
+                phi2 = self.dbugIF.phi2
+                #dbugIF data
+                
+                
+                num_flux, wave_speed = self.interface_flux(u1, u2,                     #<- Left/right states
+                                                           self.gradw1, self.gradw2,   #<- Left/right same gradients
+                                                           face.normal_vector,         #<- unit face normal
+                                                           c1.centroid,                #<- Left cell centroid
+                                                           c2.centroid,                #<- right cell centroid
+                                                           xm, ym,                     #<- face midpoint
+                                                           phi1, phi2,                 #<- Limiter functions
+                                                           )
+                
+                
                 #"""
                 
                 #print(i, num_flux, wave_speed
@@ -646,7 +696,7 @@ class Solvers(object):
         # c = bcell, the cell having the boundary face j.
         #
         savei = 0
-        #print('do boundary residual'
+        #print('do boundary residual')
         for ib, bface in enumerate(self.mesh.boundaryList):
             """
             ib = self.save[0]
@@ -702,9 +752,11 @@ class Solvers(object):
                                                        )
             test = np.any(np.isnan(self.wsn))  or np.isnan(wave_speed)
             if test:
-                self.save = [ib, bface]
+                print('NAN at a boundary')
+                print(ib, num_flux, wave_speed)
+                self.save = [ib, bface, wave_speed]
             assert(not test), "Found a NAN in boundary residual"
-            #print(ib, num_flux, wave_speed
+            print(ib, num_flux, wave_speed)
             
             """
             debugging:
@@ -1017,6 +1069,10 @@ class Solvers(object):
             num_flux,            # numerical flux (output)
             wsn                  # max wave speed at face 
             
+        
+        
+        debug inputs:
+            
             #interior
             gradw1 = self.gradw1
             gradw2 = self.gradw2
@@ -1024,12 +1080,15 @@ class Solvers(object):
             C1 = c1.centroid
             C2 = c2.centroid
             
+            
             #boundary
             gradw1 = self.gradw1
             gradw2 = self.gradw2
             n12 = face.normal_vector
             C1 = c1.centroid
             C2 = [xm, ym]
+            
+            
             
         """
         

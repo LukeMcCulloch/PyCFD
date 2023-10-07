@@ -123,7 +123,7 @@ class BC_states(object):
     # Freestream
     #**************************************************************************
     def freestream(self, wb):
-        #print("freestream")
+        print("freestream")
         #print( 'got wb',wb)
         flowstate = self.flowstate
         wb[0] = flowstate.rho_inf
@@ -176,6 +176,7 @@ class BC_states(object):
     #
     #**************************************************************************
     def slip_wall(self, wL,njk, wb):
+        print("slip_wall")
 
         un = wL(2)*njk(1) + wL(3)*njk(2)
         
