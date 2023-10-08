@@ -91,7 +91,7 @@ class BC_states(object):
                     'symmetry_y':[wL,njk,wb],
                     'slip_wall':[wL,njk, wb],
                     'outflow_supersonic':[wL, wb],
-                    'dirichlet':[]
+                    'dirichlet':[wL, wb]
                     }
         
         getattr(self, bc_state_type)(*vs_cases[bc_state_type])
@@ -120,10 +120,23 @@ class BC_states(object):
     
     
     #**************************************************************************
+    # Dirichlet
+    #**************************************************************************
+    def Dirichlet(self, wL, wb):
+        #print("freestream")
+        #print( 'got wb',wb)
+        flowstate = self.flowstate
+        wb[1] = 0.0
+        wb[2] = 0.0
+        #print( 'set wb',wb)
+        return
+    
+    
+    #**************************************************************************
     # Freestream
     #**************************************************************************
     def freestream(self, wb):
-        print("freestream")
+        #print("freestream")
         #print( 'got wb',wb)
         flowstate = self.flowstate
         wb[0] = flowstate.rho_inf
@@ -139,6 +152,7 @@ class BC_states(object):
     # Subsonic outflow (backpressure)
     #**************************************************************************
     def back_pressure(self, wL, wb):
+        print("outflow_subersonic")
         flowstate = self.flowstate
         #-------------------------
         # Back pressure condition
@@ -153,6 +167,7 @@ class BC_states(object):
     # Note: This is a simplified implementation similar to slip wall condition.
     #**********************************************************************
     def symmetry_y(self, wL,njk, wb):
+        print("symmetry_y")
         #un = wL[1]*njk[0] + wL[2]*njk[1]  #not used
 
         #-------------------------
@@ -168,6 +183,7 @@ class BC_states(object):
         # (ub,vb) = (uL,vL) - 2*un*njk -> 0.5[(ub,vb)+(uL,vL)]*njk = (0,0).
         # Since rho_b = rhoL as set in the above, this means the momemtum
         # in n direction is also zero.
+        print('wb = {}'.format(wb))
         return
 
  
@@ -178,7 +194,8 @@ class BC_states(object):
     def slip_wall(self, wL,njk, wb):
         print("slip_wall")
 
-        un = wL(2)*njk(1) + wL(3)*njk(2)
+        #un = wL[2]*njk[1] + wL[3]*njk[2]
+        un = wL[1]*njk[0] + wL[2]*njk[1]
         
         #-------------------------
         # Define the right state:
@@ -189,6 +206,8 @@ class BC_states(object):
         
         wb[1] = wL[1] - un*njk[0]
         wb[2] = wL[2] - un*njk[1]
+        
+        print('wb = {}'.format(wb))
         return
     
     
@@ -200,6 +219,7 @@ class BC_states(object):
             wb = np.array(4, float)
             wL = np.array(4, float)
         """
+        print("outflow_supersonic")
         #---------------------------------------------
         # Take everything from the interior.
         

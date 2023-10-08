@@ -227,7 +227,35 @@ class Solvers(object):
         
         #--------------------------------------
         # for the moment, default to simple initial conditions
-        self.bc_type = ["freestream" for el in range(mesh.nBoundaries)] #np.zeros(mesh.nBoundaries, str)
+        #self.bc_type = ["freestream" for el in range(mesh.nBoundaries)] #np.zeros(mesh.nBoundaries, str)
+        
+        self.bc_type = {}
+        # global_counter = 0
+        # for i, el in enumerate(mesh.boundcount):
+        #     print('parsing boundary {}, number of components {}'.format(i, el))
+        #     #btype = mesh.bound[i].bc_type
+        #     #local_counter = 0
+        #     for j in range(0,el):
+        #         global_counter += 1
+        #         #mesh.nBoundaries[global_counter]
+        #         #self.bc_type.append(btype)
+        # print('b elements set = {} =?= mesh.nBoundaries {}'.format(global_counter, mesh.nBoundaries))
+        
+        
+        print('\n Boundary nodes:')
+        print('    segments = {}'.format(len(self.mesh.boundcount)) )
+        for i in range(len(self.mesh.boundcount)):
+            print(' boundary, {},   bnodes = {}'.format(i,self.mesh.bound[i].bnode))
+            print('                bfaces = {}'.format(self.mesh.bound[i].nbnodes-1))
+            
+        count = 0
+        for ii, bb in enumerate(self.mesh.bound):
+            for jj, node in enumerate(bb.bnode):
+                #self.bc_type[node] = bb.bc_type
+                self.bc_type[count] = bb.bc_type #yes, the index is 0,1,2,.. len(self.mesh.bound)
+                count += 1
+        
+        
         self.BC = BC_states(solver = self, flowstate = FlowState() ) 
         
         
@@ -253,7 +281,7 @@ class Solvers(object):
         self.plot_flow_at_cell_centers()
         
         #self.explicit_steady_solver()
-        self.explicit_unsteady_solver()
+        #self.explicit_unsteady_solver()
         
         self.solver_initialized = True
         return
@@ -398,6 +426,7 @@ class Solvers(object):
         time = 0.0
             
         """
+        print('call explicit_unsteady_solver')
         time = 0.0
         
         self.t_final = tfinal
@@ -729,11 +758,12 @@ class Solvers(object):
             
             #---------------------------------------------------
             # Get the right state (weak BC!)
-            #print('ib = ',ib
+            #print('ib = ',ib)
+            #print('self.bc_type[ib] = {}'.format(self.bc_type[ib]))
             self.ub = self.BC.get_right_state(xm,ym, 
                                     u1, 
                                     self.unit_face_normal, 
-                                    self.bc_type[ib], #CBD (could be done): store these on the faces instead of seperate
+                                    self.bc_type[ib], #CBD (could be done): store these on the faces instead of seperate  (tlm what?...cells?) 
                                     self.ub)
             
             self.gradw2 = self.gradw2 #<- Gradient at the right state. Give the same gradient for now.
@@ -746,17 +776,26 @@ class Solvers(object):
                                                        self.gradw1, self.gradw2,    #<- Left/right same gradients
                                                        self.unit_face_normal,       #<- unit face normal
                                                        c1.centroid,                 #<- Left cell centroid
-                                                       [xm, ym],                    #<- make up a right cell centroid
+                                                       #c1.centroid,                 #<- TLM todo:  we have no c2 ?
+                                                       [xm, ym],                    #<- so make up a right cell centroid
                                                        xm, ym,                      #<- face midpoint
                                                        phi1, phi2,                  #<- Limiter functions
                                                        )
+            # self.dbugIF = dbInterfaceFlux(u1, self.ub,                     #<- Left/right states
+            #                         self.gradw1, self.gradw2,   #<- Left/right same gradients
+            #                         bface,                      #<- unit face //normal
+            #                         c1,                         #<- Left cell // centroid
+            #                         c1,                         #<- TLM todo:  no cell availible here
+            #                         xm, ym,                     #<- face midpoint
+            #                         phi1, phi2,                 #<- Limiter functions)
+            #                         )
             test = np.any(np.isnan(self.wsn))  or np.isnan(wave_speed)
             if test:
                 print('NAN at a boundary')
                 print(ib, num_flux, wave_speed)
-                self.save = [ib, bface, wave_speed]
+                self.save = [ib, bface, num_flux, wave_speed]
             assert(not test), "Found a NAN in boundary residual"
-            print(ib, num_flux, wave_speed)
+            #print(ib, num_flux, wave_speed)
             
             """
             debugging:
@@ -1635,19 +1674,19 @@ if __name__ == '__main__':
     
     #mesh = Grid(type_='quad',m=42,n=21,
     #          winding='ccw')
-    mesh = Grid(generated=True,type_='quad',m=42,n=21,
-              winding='ccw')
+    #mesh = Grid(generated=True,type_='quad',m=42,n=21,
+    #          winding='ccw')
     
-    cell = mesh.cellList[44]
-    face = cell.faces[0]
+    #cell = mesh.cellList[44]
+    #face = cell.faces[0]
     
     #cell.plot_cell()
     
     
     
-    #test = TestInviscidVortex()
+    test = TestInviscidVortex()
     #test = TestSteadyAirfoil()
-    test = TestSteadyCylinder()
+    #test = TestSteadyCylinder()
     #test = TestTEgrid()
     
     if True:
@@ -1672,12 +1711,11 @@ if __name__ == '__main__':
         #'''
         
         #"""
-        self.solver_boot(flowtype = 'freestream')
-        #self.solver_boot(flowtype = 'vortex')
-        #self.solver_solve( tfinal=.005, dt=.01)
-        #self.solver_solve( tfinal=0.25, dt=.0025)
+        #self.solver_boot(flowtype = 'freestream')
+        self.solver_boot(flowtype = 'vortex')
+        #self.solver_boot(flowtype = 'shock-diffraction')
         
-        self.solver_solve( tfinal=0.05, dt=.01)
+        self.solver_solve( tfinal=10.0, dt=.01)
         self.plot_solution()
         #"""
         
