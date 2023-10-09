@@ -159,17 +159,29 @@ def roe(ucL, ucR, njk, num_flux, wsn, gamma = 1.4):
     eig_limiting_factor = np.asarray([ 0.1, 0.1, 0.1, 0.1, 0.1 ]) #eigenvalue limiting factor
     
     # Face normal vector (unit vector)
-    nx,ny,nz = njk
+    #nx,ny,nz = njk
+    nx = njk[0]
+    ny = njk[1]
+    nz = njk[2]
     
     
     #Primitive and other variables.
     
-    #  Left state
+    #assert(ucL[0] != 0.0),"ERROR: ucL[0] :: rho=0.0 :: / by zero issue"
+    #assert(ucR[0] != 0.0),"ERROR: ucR[0] :: rho=0.0 :: / by zero issue"
     
+    if ucL[0] == 0.0: 
+        ucL[0] = 1.e15
+        print('setting Left density to infinity to fix devide by zero in roe flux')
+    if ucR[0] == 0.0: 
+        ucR[0] = 1.e15
+        print('setting Right density to infinity to fix devide by zero in roe flux')
+    
+    #  Left state
     rhoL = ucL[0]
-    uL = ucL[1]/ucL[0]
-    vL = ucL[2]/ucL[0]
-    wL = ucL[3]/ucL[0]
+    uL   = ucL[1]/ucL[0]
+    vL   = ucL[2]/ucL[0]
+    wL   = ucL[3]/ucL[0]
     qnL = uL*nx + vL*ny + wL*nz
     pL = (gamma-one)*( ucL[4] - half*rhoL*(uL*uL+vL*vL+wL*wL) )
     aL = sqrt(gamma*pL/rhoL)
@@ -180,9 +192,9 @@ def roe(ucL, ucR, njk, num_flux, wsn, gamma = 1.4):
     #  Right state
     
     rhoR = ucR[0]
-    uR = ucR[1]/ucR[0]
-    vR = ucR[2]/ucR[0]
-    wR = ucR[3]/ucR[0]
+    uR   = ucR[1]/ucR[0]
+    vR   = ucR[2]/ucR[0]
+    wR   = ucR[3]/ucR[0]
     qnR = uR*nx + vR*ny + wR*nz
     pR = (gamma-one)*( ucR[4] - half*rhoR*(uR*uR+vR*vR+wR*wR) )
     aR = sqrt(gamma*pR/rhoR)

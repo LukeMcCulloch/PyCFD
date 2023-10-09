@@ -10,6 +10,8 @@ from __future__ import print_function
 import weakref
 #
 import numpy as np
+#
+from ManufacturedSolutions import compute_manufactured_sol_and_f_euler
 
 
 class BC_states(object):
@@ -91,13 +93,12 @@ class BC_states(object):
                     'symmetry_y':[wL,njk,wb],
                     'slip_wall':[wL,njk, wb],
                     'outflow_supersonic':[wL, wb],
-                    'dirichlet':[wL, wb]
+                    'dirichlet':[xb,yb]
                     }
         
         getattr(self, bc_state_type)(*vs_cases[bc_state_type])
         
-        #Dirichlet assumes the manufactured solution: so, compute wb for (xb,yb)
-        #compute_manufactured_sol_and_f_euler(xb,yb, wb,dummy)
+        
         
         
         #---------------------------------------------------------
@@ -122,14 +123,15 @@ class BC_states(object):
     #**************************************************************************
     # Dirichlet
     #**************************************************************************
-    def Dirichlet(self, wL, wb):
-        #print("freestream")
+    def dirichlet(self, xb, yb):
+        print("dirichlet, mms")
         #print( 'got wb',wb)
-        flowstate = self.flowstate
-        wb[1] = 0.0
-        wb[2] = 0.0
-        #print( 'set wb',wb)
-        return
+        # flowstate = self.flowstate
+        # wb[1] = 0.0
+        # wb[2] = 0.0
+        # #print( 'set wb',wb)
+        #Dirichlet assumes the manufactured solution: so, compute wb for (xb,yb)
+        return compute_manufactured_sol_and_f_euler(xb,yb)
     
     
     #**************************************************************************
@@ -151,8 +153,8 @@ class BC_states(object):
     #**************************************************************************
     # Subsonic outflow (backpressure)
     #**************************************************************************
-    def back_pressure(self, wL, wb):
-        print("outflow_subersonic")
+    def outflow_subsonic(self, wL, wb):
+        print("back-pressure")
         flowstate = self.flowstate
         #-------------------------
         # Back pressure condition

@@ -617,6 +617,8 @@ class Solvers(object):
                                                            xm, ym,                     #<- face midpoint
                                                            phi1, phi2,                 #<- Limiter functions
                                                            )
+                
+                #print(i, num_flux, wave_speed)
                 test = np.any(np.isnan(num_flux)) or np.isnan(wave_speed)
                 self.dbugIF = dbInterfaceFlux(u1, u2,                     #<- Left/right states
                                     self.gradw1, self.gradw2,   #<- Left/right same gradients
@@ -652,8 +654,8 @@ class Solvers(object):
                 print( self.gradw1    )
                 print( self.gradw2    )
                 print( self.unit_face_normal    )
-                print( c1.centroid    )
-                print( c2.centroid    )
+                print( c1    )
+                print( c2    )
                 print( xm,ym    )
                 print( phi1,phi2    )
                 
@@ -669,6 +671,17 @@ class Solvers(object):
                 phi2 = self.dbugIF.phi2
                 #dbugIF data
                 
+                print(u1)
+                print(u2)
+                print(face.normal_vector)
+                print(c1)
+                print(c2)
+                print(xm)
+                print(ym)
+                print(c1)
+                print(phi1)
+                print(phi2)
+                
                 
                 num_flux, wave_speed = self.interface_flux(u1, u2,                     #<- Left/right states
                                                            self.gradw1, self.gradw2,   #<- Left/right same gradients
@@ -682,7 +695,6 @@ class Solvers(object):
                 
                 #"""
                 
-                #print(i, num_flux, wave_speed
                 #  Add the flux multiplied by the magnitude of the directed area vector to c1.
     
                 self.res[c1.cid,:] += num_flux * face.face_nrml_mag
@@ -756,6 +768,7 @@ class Solvers(object):
             self.unit_face_normal[:] = bface.normal_vector[:]
             
             
+            #print('input ub = {}, gradw2 = {}'.format(self.ub, self.gradw2))
             #---------------------------------------------------
             # Get the right state (weak BC!)
             #print('ib = ',ib)
@@ -768,6 +781,7 @@ class Solvers(object):
             
             self.gradw2 = self.gradw2 #<- Gradient at the right state. Give the same gradient for now.
             
+            #print('ub = {}, gradw2 = {}'.format(self.ub, self.gradw2))
             
             #---------------------------------------------------
             # Compute a flux at the boundary face.
@@ -776,19 +790,18 @@ class Solvers(object):
                                                        self.gradw1, self.gradw2,    #<- Left/right same gradients
                                                        self.unit_face_normal,       #<- unit face normal
                                                        c1.centroid,                 #<- Left cell centroid
-                                                       #c1.centroid,                 #<- TLM todo:  we have no c2 ?
-                                                       [xm, ym],                    #<- so make up a right cell centroid
+                                                       [xm, ym],                    #<- Set right centroid = (xm,ym)
                                                        xm, ym,                      #<- face midpoint
                                                        phi1, phi2,                  #<- Limiter functions
                                                        )
-            # self.dbugIF = dbInterfaceFlux(u1, self.ub,                     #<- Left/right states
-            #                         self.gradw1, self.gradw2,   #<- Left/right same gradients
-            #                         bface,                      #<- unit face //normal
-            #                         c1,                         #<- Left cell // centroid
-            #                         c1,                         #<- TLM todo:  no cell availible here
-            #                         xm, ym,                     #<- face midpoint
-            #                         phi1, phi2,                 #<- Limiter functions)
-            #                         )
+            self.dbugIF = dbInterfaceFlux(u1, self.ub,                     #<- Left/right states
+                                    self.gradw1, self.gradw2,   #<- Left/right same gradients
+                                    bface,                      #<- unit face //normal
+                                    c1,                         #<- Left cell // centroid
+                                    [xm, ym],                         #<- TLM todo:  no cell availible here
+                                    xm, ym,                     #<- face midpoint
+                                    phi1, phi2,                 #<- Limiter functions)
+                                    )
             test = np.any(np.isnan(self.wsn))  or np.isnan(wave_speed)
             if test:
                 print('NAN at a boundary')
@@ -800,26 +813,47 @@ class Solvers(object):
             """
             debugging:
                 
-            print(u1, u2
-            print(self.gradw1
-            print(self.gradw2
-            print(self.unit_face_normal
-            print(c1.centroid
-            print([xm, ym]
-            print(xm,ym
-            print(phi1,phi2
-            """
-            """
-            #debugging:
+                print(self.dbugIF)
+                u1 = self.dbugIF.u1
+                u2 = self.dbugIF.u2
+                face = self.dbugIF.face
+                c1 = self.dbugIF.c1
+                c2 = self.dbugIF.c2
+                xm = self.dbugIF.xm
+                ym = self.dbugIF.ym
+                phi1 = self.dbugIF.phi1
+                phi2 = self.dbugIF.phi2
+                #dbugIF data
                 
-            print( u1, u2     )
-            print( self.gradw1    )
-            print( self.gradw2    )
-            print( self.unit_face_normal    )
-            print( c1.centroid    )
-            print( c2.centroid    )
-            print( xm,ym    )
-            print( phi1,phi2    )
+                u1 = self.dbugIF.u1
+                u2 = self.dbugIF.u2
+                face = self.dbugIF.face
+                c1 = self.dbugIF.c1
+                c2 = self.dbugIF.c2
+                xm = self.dbugIF.xm
+                ym = self.dbugIF.ym
+                phi1 = self.dbugIF.phi1
+                phi2 = self.dbugIF.phi2
+                
+                gradw1 = self.dbugIF.gradw1
+                gradw2 = self.dbugIF.gradw2
+                
+                n12 =   self.dbugIF.face.normal_vector
+                C1  = c1.centroid
+                C2  = c2
+                
+                print( u1, u2     )
+                print( self.gradw1    )
+                print( self.gradw2    )
+                print( self.unit_face_normal    )
+                print( c1.centroid    )
+                print( c2    )
+                print( xm,ym    )
+                print( phi1,phi2    )
+                print( n12    )
+                print( C1    )
+                print( C2    )
+                
             #"""
             #Note: No gradients available outside the domain, and use the gradient at cell c
             #      for the right state. This does nothing to inviscid fluxes (see below) but
@@ -882,6 +916,11 @@ class Solvers(object):
         iv = self.iv
         ir = self.ir
         ip = self.ip
+        
+        
+        if u[0] == 0.0: 
+            u[0] = 1.0#1.e15
+            print('setting u density to infinity to fix devide by zero in u2w')
         
         w[ir] = u[0]
         w[iu] = u[1]/u[0]
@@ -1127,7 +1166,8 @@ class Solvers(object):
             C1 = c1.centroid
             C2 = [xm, ym]
             
-            
+        
+        
             
         """
         
@@ -1226,21 +1266,22 @@ class Solvers(object):
         self.v_inf = 0.0#M_inf*np.sin(aoa *np.pi/180.0) #aoa converted from degree to radian
         self.p_inf = 1.0/self.gamma
         
+        self.w_initial[self.ir] =  self.rho_inf #Density
+        self.w_initial[self.iu] =  self.u_inf   #u_inf
+        self.w_initial[self.iv] =  self.v_inf   #v_inf
+        self.w_initial[self.ip] =  self.p_inf   #Pressure 
+        
         # Note: Speed of sound a_inf is sqrt(gamma*p_inf/rho_inf) = 1.0.
         for i, cell in enumerate(self.mesh.cells):
             
-            
-            self.w_initial[self.ir] =  self.rho_inf #Density
-            self.w_initial[self.iu] =  self.u_inf   #u_inf
-            self.w_initial[self.iv] =  self.v_inf   #v_inf
-            self.w_initial[self.ip] =  self.p_inf   #Pressure 
             
             #Store the initial solution
             self.w[i,:] = self.w_initial[:]
             
             # Compute and store conservative variables
             self.u[i,:] = self.w2u( self.w[i,:] )
-            
+        
+        print('Done with freestream setup')
         return
         
     
@@ -1684,9 +1725,9 @@ if __name__ == '__main__':
     
     
     
-    test = TestInviscidVortex()
+    #test = TestInviscidVortex()
     #test = TestSteadyAirfoil()
-    #test = TestSteadyCylinder()
+    test = TestSteadyCylinder()
     #test = TestTEgrid()
     
     if True:
@@ -1711,11 +1752,11 @@ if __name__ == '__main__':
         #'''
         
         #"""
-        #self.solver_boot(flowtype = 'freestream')
-        self.solver_boot(flowtype = 'vortex')
+        self.solver_boot(flowtype = 'freestream')
+        #self.solver_boot(flowtype = 'vortex')
         #self.solver_boot(flowtype = 'shock-diffraction')
         
-        self.solver_solve( tfinal=10.0, dt=.01)
+        self.solver_solve( tfinal=100.0, dt=.01)
         self.plot_solution()
         #"""
         

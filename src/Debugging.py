@@ -41,6 +41,13 @@ class dbInterfaceFlux(object):
         print('ym = self.dbugIF.ym')
         print('phi1 = self.dbugIF.phi1')
         print('phi2 = self.dbugIF.phi2')
+        
+        print('\ngradw1 = self.dbugIF.gradw1')
+        print('gradw2 = self.dbugIF.gradw2\n')
+        
+        print('n12 =   self.dbugIF.face.normal_vector')              # Directed area vector (unit vector)
+        print('C1  = c1.centroid')          # left centroid
+        print('C2  = c2')         # right centroid for boundary, interior needs.centroid!
         return '#dbugIF data'
     
     
