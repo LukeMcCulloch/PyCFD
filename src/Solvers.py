@@ -277,6 +277,7 @@ class Solvers(object):
         
         
         switchdict = {
+            'mms':self.initial_solution_freestream,
             'vortex':   self.initial_condition_vortex,
             'freestream': self.initial_solution_freestream,
             'airfoil':self.initial_solution_freestream,
@@ -284,7 +285,10 @@ class Solvers(object):
             'shock-diffraction':self.initial_solution_shock_diffraction
             }
         #switchdict.get(flowtype, "not implemented, at all")
-        switchdict[flowtype]()
+        if flowtype == 'mms': 
+            pass
+        else:
+            switchdict[flowtype]()
         
         self.plot_flow_at_cell_centers(title = 'Initial Solution')
         
@@ -1509,8 +1513,8 @@ class Solvers(object):
         self.write_flow_at_cell_centers()
         return
     
-    def plot_solution(self):
-        self.plot_flow_at_cell_centers()
+    def plot_solution(self, title='Not Inital'):
+        self.plot_flow_at_cell_centers(title)
         return
     
     def write_flow_at_cell_centers(self):
@@ -1542,7 +1546,7 @@ class Solvers(object):
                       lines = w)
         return
     
-    def plot_flow_at_cell_centers(self):
+    def plot_flow_at_cell_centers(self, title):
         coords_ = []
         for i, cell in enumerate(self.mesh.cells):
             coords_.append(cell.centroid)
@@ -1618,7 +1622,7 @@ class Solvers(object):
         fig.colorbar(cntr1, ax=ax1)
         #ax1.plot(coords_[:,0], coords_[:,1], 'ko', ms=3)
         #ax1.set(xlim=(-2, 2), ylim=(-2, 2))
-        ax1.set_title('Density (%d points, %d grid points)' %
+        ax1.set_title(title+' Density (%d points, %d grid points)' %
                       (npts, ngridx * ngridy))
         # 
         #--------------------------------------------------------------
@@ -1645,7 +1649,7 @@ class Solvers(object):
         fig.colorbar(cntr2, ax=ax2)
         #ax2.plot(coords_[:,0], coords_[:,1], 'ko', ms=3)
         #ax2.set(xlim=(-2, 2), ylim=(-2, 2))
-        ax2.set_title('Pressure (%d points)' % npts)
+        ax2.set_title(title+' Pressure (%d points)' % npts)
         
         plt.subplots_adjust(hspace=0.5)
         plt.show()
@@ -1859,7 +1863,7 @@ if __name__ == '__main__':
         #'''
         
         #"""
-        self.solver_boot_mms()
+        self.solver_boot(flowtype = 'mms')
         #self.solver_boot(flowtype = 'freestream')
         #self.solver_boot(flowtype = 'vortex')
         #self.solver_boot(flowtype = 'shock-diffraction')
@@ -1868,7 +1872,7 @@ if __name__ == '__main__':
                       1:'mms_solver',
                       2:'implicit_solver'}
         self.solver_solve( tfinal=10.0, dt=.01, solver_type = solvertype[1])
-        self.plot_solution()
+        self.plot_solution( title='Final ')
         #"""
         
         '''
