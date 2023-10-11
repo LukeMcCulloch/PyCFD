@@ -167,15 +167,15 @@ def roe(ucL, ucR, njk, num_flux, wsn, gamma = 1.4):
     
     #Primitive and other variables.
     
-    #assert(ucL[0] != 0.0),"ERROR: ucL[0] :: rho=0.0 :: / by zero issue"
-    #assert(ucR[0] != 0.0),"ERROR: ucR[0] :: rho=0.0 :: / by zero issue"
+    assert(ucL[0] != 0.0),"ERROR: ucL[0] :: rho=0.0 :: / by zero issue"
+    assert(ucR[0] != 0.0),"ERROR: ucR[0] :: rho=0.0 :: / by zero issue"
     
     if ucL[0] == 0.0: 
-        ucL[0] = 1.e15
-        print('setting Left density to infinity to fix devide by zero in roe flux')
+        ucL[0] = 1.e-15
+        print('setting Left density to 1e-15 to fix devide by zero in roe flux')
     if ucR[0] == 0.0: 
-        ucR[0] = 1.e15
-        print('setting Right density to infinity to fix devide by zero in roe flux')
+        ucR[0] = 1.e-15
+        print('setting Right density to 1e-15 to fix devide by zero in roe flux')
     
     #  Left state
     rhoL = ucL[0]

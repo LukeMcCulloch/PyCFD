@@ -209,7 +209,9 @@ class BC_states(object):
         wb[1] = wL[1] - un*njk[0]
         wb[2] = wL[2] - un*njk[1]
         
-        print('wb = {}'.format(wb))
+        #print('wb dot njk= {}'.format(wb[1:3].dot(njk)))
+        tol= 1.e-10
+        assert(wb[1:3].dot(njk) < tol),"slip wall failure normal velocity = {}".format(wb[1:3].dot(njk))
         return
     
     

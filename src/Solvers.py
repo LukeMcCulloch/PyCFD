@@ -28,10 +28,12 @@ pi = np.pi
 from flux import roe
 from System2D import Grid
 from BoundaryConditions import BC_states
+from ManufacturedSolutions import compute_manufactured_sol_and_f_euler
 from Parameters import Parameters
 
 from Utilities import default_input
 from DataHandler import DataHandler
+
 
 import FileTools as FT
 from PlotGrids import PlotGrid
@@ -140,8 +142,13 @@ class Solvers(object):
     """
     def __init__(self, mesh):
         self.solver_initialized = False
+        self.do_mms = False
         self.mesh = mesh
         self.dim = mesh.dim
+        
+        #self.solver_switch = {'mms':mms_solver,
+        #                      'explicit':self.explicit_unsteady_solver,
+        #                      'implicit':None}
         
         self.Parameters = Parameters()
         
@@ -278,21 +285,37 @@ class Solvers(object):
             }
         #switchdict.get(flowtype, "not implemented, at all")
         switchdict[flowtype]()
-        self.plot_flow_at_cell_centers()
         
-        #self.explicit_steady_solver()
-        #self.explicit_unsteady_solver()
+        self.plot_flow_at_cell_centers(title = 'Initial Solution')
+        
         
         self.solver_initialized = True
         return
     
-    def solver_solve(self, tfinal=1.0, dt=.01):
+    def solver_boot_mms(self):
+        
+        self.do_mms = True
+        self.solver_initialized = True
+        return
+    
+    def solver_solve(self, tfinal=1.0, dt=.01, solver_type='explicit_unsteady_solver'):
         if not self.solver_initialized :
             print("You must initialize the solver first!")
             print("call solver_boot() on this object to initialize solver")
             return
         #self.explicit_steady_solver()
-        self.explicit_unsteady_solver(tfinal=tfinal, dt=dt)
+        #self.explicit_unsteady_solver(tfinal=tfinal, dt=dt)
+        
+        
+        self.solver_switch = {'mms_solver':[],
+                              'explicit_unsteady_solver':[tfinal, dt],
+                              'implicit_solver':[tfinal, dt]}
+        
+        
+        
+        getattr(self, solver_type)(*self.solver_switch[solver_type])
+        
+        
         return
         
     
@@ -409,7 +432,65 @@ class Solvers(object):
             print(" Verified: LSQ coefficients are exact for a linear function." )
         return
     
+    def mms_solver(self):
+        print('call mms_solver')
+        self.mms_truncation_error()
+        return
     
+    def mms_truncation_error(self):
+        
+        
+        mesh = self.mesh
+        nCells = mesh.nCells
+        zero = 0.0
+        
+        heffv = mesh.heffv
+        
+        # Allocate a forcing term array:
+        f = np.zeros((nCells,4),float)
+        
+        #----------------------------------------------------------------------
+        #----------------------------------------------------------------------
+        # loop over all cells
+        #for i in range(self.mesh.nCells):
+        #    cell = self.mesh.cells[i]
+        for i, cell in enumerate(mesh.cells):
+            # Compute and store w (exact soltion in primitive variables) and f:
+            self.w[i,:], f[i,:] = compute_manufactured_sol_and_f_euler(cell.centroid[0],
+                                                                       cell.centroid[1])
+            
+            # Compute conservative variables from primitive variables.
+            
+            #self.u[i,:] = self.w[i,:]
+            self.u[i,:] = self.w2u(self.w[i,:])
+        
+        # Compute the residuals (=TE*volume), and store them in res(:,:).
+        self.compute_residual()
+        
+        #Subtract the forcing term.
+        #Note: Res is an integral of Fx+Gy. So, the forcing term is also integrated,
+        #      and so multiplied by the cell volume.
+        for i, cell in enumerate(mesh.cells):
+            self.res[i,:] -= f[i,:]*cell.volume
+        
+        # Compute L1 norms and print them on screen.
+        
+        # Initialization
+        norm1 = zero
+        
+        # Sum of absolute values:
+        for i, cell in enumerate(mesh.cells):
+            norm1 += abs(self.res[i,:]/cell.volume) #TE = Res/Volume.
+            
+        # Take an average; this is the TE.
+        norm1 = norm1 / float(nCells)
+        
+        # Print the TE for all 4 equations.
+        print(" -------------- Truncation error norm ------------------")
+        print("conti {} \n x-mom  {} \n y-mom {} \n energy {} \n heffv {}".format(
+            norm1[0],norm1[1],norm1[2],norm1[3],heffv) )
+        
+        return
         
     #-------------------------------------------------------------------------#
     # Euler solver: Explicit Unsteady Solver: Ut + Fx + Gy = S
@@ -525,10 +606,10 @@ class Solvers(object):
         mesh = self.mesh
         
         # Gradients of primitive variables
-        self.gradw1[:,:] = 0.
-        self.gradw2[:,:] = 0.
+        self.gradw1[:,:] = 0.0
+        self.gradw2[:,:] = 0.0
         
-        self.res[:,:] = 0.
+        self.res[:,:] = 0.0
         self.wsn[:] = 0.0
         
         self.gradw[:,:,:] = 0.0
@@ -575,6 +656,7 @@ class Solvers(object):
             #TODO: make sure boundary faces are not in the 
             # main face list
             if face.isBoundary:
+                #print('POSSIBLE ISSUE: boundary faces found on the interior iteration')
                 pass
             else:
                 #savei = i
@@ -589,10 +671,10 @@ class Solvers(object):
                 u1 = self.u[c1.cid] #Conservative variables at c1
                 u2 = self.u[c2.cid] #Conservative variables at c2
                 
-                self.gradw1 = self.gradw[c1.cid]
-                self.gradw2 = self.gradw[c2.cid]
+                self.gradw1 = self.gradw[c1.cid] # Gradient of primitive variables at c1
+                self.gradw2 = self.gradw[c2.cid] # Gradient of primitive variables at c2
                 
-                self.unit_face_normal[:] = face.normal_vector[:]
+                self.unit_face_normal[:] = face.normal_vector[:] # Unit face normal vector: c1 -> c2.
                 
                 #Face midpoint at which we compute the flux.
                 xm,ym = face.center
@@ -604,6 +686,7 @@ class Solvers(object):
                 else:
                     phi1 = 1.0
                     phi2 = 1.0
+                    
                     
                     
                 # Reconstruct the solution to the face midpoint and compute a numerical flux.
@@ -861,7 +944,7 @@ class Solvers(object):
             
             #Note: Set right centroid = (xm,ym) so that the reconstruction from the right cell
             #      that doesn't exist is automatically cancelled: wR=wb+gradw*(xm-xc2)=wb.
-
+            # so assert(wR == wb)
 
             #---------------------------------------------------
             #  Add the boundary contributions to the residual.
@@ -910,6 +993,19 @@ class Solvers(object):
     #
     #-------------------------------------------------------------------------#
     def u2w(self, u):
+        '''
+        Compute primitive variables from conservative variables.
+
+        Parameters
+        ----------
+        u : conservative variables (rho, rho*u, rho*v, rho*E)
+
+        Returns
+        -------
+        w : primitive variables (rho,     u,     v,     p)
+
+        '''
+        
         w = np.zeros((nq),float)
         
         iu = self.iu
@@ -919,8 +1015,8 @@ class Solvers(object):
         
         
         if u[0] == 0.0: 
-            u[0] = 1.0#1.e15
-            print('setting u density to infinity to fix devide by zero in u2w')
+            u[0] = 1.0e-15#1.e15
+            #print('setting u density to 1e-15 to fix devide by zero in u2w')
         
         w[ir] = u[0]
         w[iu] = u[1]/u[0]
@@ -941,7 +1037,18 @@ class Solvers(object):
     #
     #-------------------------------------------------------------------------#
     def w2u(self, w):
-        
+        '''
+        Compute conservative variables from primitive variables.
+
+        Parameters
+        ----------
+        w : primitive variables (rho,     u,     v,     p)
+
+        Returns
+        -------
+        u : conservative variables (rho, rho*u, rho*v, rho*E)
+
+        '''
         u = np.zeros((nq),float)
         
         gamma = self.gamma
@@ -1727,8 +1834,8 @@ if __name__ == '__main__':
     
     #test = TestInviscidVortex()
     #test = TestSteadyAirfoil()
-    test = TestSteadyCylinder()
-    #test = TestTEgrid()
+    #test = TestSteadyCylinder()
+    test = TestTEgrid()
     
     if True:
         
@@ -1752,11 +1859,15 @@ if __name__ == '__main__':
         #'''
         
         #"""
-        self.solver_boot(flowtype = 'freestream')
+        self.solver_boot_mms()
+        #self.solver_boot(flowtype = 'freestream')
         #self.solver_boot(flowtype = 'vortex')
         #self.solver_boot(flowtype = 'shock-diffraction')
         
-        self.solver_solve( tfinal=100.0, dt=.01)
+        solvertype = {0:'explicit_unsteady_solver',
+                      1:'mms_solver',
+                      2:'implicit_solver'}
+        self.solver_solve( tfinal=10.0, dt=.01, solver_type = solvertype[1])
         self.plot_solution()
         #"""
         
@@ -1764,5 +1875,8 @@ if __name__ == '__main__':
         # if memory issues are encountered:
         del(self)
         del(mesh)
-        #'''
         
+        canvas = plotmesh = PlotGrid(self.mesh)
+        plotmesh.plot_boundary()
+        
+        #'''

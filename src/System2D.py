@@ -552,6 +552,10 @@ class Grid(object):
         self.cells = []
         self.FaceCellMap = {}
         
+        # check mesh
+        self.heffv = None   # Effecrtive spacing based on # of nodes
+        self.heffc = None   # Effecrtive spacing based on # of cells
+        
         if self.generated:
             self.nNodes = m*n
             
@@ -772,6 +776,8 @@ class Grid(object):
             self.buildCellToFaceIncidence() # self.EToF
             self.buildFaceToNodeIncidence() # self.FToV
             self.buildVertexToCellIncidence() # self.VToC
+            
+        self.compute_mesh_statistics()
         return
     
     def make_cells(self, winding ='cw'):
@@ -1037,6 +1043,42 @@ class Grid(object):
         for cell in self.cellList:
             vol += cell.volume
         return vol
+    
+    #--------------------------------------------------------
+    # Face normal sum check for each cell
+    #--------------------------------------------------------
+    def check_normals(self, tol=1e-14):
+        #print(" Max face vector sum over a cell is larger than machine zero... Something is wrong. Stop.")
+        return
+    
+    
+    #------------------------------------------------------------------------------------
+    # Compute mesh spacing statistics.
+    #
+    #   heffn     = Effecrtive spacing based on # of nodes
+    #   heffc     = Effecrtive spacing based on # of cells
+    #   heffv     = Average of sqrt(volume).
+    #   heffv_min = Minimum sqrt(volume).
+    #   heffv_max = Maximum sqrt(volume).
+    #
+    def compute_mesh_statistics(self):
+        one = 1.0
+        
+        self.heffc = np.sqrt( one/float(self.nCells) ) # Effecrtive spacing based on # of cells
+        
+        self.heffv     = np.sqrt( self.cells[0].volume )
+        heffv_min = np.sqrt( self.cells[0].volume )
+        heffv_max = np.sqrt( self.cells[0].volume )
+        
+        for i in range(1, self.nCells):
+            cell = self.cells[i]
+            self.heffv += np.sqrt( cell.volume  )
+            heffv_min = min( heffv_min, np.sqrt( cell.volume  ) )
+            heffv_max = max( heffv_max, np.sqrt( cell.volume ) )
+        
+        self.heffv /= float(self.nCells)
+        return
+    
     #-------------------------------------------------------------------------#
     # Done with checks
     #-------------------------------------------------------------------------#
