@@ -233,8 +233,7 @@ class Solvers(object):
         self.w_initial = np.zeros(4, float)
         
         #--------------------------------------
-        # for the moment, default to simple initial conditions
-        #self.bc_type = ["freestream" for el in range(mesh.nBoundaries)] #np.zeros(mesh.nBoundaries, str)
+        # initial conditions
         
         self.bc_type = {}
         # global_counter = 0
@@ -249,11 +248,11 @@ class Solvers(object):
         # print('b elements set = {} =?= mesh.nBoundaries {}'.format(global_counter, mesh.nBoundaries))
         
         
-        print('\n Boundary nodes:')
-        print('    segments = {}'.format(len(self.mesh.boundcount)) )
-        for i in range(len(self.mesh.boundcount)):
-            print(' boundary, {},   bnodes = {}'.format(i,self.mesh.bound[i].bnode))
-            print('                bfaces = {}'.format(self.mesh.bound[i].nbnodes-1))
+        #print('\n Boundary nodes:')
+        #print('    segments = {}'.format(len(self.mesh.boundcount)) )
+        #for i in range(len(self.mesh.boundcount)):
+        #    print(' boundary, {},   bnodes = {}'.format(i,self.mesh.bound[i].bnode))
+        #    print('                bfaces = {}'.format(self.mesh.bound[i].nbnodes-1))
             
         count = 0
         for ii, bb in enumerate(self.mesh.bound):
@@ -1841,6 +1840,7 @@ if __name__ == '__main__':
     #test = TestSteadyCylinder()
     test = TestTEgrid()
     
+    #if False:
     if True:
         
         #'''
@@ -1855,10 +1855,10 @@ if __name__ == '__main__':
         #show_LSQ_grad_area_plots(self)
         
         
-        # cc = ssolve.cclsq[57]
+        # cc = self.cclsq[57]
         # cc.plot_lsq_reconstruction()
         # cell = cc.cell
-        # cell.plot_cell()
+        # cell.plot_cell() #normals should be outward facing
         
         #'''
         
@@ -1881,6 +1881,21 @@ if __name__ == '__main__':
         del(mesh)
         
         canvas = plotmesh = PlotGrid(self.mesh)
-        plotmesh.plot_boundary()
+        plotmesh.plot_boundary() #normals should be outward facing
+        
+        
+        
+        plotmesh = PlotGrid(self.mesh)
+        axTri = plotmesh.plot_cells()
+        axTri = plotmesh.plot_centroids(axTri)
+        axTri = plotmesh.plot_face_centers(axTri)
+        axTri = plotmesh.plot_normals(axTri)
+        
+        plotmesh = PlotGrid(self.mesh)
+        axRect = plotmesh.plot_cells()
+        axRect = plotmesh.plot_centroids(axRect)
+        axRect = plotmesh.plot_face_centers(axRect)
+        axRect = plotmesh.plot_normals(axRect)
+        
         
         #'''

@@ -183,6 +183,9 @@ class PlotGrid(object):
         
         for seg in grid.bound:
             self.plot_bgrid(seg, ax, alpha)
+        
+        for face in grid.boundaryList:
+            ax = face.plot_face_normal(ax)
             
         return ax
     

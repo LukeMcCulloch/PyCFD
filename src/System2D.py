@@ -20,7 +20,7 @@ from Overload import Overload
 from PlotGrids import PlotGrid
 
 from Utilities import normalize, normalized, norm, dot, cross, \
-    normalize2D, normalized2D, triangle_area
+    normalize2D, normalized2D, triangle_area, triangle_area_from_raw_data
     
 from FileTools import GetLines, GetLineByLine
 
@@ -233,6 +233,27 @@ class Face(object):
         Qb = self.nodes[1].Q
         return Qb-Qa #(Qb-Qa)/self.hxi
     
+    def plot_face_normal(self, canvas = None,
+                         alpha=.4):
+        if canvas is None:
+            fig, ax = plt.subplots()
+        else:
+            ax = canvas
+        
+        norm0 = self.normal_vector + self.center
+                
+        ax.plot([ norm0[0],self.center[0] ],
+                [ norm0[1],self.center[1] ],
+                color='black',
+                alpha = alpha)
+        ax.scatter(self.center[0],self.center[1], marker='x',
+                color='black',
+                alpha = alpha)
+        ax.scatter(norm0[0],norm0[1],marker = '.',
+                color='black',
+                alpha = alpha)
+                
+        return ax
     
         
 class BGrid(object):
@@ -242,13 +263,13 @@ class BGrid(object):
      Note: Each boundary segment has the following data.
     ----------------------------------------------------------
     '''
-    def __init__(self, bc_type, nbnodes, bnode):
+    def __init__(self, bc_type, nbnodes, bnode, nbfaces):
         self.bc_type = bc_type #type of boundary nodes for this segment
         self.nbnodes = nbnodes #number of boundary nodes for this segment
         self.bnode = bnode     #list of boundary nodes for this segment
         
         #to be constructed from the code
-        self.nbfaces = None # number of boundary faces
+        self.nbfaces = nbfaces # number of boundary faces
         self.bfnx    = None #x-component of the face outward normal
         self.bfny    = None #y-component of the face outward normal
         self.bfn     = None #magnitude of the face normal vector
@@ -276,6 +297,7 @@ class Cell(object):
         self.nodes = nodes #Node data type
         self.N = len(self.nodes)
         self.num_faces = self.N
+        self.num_nodes = self.N
         self.volume = 0.
         self.set_centroid()
         self.set_volume()
@@ -530,6 +552,8 @@ class Grid(object):
         self.yb = yb
         self.ye = ye
         
+        self.winding = winding
+        
         self.generated = generated
         self.gridtype = {'quad':0,
                          'tri':1}
@@ -697,8 +721,8 @@ class Grid(object):
             
             print('\n Total Numbers')
             print('          nodes = {}'.format(nnodes))
-            print('      triangles = {}'.format(nnodes))
-            print('          quads = {}'.format(nnodes))
+            print('      triangles = {}'.format(self.ntria))
+            print('          quads = {}'.format(self.nquad))
             
             #read boundary data
             nbound = int((handle.readline()).split()[0]) #number of boundaries each with possible different conditions
@@ -714,9 +738,11 @@ class Grid(object):
             handle.readline()#hard coded line break is a smell!
             #nface = 0
             for i in range(nbound):#loop over the  different boundaries
+                print (i)
                 self.bound.append(BGrid('unknownType', 
                                         nbnodes=self.boundcount[i], 
-                                        bnode = []))
+                                        bnode = [],
+                                        nbfaces = self.boundcount[i]-1))
                 for j in range(self.boundcount[i]): #read in this many nodes on this boundary
                     thing = (handle.readline()).split()
                     if len(thing)>0:
@@ -732,11 +758,18 @@ class Grid(object):
             
             self.bound = np.asarray(self.bound)
             handle.close() #done with  grid file read
+            
+            # print('\n Boundary nodes:')
+            # print('    segments = {}'.format(nbound))
+            # for i in range(nbound):
+            #     print(' boundary, {},   bnodes = {}'.format(i,self.bound[i].bnode))
+            #     print('                bfaces = {}'.format(self.bound[i].nbnodes-1))
+                
             print('\n Boundary nodes:')
             print('    segments = {}'.format(nbound))
             for i in range(nbound):
-                print(' boundary, {},   bnodes = {}'.format(i,self.bound[i].bnode))
-                print('                bfaces = {}'.format(self.bound[i].nbnodes-1))
+                print(' boundary, {},   bnodes = {}'.format(i,self.bound[i].nbnodes))
+                print('                bfaces = {}'.format(self.bound[i].nbfaces))
                 
             '''
             read Boundary Conditions
@@ -777,7 +810,16 @@ class Grid(object):
             self.buildFaceToNodeIncidence() # self.FToV
             self.buildVertexToCellIncidence() # self.VToC
             
+        #----------------------------------------------
+        # check the mesh:
+        #----------------------------------------------
         self.compute_mesh_statistics()
+        print("\n >>> Verifying the ccfv grid data...\n")
+        self.check_centroids()
+        self.check_volume()
+        print( " --- Check the sum of all boundary normals (must be zero):")
+        self.check_boundary_normals()
+        self.check_normals()
         return
     
     def make_cells(self, winding ='cw'):
@@ -963,6 +1005,7 @@ class Grid(object):
                     face.isBoundary = True
                     self.boundaryList.append(face)
         self.nBoundaries = len(self.boundaryList)
+        #self.bound = np.asarray(self.boundaryList)
         return
     
     
@@ -1024,19 +1067,27 @@ class Grid(object):
     #-------------------------------------------------------------------------#
     # Mesh checks
     #-------------------------------------------------------------------------#
-    def check_volume(self, tol=1e-14):
-        v1 = self.sum_volume_green_gauss()
-        v2 = self.sum_volume_cell_sum()
-        if (abs(v1-v2)>tol):
-            print(" Volume difference is larger than round-off error... Something is wrong. Stop." )
+    def check_volume(self, tol=1e-10):
+        vol_domain = self.sum_volume_green_gauss()
+        print("  Total volume of the domain = ", vol_domain)
+        vol_domain_cells = self.sum_volume_cell_sum()
+        print("     Sum of the cell volumes = ", vol_domain_cells)
+        print("                  Difference = ", abs(vol_domain - vol_domain_cells))
+        print()
+        if (abs(vol_domain-vol_domain_cells)>tol):
+            print(" Volume difference is larger than round-off error (actually tolerance)... Something is wrong. Stop." )
+            assert(False),"ERROR: Volumes are not consistent"
         return
     
     def sum_volume_green_gauss(self):
+        '''
+        assume ___ faceing normal
+        '''
         vol = 0.
         for bound in self.boundaryList:
             mid = bound.center
             vol += np.dot( mid,bound.normal_vector )*bound.face_nrml_mag
-        return -0.5*vol
+        return 0.5*vol
     
     def sum_volume_cell_sum(self):
         vol = 0.
@@ -1044,12 +1095,150 @@ class Grid(object):
             vol += cell.volume
         return vol
     
+    
+    
+    #--------------------------------------------------------
+    # Boundary normal sum check
+    #--------------------------------------------------------
+    def check_boundary_normals(self, tol=1.e-10):
+        sum_bnormal = np.zeros(2,float)
+        for bound in self.boundaryList:
+            sum_bnormal[0] += bound.normal_vector[0] * bound.face_nrml_mag
+            sum_bnormal[1] += bound.normal_vector[1] * bound.face_nrml_mag
+        
+        print("     Sum of boundary face normal (nx) = ", sum_bnormal[0])
+        print("     Sum of boundary face normal (ny) = ", sum_bnormal[1])
+        print()
+        if (abs(sum_bnormal[0])>tol or abs(sum_bnormal[1])>tol):
+            print(" Boundary face vector sum is larger than machine zero....." )
+            print(" Something is wrong. Stop.")
+            assert(False),"ERROR: Sum of normals around the boundaries is not zero"
+        return
+    
+    
     #--------------------------------------------------------
     # Face normal sum check for each cell
     #--------------------------------------------------------
-    def check_normals(self, tol=1e-14):
+    def check_normals(self, tol=1e-10):
+        sum_face_normal_method1 = np.zeros((self.nCells,2),float)
+        sum_face_normal = np.zeros((self.nCells,3),float)
+        #----------------------------------------------------
+        # Accumulate face normals at cells by looping over interior faces.
+        #'''
+        for i, cell in enumerate(self.cells):
+            for face in cell.faces:
+                sum_face_normal_method1[i,0] += face.normal_vector[0] * face.face_nrml_mag
+                sum_face_normal_method1[i,1] += face.normal_vector[1] * face.face_nrml_mag
+        #'''
+        
+        #'''
+        for face in self.faceList:
+            if face.isBoundary:
+                pass
+                #cid1 = face.parentcell.cid
+                #sum_face_normal[cid1,0] += face.normal_vector[0] * face.face_nrml_mag
+                #sum_face_normal[cid1,1] += face.normal_vector[1] * face.face_nrml_mag
+            else:
+                cid1 = face.parentcell.cid
+                sum_face_normal[cid1,0] += face.normal_vector[0] * face.face_nrml_mag
+                sum_face_normal[cid1,1] += face.normal_vector[1] * face.face_nrml_mag
+                sum_face_normal[cid1,2] = 0.0 # not a boundary
+            
+                #face = face.adjacentface
+                #cid2 = face.parentcell.cid
+                #sum_face_normal[cid2,0] += face.normal_vector[0] * face.face_nrml_mag
+                #sum_face_normal[cid2,1] += face.normal_vector[1] * face.face_nrml_mag
+                #sum_face_normal[cid2,2] = 0.0 #not a boundary
+        print("\nFaces are currently counted twice - once for each cell,")
+        print(" and nodes are aranged to match depending on which cell this version of the face belongs to\n")
+        #'''
+        #----------------------------------------------------
+        # Add boundary face normal contributions to cells by looping over boundary faces.
+        
+        # actually I think these are included above?
+        #'''
+        for bound in self.boundaryList:
+            cid = bound.parentcell.cid
+            sum_face_normal[cid,0] += bound.normal_vector[0] * bound.face_nrml_mag
+            sum_face_normal[cid,1] += bound.normal_vector[1] * bound.face_nrml_mag
+            sum_face_normal[cid,2] = 1.0 # a boundary
+            
+        #'''
+        
+        self.sum_face_normal = sum_face_normal
+        print("   Display the maximum over all cells (must be zero):")
+        print("   (the sum of face normals over each cell)")
+        print()
+        print(" method1 Max of |sum_faces face normal (nx)| = ", np.max(abs(sum_face_normal_method1[:,0])))
+        print(" method1 Max of |sum_faces face normal (ny)| = ", np.max(abs(sum_face_normal_method1[:,1])))
+        print("     Max of |sum_faces face normal (nx)| = ", np.max(abs(sum_face_normal[:,0])))
+        print("     Max of |sum_faces face normal (ny)| = ", np.max(abs(sum_face_normal[:,1])))
+        
+        
+        #----------------------------------------------------
+        # Check the maximum sum over all cells. Must be zero.
+        
+        #Use the maximum sqrt(vol) as a reference magnitude 
+        #for checking zero face normal sum.
+        sqrts = np.sqrt(np.asarray([[cell.volume for cell in self.cells]]))
+        ref_mag = np.max( sqrts )
+        print()
+        print("              Reference magnitude = ", ref_mag)
+        print()
+        
+        if (np.max(abs(sum_face_normal[:,0]))>tol or np.max(abs(sum_face_normal[:,1]))>tol):
+            print(" Max face vector sum over a cell is larger than machine zero... " )
+            print(" Something is wrong. Stop.")
+            assert(False),"ERROR: Sum of normals around the cells is not zero"
         #print(" Max face vector sum over a cell is larger than machine zero... Something is wrong. Stop.")
         return
+    
+    
+    #--------------------------------------------------------
+    # Centroids for each cell are always within the cell
+    #--------------------------------------------------------
+    def check_centroids(self):
+        print(" --- Check the centroids:")
+        for i, cell in enumerate(self.cells):
+            # nodes are ordered counterclockwise.  Take two consecutive nodes:
+            for k in range(cell.num_nodes):
+                v1 = cell.nodes[k] #node object representing the vertex
+                if (k+1 == cell.num_nodes):
+                    v2 = cell.nodes[0] #<back to the first vertex
+                else:
+                    v2 = cell.nodes[k+1]
+                
+                x1,y1 = v1.vector
+                x2,y2 = v2.vector
+                
+                if self.winding == 'cw':
+                    volk = triangle_area_from_raw_data(x1,x2, cell.centroid[0], y1,y2, cell.centroid[1])
+                
+                else:
+                    volk = triangle_area_from_raw_data(cell.centroid[0],x2,x1, cell.centroid[1],y2,y1)
+                
+                # If volume_k is negative, stop.
+                if (volk < 0.0):
+                    print(" A centroid is outside the cell... Cell = ", i, " Stop...")
+                    print("                      (xc,yc) = ", cell.centroid)
+                    print("                      (x1,y1) = ", x1, y1)
+                    print("                      (x2,y2) = ", x2, y2)
+                    print("  Partial volume (tria c-1-2) = ", volk)
+                    assert(False),"ERROR: Centroids outside the cell!"
+        print("  No centroids found to be located outside a cell. Good.")
+            
+        return
+    
+    
+    #--------------------------------------------------------
+    # Volume check
+    #--------------------------------------------------------
+    #def check_volume2(self):
+    #    print(" --- Check the total volume:")
+    #    sum_ = 1.0e-15
+    #    for i, cell in enumerate(self.cells):
+    #        sum_ += cell.volume * sum_
+        
     
     
     #------------------------------------------------------------------------------------
@@ -1120,11 +1309,20 @@ class TestTEgrid(object):
     
     
 if __name__ == '__main__':
-    gd = Grid(type_='rect',m=10,n=10)
-    self = Grid(type_='tri',m=10,n=10)
+    # gd = Grid(type_='rect',m=10,n=10, winding='ccw')
+    # self = Grid(type_='tri',m=10,n=10, winding='ccw')
     
-    cell = self.cellList[44]
-    face = cell.faces[0]
+    # cell = self.cellList[44]
+    # face = cell.faces[0]
+    
+    """
+    plotRect = PlotGrid(gd)
+    axRect = plotRect.plot_cells()
+    axRect = plotRect.plot_centroids(axRect)
+    axRect = plotRect.plot_face_centers(axRect)
+    axRect = plotRect.plot_normals(axRect)
+    #axRect = plotRect.plot_boundary(axRect) #BGrid does not exist for generated grids
+    #"""
     
     #print(face.e_eta
     #print(face.e_xi
@@ -1133,12 +1331,13 @@ if __name__ == '__main__':
     #face = cell.faces[0]
     
     
-    plotTri = PlotGrid(self)
+    #plotTri = PlotGrid(self)
     """
     axTri = plotTri.plot_cells()
     axTri = plotTri.plot_centroids(axTri)
     axTri = plotTri.plot_face_centers(axTri)
     axTri = plotTri.plot_normals(axTri)
+    #axTri = plotTri.plot_boundary(axTri) #BGrid does not exist for generated grids
     
     plotRect = PlotGrid(gd)
     axRect = plotRect.plot_cells()

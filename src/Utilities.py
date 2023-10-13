@@ -179,6 +179,24 @@ def triangle_area(node1,node2,node3):
     # area = -0.5*( (x1-x3)*(y2-y3)-(y1-y3)*(x2-x3) )      #<- cross product
     return  -0.5*( x1*(y2-y3) + x2*(y3-y1) + x3*(y1-y2) ) #re-arranged
 
+def triangle_area_from_raw_data(x1,x2,x3, y1,y2,y3):
+    """
+    area of a 2D triangular cell
+    which is assumed to be ordered counter clockwise.
+    
+         1              2
+          o------------o
+           \         .
+            \       .
+             \    .
+              \ .
+               o
+               3
+    Note: Area vector is computed as the cross product of edge vectors [32] and [31].
+    """
+    # area = -0.5*( (x1-x3)*(y2-y3)-(y1-y3)*(x2-x3) )      #<- cross product
+    return  -0.5*( x1*(y2-y3) + x2*(y3-y1) + x3*(y1-y2) ) #re-arranged
+
 '''
 3D vector utilities
 '''
