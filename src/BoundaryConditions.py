@@ -138,7 +138,7 @@ class BC_states(object):
     # Freestream
     #**************************************************************************
     def freestream(self, wb):
-        #print("freestream")
+        print("freestream")
         #print( 'got wb',wb)
         flowstate = self.flowstate
         wb[0] = flowstate.rho_inf

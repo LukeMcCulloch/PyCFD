@@ -312,7 +312,7 @@ class Solvers(object):
         
         self.solver_switch = {'mms_solver':[],
                               'explicit_unsteady_solver':[tfinal, dt],
-                              'implicit_solver':[tfinal, dt]}
+                              'explicit_steady_solver':[tfinal, dt]}
         
         
         
@@ -532,6 +532,7 @@ class Solvers(object):
             print(time)
             #------------------------------------------------------------------
             # Compute the residual: res(i,:)
+            print("stage 1 compute residual")
             self.compute_residual()
             
             #------------------------------------------------------------------
@@ -565,7 +566,7 @@ class Solvers(object):
                 
             #-----------------------------
             #- 2nd Stage of Runge-Kutta:
-                
+            print("stage 2 compute residual")
             self.compute_residual()
             
             for i in range(self.mesh.nCells):
@@ -581,6 +582,138 @@ class Solvers(object):
     
     
     
+    
+    
+        
+    #-------------------------------------------------------------------------#
+    # Euler solver: Explicit Steady Solver: Ut + Fx + Gy = S
+    #
+    # Explicit Steady Solver: Ut + Fx + Gy = S, Ut -> 0.
+    #
+    # This subroutine solves a steady problem by explicit schemes with the time
+    # taken as a pseudo time, and thus we can use local time steps for speed up
+    # the convergence (and a local-preconditioning method if implemented).
+    #
+    # In other words, it solves a global system of nonlinear residual equations:
+    #   Res(U) = 0
+    # by explicit iteration schemes.
+    #
+    #-------------------------------------------------------------------------#
+    def explicit_steady_solver(self, tfinal=1.0, dt=.01, tol=1.e-5, max_iteration = 100):
+        """
+        
+        debugging:
+           
+        self.t_final = 1.0
+        time = 0.0
+            
+        """
+        print('call explicit_steady_solver')
+        time = 0.0
+        
+        self.t_final = tfinal
+        
+        
+        #-----------------------------------------------------------------------------
+        #-----------------------------------------------------------------------------
+        # Pseudo time-stepping
+        #-----------------------------------------------------------------------------
+        #-----------------------------------------------------------------------------
+        print()
+        print("---------------------------------------")
+        print(" Pseudo time-Stepping")
+        print()
+        
+        
+        i_iteration = 0
+        pseudo_time_loop = True
+        
+        while (pseudo_time_loop):
+            print(time)
+            #------------------------------------------------------------------
+            # Compute the residual: res(i,:) (gradient computation is done within)
+            print("stage 1 compute residual")
+            self.compute_residual()
+            
+            #Compute the residual norm for checking convergence.
+            self.compute_residual_norm()
+            
+            
+            #--- Initial (no solution update yet) ------------
+            if (i_iteration == 0) :
+                #Save the initial max res norm.
+                res_norm_initial = self.res_norm
+                
+                print(" Iteration   max(res)    max(res)/max(res)_initial ")
+                print(i_iteration, np.max( self.res_norm[:] ), 1.0)
+                
+            #--- After the first solution upate ------------
+            else:
+                print( i_iteration, np.max( self.res_norm[:] ),
+                      np.max( self.res_norm[:] / res_norm_initial[:] )
+                      )
+                
+                print(i_iteration, np.max( self.res_norm[:]/res_norm_initial[:] ))
+            
+            
+            #------------------------------------------------------
+            # Exit if the res norm is reduced below the tolerance specified by input.
+            
+            if ( np.max( self.res_norm[:]/res_norm_initial[:] ) < tol ): pseudo_time_loop=False
+    
+            #------------------------------------------------------
+            # Exit if we reach a specified number of iterations.
+            if (i_iteration == max_iteration): pseudo_time_loop=False
+            
+    
+            #------------------------------------------------------
+            # Increment the counter and go to the next iteration.
+            
+            i_iteration = i_iteration + 1 #<- This is the iteration that has just been done.
+            
+            
+            #------------------------------------------------------
+            # Compute the local time step, dtau.
+            dt = self.compute_global_time_step()#*.5
+            
+            
+            #------------------------------------------------------------------
+            # Increment the physical time and exit if the final time is reached
+            time += dt #TBD dt was undefined
+            
+            #------------------------------------------------------
+            # Update the solution by forward Euler scheme.
+            
+            #-------------------------------------------------------------------
+            # Update the solution by 2nd-order TVD-RK.: u^n is saved as u0(:,:)
+            #  1. u^*     = u^n - (dt/vol)*Res(u^n)
+            #  2. u^{n+1} = 1/2*(u^n + u^*) - 1/2*(dt/vol)*Res(u^*)
+            
+            
+            #-----------------------------
+            #- 1st Stage of Runge-Kutta:
+            
+            self.u0[:] = self.u[:]
+            # slow test first
+            for i in range(self.mesh.nCells):
+                self.u[i,:] = self.u0[i,:] - \
+                                (dt/self.mesh.cells[i].volume) * self.res[i,:] #This is R.K. intermediate u*.
+                self.w[i,:] = self.u2w( self.u[i,:]  )
+                
+                
+            #-----------------------------
+            #- 2nd Stage of Runge-Kutta:
+            print("stage 2 compute residual")
+            self.compute_residual()
+            
+            for i in range(self.mesh.nCells):
+                self.u[i,:] = 0.5*( self.u[i,:] + self.u0[i,:] )  - \
+                                0.5*(dt/self.mesh.cells[i].volume) * self.res[i,:]
+                self.w[i,:] = self.u2w( self.u[i,:]  )
+            
+        print(" End of Physical Time-Stepping")
+        print("---------------------------------------")
+        return
     
     
     
@@ -1837,8 +1970,8 @@ if __name__ == '__main__':
     
     #test = TestInviscidVortex()
     #test = TestSteadyAirfoil()
-    #test = TestSteadyCylinder()
-    test = TestTEgrid()
+    test = TestSteadyCylinder()
+    #test = TestTEgrid()
     
     #if False:
     if True:
@@ -1863,15 +1996,17 @@ if __name__ == '__main__':
         #'''
         
         #"""
-        self.solver_boot(flowtype = 'mms')
-        #self.solver_boot(flowtype = 'freestream')
+        #self.solver_boot(flowtype = 'mms')
+        self.solver_boot(flowtype = 'freestream')
         #self.solver_boot(flowtype = 'vortex')
         #self.solver_boot(flowtype = 'shock-diffraction')
         
         solvertype = {0:'explicit_unsteady_solver',
                       1:'mms_solver',
-                      2:'implicit_solver'}
-        self.solver_solve( tfinal=10.0, dt=.01, solver_type = solvertype[1])
+                      2:'explicit_steady_solver'}
+        #self.solver_solve( tfinal=1.0, dt=.01, solver_type = solvertype[1])
+        #self.solver_solve( tfinal=1.0, dt=.01, solver_type = solvertype[0])
+        self.solver_solve( tfinal=1.0, dt=.01, solver_type = solvertype[2])
         self.plot_solution( title='Final ')
         #"""
         

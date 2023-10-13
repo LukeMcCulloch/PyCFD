@@ -1309,11 +1309,11 @@ class TestTEgrid(object):
     
     
 if __name__ == '__main__':
-    # gd = Grid(type_='rect',m=10,n=10, winding='ccw')
-    # self = Grid(type_='tri',m=10,n=10, winding='ccw')
+    gd = Grid(type_='rect',m=10,n=10, winding='ccw')
+    self = Grid(type_='tri',m=10,n=10, winding='ccw')
     
-    # cell = self.cellList[44]
-    # face = cell.faces[0]
+    cell = self.cellList[44]
+    face = cell.faces[0]
     
     """
     plotRect = PlotGrid(gd)
