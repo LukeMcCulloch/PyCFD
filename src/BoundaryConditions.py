@@ -96,9 +96,11 @@ class BC_states(object):
                     'dirichlet':[xb,yb]
                     }
         
-        getattr(self, bc_state_type)(*vs_cases[bc_state_type])
+        #print('before:  wL,njk, wb',wL,njk, wb)
         
-        
+        wb = getattr(self, bc_state_type)(*vs_cases[bc_state_type])
+
+        #print('after: wL,njk, wb',wL,njk, wb)
         
         
         #---------------------------------------------------------
@@ -131,14 +133,14 @@ class BC_states(object):
         # wb[2] = 0.0
         # #print( 'set wb',wb)
         #Dirichlet assumes the manufactured solution: so, compute wb for (xb,yb)
-        return compute_manufactured_sol_and_f_euler(xb,yb)
+        return compute_manufactured_sol_and_f_euler(xb,yb) #TODO: fix return!
     
     
     #**************************************************************************
     # Freestream
     #**************************************************************************
     def freestream(self, wb):
-        print("freestream")
+        #print("freestream")
         #print( 'got wb',wb)
         flowstate = self.flowstate
         wb[0] = flowstate.rho_inf
@@ -146,21 +148,28 @@ class BC_states(object):
         wb[2] = flowstate.v_inf
         wb[3] = flowstate.p_inf
         #print( 'set wb',wb)
-        return
+        return wb
     
     
     
     #**************************************************************************
     # Subsonic outflow (backpressure)
     #**************************************************************************
-    def outflow_subsonic(self, wL, wb):
-        print("back-pressure")
+    def outflow_subsonic(self, *args):
+        #print("back-pressure")
+        wL = args[0] 
+        wb = args[1]
+        #print('wL',wL)
+        #print('wb',wb)
         flowstate = self.flowstate
         #-------------------------
         # Back pressure condition
-        wb    = wL
+        #wb = np.copy(wL)
+        wb[:] = wL[:]
         wb[3] = flowstate.p_inf  #<- fix the pressure
-        return
+        #print('wL',wL)
+        #print('wb',wb)
+        return wb
 
 
     #**********************************************************************
@@ -168,25 +177,36 @@ class BC_states(object):
     #
     # Note: This is a simplified implementation similar to slip wall condition.
     #**********************************************************************
-    def symmetry_y(self, wL,njk, wb):
-        print("symmetry_y")
-        #un = wL[1]*njk[0] + wL[2]*njk[1]  #not used
+    def symmetry_y(self, *args):
+        #print("symmetry_y")
+        wL = args[0]
+        njk = args[1]
+        wb = args[2]
+        
+        
+        un = wL[1]*njk[0] + wL[2]*njk[1]  #not used
 
         #-------------------------
         # Define the right state:
         
-        wb = wL
+        #wb = np.copy(wL)
+        wb[:] = wL[:]
         
         #-------------------------
         # Ensure zero y-momentum flux on average:
         
-        wb[2] = 0.0
+        #wb[2] = 0.0 #where did this come from??
+        
+        # Ensure zero normal velocity on average:
+        
+        wb[1] = wL[1] - 2.0*un*njk[0]
+        wb[2] = wL[2] - 2.0*un*njk[1]
         
         # (ub,vb) = (uL,vL) - 2*un*njk -> 0.5[(ub,vb)+(uL,vL)]*njk = (0,0).
         # Since rho_b = rhoL as set in the above, this means the momemtum
         # in n direction is also zero.
-        print('wb = {}'.format(wb))
-        return
+        #print('wb = {}'.format(wb))
+        return wb
 
  
     #**************************************************************************
@@ -194,25 +214,24 @@ class BC_states(object):
     #
     #**************************************************************************
     def slip_wall(self, wL,njk, wb):
-        print("slip_wall")
+        #print("slip_wall")
 
-        #un = wL[2]*njk[1] + wL[3]*njk[2]
         un = wL[1]*njk[0] + wL[2]*njk[1]
         
         #-------------------------
         # Define the right state:
         
-        wb = wL
+        wb[:] = wL[:]
         
         # Ensure zero normal velocity on average:
         
-        wb[1] = wL[1] - un*njk[0]
-        wb[2] = wL[2] - un*njk[1]
+        wb[1] = wL[1] - 2.0*un*njk[0]
+        wb[2] = wL[2] - 2.0*un*njk[1]
         
         #print('wb dot njk= {}'.format(wb[1:3].dot(njk)))
-        tol= 1.e-10
-        assert(wb[1:3].dot(njk) < tol),"slip wall failure normal velocity = {}".format(wb[1:3].dot(njk))
-        return
+        #tol= 1.e-10
+        #assert(wb[1:3].dot(njk) < tol),"slip wall failure normal velocity = {}".format(wb[1:3].dot(njk))
+        return wb
     
     
     #**************************************************************************
@@ -223,13 +242,13 @@ class BC_states(object):
             wb = np.array(4, float)
             wL = np.array(4, float)
         """
-        print("outflow_supersonic")
+        #print("outflow_supersonic")
         #---------------------------------------------
         # Take everything from the interior.
         
-        wb = wL
+        wb[:] = wL[:]
         
-        return
+        return wb
     
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------

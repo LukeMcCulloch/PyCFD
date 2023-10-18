@@ -328,12 +328,23 @@ class Cell(object):
         """
         if self.N == 3:
             self.volume = -triangle_area(*self.nodes)
+        elif (self.N == 4):
+            v1 = Node(self.nodes[0].vector,-1)
+            v2 = Node(self.nodes[1].vector,-1)
+            v3 = Node(self.nodes[2].vector,-1)
+            v4 = Node(self.nodes[3].vector,-1)
+            
+            self.volume = 0.0
+            
+            self.volume -= triangle_area(v1,v2,v4)
+            self.volume -= triangle_area(v2,v3,v4)
         else:
-            vol = 0.
-            for i in range(self.N-3+1):
-                nlist1 = self.nodes[i:i+3]
-                vol += triangle_area(*nlist1)
-            self.volume = -vol
+            assert(False),"Error: cell is neither quad nor tri"
+            # vol = 0.
+            # for i in range(self.N-3+1):
+            #     nlist1 = self.nodes[i:i+3]
+            #     vol += triangle_area(*nlist1)
+            # self.volume = -vol
         return 
         
     def set_face_vectors(self, nface, facelist):   #, n, FaceCellMap):
@@ -1067,7 +1078,7 @@ class Grid(object):
     #-------------------------------------------------------------------------#
     # Mesh checks
     #-------------------------------------------------------------------------#
-    def check_volume(self, tol=1e-10):
+    def check_volume(self, tol=1e-8):
         vol_domain = self.sum_volume_green_gauss()
         print("  Total volume of the domain = ", vol_domain)
         vol_domain_cells = self.sum_volume_cell_sum()

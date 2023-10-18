@@ -170,36 +170,50 @@ def roe(ucL, ucR, njk, num_flux, wsn, gamma = 1.4):
     assert(ucL[0] != 0.0),"ERROR: ucL[0] :: rho=0.0 :: / by zero issue"
     assert(ucR[0] != 0.0),"ERROR: ucR[0] :: rho=0.0 :: / by zero issue"
     
-    if ucL[0] == 0.0: 
-        ucL[0] = 1.e-15
-        print('setting Left density to 1e-15 to fix devide by zero in roe flux')
-    if ucR[0] == 0.0: 
-        ucR[0] = 1.e-15
-        print('setting Right density to 1e-15 to fix devide by zero in roe flux')
+    # if ucL[0] == 0.0: 
+    #     ucL[0] = 1.e-15
+    #     print('setting Left density to 1e-15 to fix devide by zero in roe flux')
+    # if ucR[0] == 0.0: 
+    #     ucR[0] = 1.e-15
+    #     print('setting Right density to 1e-15 to fix devide by zero in roe flux')
     
+    #print('ucL',ucL)
     #  Left state
     rhoL = ucL[0]
     uL   = ucL[1]/ucL[0]
     vL   = ucL[2]/ucL[0]
     wL   = ucL[3]/ucL[0]
     qnL = uL*nx + vL*ny + wL*nz
+    ##print('one, ucL[4], half, rhoL, uL,uL,vL,vL,wL,wL')
+    ##print(one, ucL[4], half, rhoL, uL,uL,vL,vL,wL,wL)
+    #print('uL*uL+vL*vL+wL*wL',uL*uL+vL*vL+wL*wL)
+    #print('half*rhoL*(uL*uL+vL*vL+wL*wL)',half*rhoL*(uL*uL+vL*vL+wL*wL))
     pL = (gamma-one)*( ucL[4] - half*rhoL*(uL*uL+vL*vL+wL*wL) )
+    #print('pL',pL)
+    #print('gamma*pL/rhoL',gamma*pL/rhoL)
     aL = sqrt(gamma*pL/rhoL)
-    #pL = abs((gamma-one)*( ucL[4] - half*rhoL*(uL*uL+vL*vL+wL*wL) ))
-    #aL = sqrt(abs(gamma*pL/rhoL) )
+    ##pL = abs((gamma-one)*( ucL[4] - half*rhoL*(uL*uL+vL*vL+wL*wL) ))
+    ##aL = sqrt(abs(gamma*pL/rhoL) )
     HL = aL*aL/(gamma-one) + half*(uL*uL+vL*vL+wL*wL)
     
-    #  Right state
     
+    #print('ucR',ucR)
+    #  Right state
     rhoR = ucR[0]
     uR   = ucR[1]/ucR[0]
     vR   = ucR[2]/ucR[0]
     wR   = ucR[3]/ucR[0]
     qnR = uR*nx + vR*ny + wR*nz
+    ##print('one, ucL[4], half, rhoR, uR,uR,vR,vR,wR,wR')
+    ##print(one, ucL[4], half, rhoR, uR,uR,vR,vR,wR,wR)
+    #print('uR*uR+vR*vR+wR*wR',uR*uR+vR*vR+wR*wR)
+    #print('half*rhoR*(uR*uR+vR*vR+wR*wR)',half*rhoR*(uR*uR+vR*vR+wR*wR))
     pR = (gamma-one)*( ucR[4] - half*rhoR*(uR*uR+vR*vR+wR*wR) )
+    #print('pR',pR)
+    #print('gamma*pR/rhoR',gamma*pR/rhoR)
     aR = sqrt(gamma*pR/rhoR)
-    #pR = abs( (gamma-one)*( ucR[4] - half*rhoR*(uR*uR+vR*vR+wR*wR) ) )
-    #aR = sqrt(abs(gamma*pR/rhoR))
+    ##pR = abs( (gamma-one)*( ucR[4] - half*rhoR*(uR*uR+vR*vR+wR*wR) ) )
+    ##aR = sqrt(abs(gamma*pR/rhoR))
     HR = aR*aR/(gamma-one) + half*(uR*uR+vR*vR+wR*wR)
     
     #Compute the physical flux: fL = Fn(UL) and fR = Fn(UR)

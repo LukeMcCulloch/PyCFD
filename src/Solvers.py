@@ -262,7 +262,11 @@ class Solvers(object):
                 count += 1
         
         
-        self.BC = BC_states(solver = self, flowstate = FlowState() ) 
+        self.BC = BC_states(solver = self, 
+                            flowstate = FlowState(self.rho_inf, 
+                                                  self.u_inf, 
+                                                  self.v_inf,
+                                                  self.p_inf) ) 
         
         
         
@@ -780,7 +784,7 @@ class Solvers(object):
         #
         #----------------------------------------------------------------------
         savei = 0
-        #print('do interior residual'
+        print('do interior residual')
         for i,face in enumerate(mesh.faceList):
             """
             #debugging:
@@ -956,7 +960,7 @@ class Solvers(object):
         # c = bcell, the cell having the boundary face j.
         #
         savei = 0
-        #print('do boundary residual')
+        print('do boundary residual')
         for ib, bface in enumerate(self.mesh.boundaryList):
             """
             ib = self.save[0]
@@ -1111,6 +1115,10 @@ class Solvers(object):
         assert(abs(self.wsn[i]) > 0.),'wsn time step initilization div by zero'
         physical_time_step = CFL*self.mesh.cells[i].volume / ( 0.5*self.wsn[i] )
         
+        for i, cell in enumerate(self.mesh.cells):
+            physical_time_step = min( physical_time_step,
+                        CFL*self.mesh.cells[i].volume / ( 0.5*self.wsn[i] )
+                                     )
         
         return physical_time_step
     
@@ -1141,7 +1149,7 @@ class Solvers(object):
         w : primitive variables (rho,     u,     v,     p)
 
         '''
-        
+        #print('u',u)
         w = np.zeros((nq),float)
         
         iu = self.iu
@@ -1150,9 +1158,9 @@ class Solvers(object):
         ip = self.ip
         
         
-        if u[0] == 0.0: 
-            u[0] = 1.0e-15#1.e15
-            #print('setting u density to 1e-15 to fix devide by zero in u2w')
+        #if u[0] == 0.0: 
+        #    u[0] = 1.0e-15#1.e15
+        #    #print('setting u density to 1e-15 to fix devide by zero in u2w')
         
         w[ir] = u[0]
         w[iu] = u[1]/u[0]
@@ -1428,10 +1436,10 @@ class Solvers(object):
         # primitive variables reconstructed to the face wL, WR:
         
         #Cell 1 centroid to the face midpoint:
-        wL = w1 + phi1 * (gradw1[:,0]*(xm-xc1) + gradw1[:,1]*(ym-yc1))
+        wL = w1[:] + phi1 * (gradw1[:,0]*(xm-xc1) + gradw1[:,1]*(ym-yc1))
         
         #Cell 2 centroid to the face midpoint:
-        wR = w2 + phi2 * ( gradw2[:,0]*(xm-xc2) + gradw2[:,1]*(ym-yc2) )
+        wR = w2[:] + phi2 * ( gradw2[:,0]*(xm-xc2) + gradw2[:,1]*(ym-yc2) )
         
         # Store the reconstructed solutions as conservative variables.
         # Just becasue flux functions use conservative variables.
@@ -1969,8 +1977,8 @@ if __name__ == '__main__':
     
     
     #test = TestInviscidVortex()
-    #test = TestSteadyAirfoil()
-    test = TestSteadyCylinder()
+    test = TestSteadyAirfoil()
+    #test = TestSteadyCylinder()
     #test = TestTEgrid()
     
     #if False:
@@ -1996,7 +2004,7 @@ if __name__ == '__main__':
         #'''
         
         #"""
-        #self.solver_boot(flowtype = 'mms')
+        #self.solver_boot(flowtype = 'mms') #TODO fixme compute_manufactured_sol_and_f_euler return vals
         self.solver_boot(flowtype = 'freestream')
         #self.solver_boot(flowtype = 'vortex')
         #self.solver_boot(flowtype = 'shock-diffraction')
@@ -2004,9 +2012,18 @@ if __name__ == '__main__':
         solvertype = {0:'explicit_unsteady_solver',
                       1:'mms_solver',
                       2:'explicit_steady_solver'}
-        #self.solver_solve( tfinal=1.0, dt=.01, solver_type = solvertype[1])
-        #self.solver_solve( tfinal=1.0, dt=.01, solver_type = solvertype[0])
-        self.solver_solve( tfinal=1.0, dt=.01, solver_type = solvertype[2])
+        '''
+        self.solver_solve( tfinal=0.2, dt=.01, 
+                          solver_type = solvertype[0])
+        #'''
+        '''
+        self.solver_solve( tfinal=0.2, dt=.01, 
+                           solver_type = solvertype[1])
+        #'''
+        #'''
+        self.solver_solve( tfinal=0.2, dt=.01, 
+                           solver_type = solvertype[2])
+        #'''
         self.plot_solution( title='Final ')
         #"""
         
