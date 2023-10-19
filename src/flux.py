@@ -191,7 +191,12 @@ def roe(ucL, ucR, njk, num_flux, wsn, gamma = 1.4):
     pL = (gamma-one)*( ucL[4] - half*rhoL*(uL*uL+vL*vL+wL*wL) )
     #print('pL',pL)
     #print('gamma*pL/rhoL',gamma*pL/rhoL)
-    aL = sqrt(gamma*pL/rhoL)
+    #assert(gamma*pL/rhoL>0.0),"gamma = {}, pL = {}, rhoL = {}".format(gamma, pL, rhoL)
+    if (gamma*pL/rhoL<0.0):
+        print("ERROR: gamma = {}, pL = {}, rhoL = {}".format(gamma, pL, rhoL))
+        aL = sqrt(abs(gamma*pL/rhoL))
+    else:
+        aL = sqrt(gamma*pL/rhoL)
     ##pL = abs((gamma-one)*( ucL[4] - half*rhoL*(uL*uL+vL*vL+wL*wL) ))
     ##aL = sqrt(abs(gamma*pL/rhoL) )
     HL = aL*aL/(gamma-one) + half*(uL*uL+vL*vL+wL*wL)
@@ -211,7 +216,12 @@ def roe(ucL, ucR, njk, num_flux, wsn, gamma = 1.4):
     pR = (gamma-one)*( ucR[4] - half*rhoR*(uR*uR+vR*vR+wR*wR) )
     #print('pR',pR)
     #print('gamma*pR/rhoR',gamma*pR/rhoR)
-    aR = sqrt(gamma*pR/rhoR)
+    assert(gamma*pR/rhoL>0.0),"gamma = {}, pR = {}, rhoR = {}".format(gamma, pR, rhoR)
+    if (gamma*pR/rhoL<0.0):
+        print("ERROR: gamma = {}, pR = {}, rhoR = {}".format(gamma, pR, rhoR))
+        aR = sqrt(abs(gamma*pR/rhoR))
+    else:       
+        aR = sqrt(gamma*pR/rhoR)
     ##pR = abs( (gamma-one)*( ucR[4] - half*rhoR*(uR*uR+vR*vR+wR*wR) ) )
     ##aR = sqrt(abs(gamma*pR/rhoR))
     HR = aR*aR/(gamma-one) + half*(uR*uR+vR*vR+wR*wR)

@@ -262,11 +262,11 @@ class Solvers(object):
                 count += 1
         
         
-        self.BC = BC_states(solver = self, 
-                            flowstate = FlowState(self.rho_inf, 
-                                                  self.u_inf, 
-                                                  self.v_inf,
-                                                  self.p_inf) ) 
+        # self.BC = BC_states(solver = self, 
+        #                     flowstate = FlowState(self.rho_inf, 
+        #                                           self.u_inf, 
+        #                                           self.v_inf,
+        #                                           self.p_inf) ) 
         
         
         
@@ -295,6 +295,12 @@ class Solvers(object):
         
         self.plot_flow_at_cell_centers(title = 'Initial Solution')
         
+        
+        self.BC = BC_states(solver = self, 
+                            flowstate = FlowState(self.rho_inf, 
+                                                  self.u_inf, 
+                                                  self.v_inf,
+                                                  self.p_inf) ) 
         
         self.solver_initialized = True
         return
@@ -539,6 +545,11 @@ class Solvers(object):
             print("stage 1 compute residual")
             self.compute_residual()
             
+            #exit()
+            
+            self.compute_residual_norm()
+            print('res_norm = {}'.format(self.res_norm))
+            
             #------------------------------------------------------------------
             # Compute the global time step, dt. One dt for all cells.
             dt = self.compute_global_time_step()#*.5
@@ -572,13 +583,14 @@ class Solvers(object):
             #- 2nd Stage of Runge-Kutta:
             print("stage 2 compute residual")
             self.compute_residual()
-            
+            exit()
             for i in range(self.mesh.nCells):
                 self.u[i,:] = 0.5*( self.u[i,:] + self.u0[i,:] )  - \
                                 0.5*(dt/self.mesh.cells[i].volume) * self.res[i,:]
                 self.w[i,:] = self.u2w( self.u[i,:]  )
             
-            
+            self.compute_residual_norm()
+            print('res_norm = {}'.format(self.res_norm))
             
         print(" End of Physical Time-Stepping")
         print("---------------------------------------")
@@ -638,6 +650,7 @@ class Solvers(object):
             # Compute the residual: res(i,:) (gradient computation is done within)
             print("stage 1 compute residual")
             self.compute_residual()
+            #exit()
             
             #Compute the residual norm for checking convergence.
             self.compute_residual_norm()
@@ -709,7 +722,7 @@ class Solvers(object):
             #- 2nd Stage of Runge-Kutta:
             print("stage 2 compute residual")
             self.compute_residual()
-            
+            #exit()
             for i in range(self.mesh.nCells):
                 self.u[i,:] = 0.5*( self.u[i,:] + self.u0[i,:] )  - \
                                 0.5*(dt/self.mesh.cells[i].volume) * self.res[i,:]
@@ -733,7 +746,9 @@ class Solvers(object):
     #
     #-------------------------------------------------------------------------#
     def compute_residual_norm(self):
-        self.res_norm[:] = np.sum(np.abs(self.res)) / float(self.mesh.nCells)
+        #self.res_norm[:] = np.sum(np.abs(self.res)) / float(self.mesh.nCells)
+        for i in range(len(self.res[0,:])):
+            self.res_norm[i] = np.linalg.norm(self.res[:,i]) / float(self.mesh.nCells)
         return
     
     #-------------------------------------------------------------------------#
@@ -831,8 +846,8 @@ class Solvers(object):
                     
                 # Reconstruct the solution to the face midpoint and compute a numerical flux.
                 # (reconstruction is implemented inside "interface_flux".
-                #print('i = ',i
-                num_flux, wave_speed = self.interface_flux(u1, u2,                     #<- Left/right states
+                #print('i = ',i)
+                num_flux, wave_speed = self.interface_flux(u1[:], u2[:],                     #<- Left/right states
                                                            self.gradw1, self.gradw2,   #<- Left/right same gradients
                                                            face.normal_vector,         #<- unit face normal
                                                            c1.centroid,                #<- Left cell centroid
@@ -862,7 +877,20 @@ class Solvers(object):
                                         )
                     print('NAN on the interior')
                     print(i, num_flux, wave_speed)
-                    self.save = [i, face, wave_speed]
+                    self.save = [i, face, num_flux, wave_speed]
+                    self.save = {'i' : i,
+                                 'face' : face,
+                                 'num_flux':num_flux,
+                                 'wave_speed':wave_speed,
+                                 'u1':u1,
+                                 'u2':u2,
+                                 'c1':c1,
+                                 'c2':c2,
+                                 'xm':xm,
+                                 'ym':ym,
+                                 'phi1':phi1, 
+                                 'phi2':phi2
+                                 }
                     #self.save = [i, face]
                     '''
                     i = self.save[0]
@@ -997,10 +1025,11 @@ class Solvers(object):
             #print('ib = ',ib)
             #print('self.bc_type[ib] = {}'.format(self.bc_type[ib]))
             self.ub = self.BC.get_right_state(xm,ym, 
-                                    u1, 
+                                    u1[:], 
                                     self.unit_face_normal, 
                                     self.bc_type[ib], #CBD (could be done): store these on the faces instead of seperate  (tlm what?...cells?) 
-                                    self.ub)
+                                    self.ub[:])
+            #print('ub = {}'.format(self.ub))
             
             self.gradw2 = self.gradw2 #<- Gradient at the right state. Give the same gradient for now.
             
@@ -1009,7 +1038,7 @@ class Solvers(object):
             #---------------------------------------------------
             # Compute a flux at the boundary face.
             #print('ub = ',self.ub
-            num_flux, wave_speed = self.interface_flux(u1, self.ub,                      #<- Left/right states
+            num_flux, wave_speed = self.interface_flux(u1[:], self.ub,                      #<- Left/right states
                                                        self.gradw1, self.gradw2,    #<- Left/right same gradients
                                                        self.unit_face_normal,       #<- unit face normal
                                                        c1.centroid,                 #<- Left cell centroid
@@ -1030,6 +1059,19 @@ class Solvers(object):
                 print('NAN at a boundary')
                 print(ib, num_flux, wave_speed)
                 self.save = [ib, bface, num_flux, wave_speed]
+                self.save = {'i' : ib,
+                             'face' : face,
+                             'num_flux':num_flux,
+                             'wave_speed':wave_speed,
+                             'u1':u1,
+                             'u2':self.ub,
+                             'c1':c1,
+                             'c2':[xm, ym],
+                             'xm':xm,
+                             'ym':ym,
+                             'phi1':phi1, 
+                             'phi2':phi2
+                             }
             assert(not test), "Found a NAN in boundary residual"
             #print(ib, num_flux, wave_speed)
             
@@ -1427,8 +1469,9 @@ class Solvers(object):
         zero = 0.0
         inviscid_flux = roe
         
-        # convert consertative to primitive variables
-        # at centroids.
+        # convert consertative to primitive variables at centroids.
+        #print('u1 ',u1)
+        #print('u2 ',u2)
         w1 = self.u2w(u1) 
         w2 = self.u2w(u2)
         
@@ -1499,7 +1542,7 @@ class Solvers(object):
         return self.num_flux[:], wsn
         
     
-    def initial_solution_freestream(self, M_inf = 1.0, aoa = 0.0):
+    def initial_solution_freestream(self, M_inf = 0.3, aoa = 0.0):
         """
         #*******************************************************************************
         # Set the initial solution.
@@ -1514,7 +1557,7 @@ class Solvers(object):
         # Set free stream values based on the input Mach number.
         self.rho_inf = 1.0
         self.u_inf = M_inf*np.cos(aoa *np.pi/180.0) #aoa converted from degree to radian
-        self.v_inf = 0.0#M_inf*np.sin(aoa *np.pi/180.0) #aoa converted from degree to radian
+        self.v_inf = M_inf*np.sin(aoa *np.pi/180.0) #aoa converted from degree to radian
         self.p_inf = 1.0/self.gamma
         
         self.w_initial[self.ir] =  self.rho_inf #Density
@@ -1977,8 +2020,8 @@ if __name__ == '__main__':
     
     
     #test = TestInviscidVortex()
-    test = TestSteadyAirfoil()
-    #test = TestSteadyCylinder()
+    #test = TestSteadyAirfoil()
+    test = TestSteadyCylinder()
     #test = TestTEgrid()
     
     #if False:
@@ -2012,20 +2055,26 @@ if __name__ == '__main__':
         solvertype = {0:'explicit_unsteady_solver',
                       1:'mms_solver',
                       2:'explicit_steady_solver'}
-        '''
-        self.solver_solve( tfinal=0.2, dt=.01, 
-                          solver_type = solvertype[0])
         #'''
+        self.solver_solve( tfinal=0.2, dt=.01, 
+                          solver_type = solvertype[2])
+        #'''
+        ################################
         '''
         self.solver_solve( tfinal=0.2, dt=.01, 
                            solver_type = solvertype[1])
         #'''
-        #'''
+        ################################
+        '''
         self.solver_solve( tfinal=0.2, dt=.01, 
                            solver_type = solvertype[2])
         #'''
+        
+        #'''
         self.plot_solution( title='Final ')
         #"""
+        
+        
         
         '''
         # if memory issues are encountered:

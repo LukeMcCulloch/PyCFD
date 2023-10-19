@@ -239,8 +239,11 @@ class Face(object):
             fig, ax = plt.subplots()
         else:
             ax = canvas
+            
+        normal_vector = self.area * self.normal_vector/np.linalg.norm(self.normal_vector)
         
         norm0 = self.normal_vector + self.center
+        norm0 = normal_vector + self.center
                 
         ax.plot([ norm0[0],self.center[0] ],
                 [ norm0[1],self.center[1] ],
@@ -480,6 +483,7 @@ class Cell(object):
             fnorm = face.normal_vector
             norm = 2.*np.linalg.norm(face.normal_vector)*face.area
             
+            norm = np.linalg.norm(face.normal_vector)
             
             #scalearrow = np.linalg.norm(norm0)
             # plt.arrow(face.center[0],

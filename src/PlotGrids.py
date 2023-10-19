@@ -200,7 +200,7 @@ class PlotGrid(object):
             ax = canvas
         grid = self.grid
         
-        for i in range(1,seg.nbnodes):
+        for i in range(1,seg.nbnodes-1):
             n0 = grid.nodes[seg.bnode[i-1]]
             n1 = grid.nodes[seg.bnode[i]]
             

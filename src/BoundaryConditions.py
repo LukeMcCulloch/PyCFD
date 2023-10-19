@@ -126,7 +126,7 @@ class BC_states(object):
     # Dirichlet
     #**************************************************************************
     def dirichlet(self, xb, yb):
-        print("dirichlet, mms")
+        #print("dirichlet, mms")
         #print( 'got wb',wb)
         # flowstate = self.flowstate
         # wb[1] = 0.0
@@ -225,12 +225,12 @@ class BC_states(object):
         
         # Ensure zero normal velocity on average:
         
-        wb[1] = wL[1] - 2.0*un*njk[0]
-        wb[2] = wL[2] - 2.0*un*njk[1]
+        wb[1] = wL[1] - un*njk[0]
+        wb[2] = wL[2] - un*njk[1]
         
         #print('wb dot njk= {}'.format(wb[1:3].dot(njk)))
-        #tol= 1.e-10
-        #assert(wb[1:3].dot(njk) < tol),"slip wall failure normal velocity = {}".format(wb[1:3].dot(njk))
+        tol= 1.e-10
+        assert(wb[1:3].dot(njk) < tol),"slip wall failure normal velocity = {}".format(wb[1:3].dot(njk))
         return wb
     
     
