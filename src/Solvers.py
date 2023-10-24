@@ -6,6 +6,7 @@ Created on Fri Jan  3 21:15:20 2020
 @author: lukemcculloch
 """
 import os
+import sys
 import weakref
 try:
     from memory_profiler import profile
@@ -145,6 +146,7 @@ class Solvers(object):
         self.do_mms = False
         self.mesh = mesh
         self.dim = mesh.dim
+        self.dpn = self.dim + 2#rho, u,v,p
         
         #self.solver_switch = {'mms':mms_solver,
         #                      'explicit':self.explicit_unsteady_solver,
@@ -545,7 +547,7 @@ class Solvers(object):
             print("stage 1 compute residual")
             self.compute_residual()
             
-            #exit()
+            #sys.exit()
             
             self.compute_residual_norm()
             print('res_norm = {}'.format(self.res_norm))
@@ -583,7 +585,7 @@ class Solvers(object):
             #- 2nd Stage of Runge-Kutta:
             print("stage 2 compute residual")
             self.compute_residual()
-            exit()
+            #exit()
             for i in range(self.mesh.nCells):
                 self.u[i,:] = 0.5*( self.u[i,:] + self.u0[i,:] )  - \
                                 0.5*(dt/self.mesh.cells[i].volume) * self.res[i,:]
@@ -650,7 +652,7 @@ class Solvers(object):
             # Compute the residual: res(i,:) (gradient computation is done within)
             print("stage 1 compute residual")
             self.compute_residual()
-            #exit()
+            #sys.exit()
             
             #Compute the residual norm for checking convergence.
             self.compute_residual_norm()
@@ -1018,7 +1020,7 @@ class Solvers(object):
             
             self.unit_face_normal[:] = bface.normal_vector[:]
             
-            
+            #print('bface normal = ',self.unit_face_normal)
             #print('input ub = {}, gradw2 = {}'.format(self.ub, self.gradw2))
             #---------------------------------------------------
             # Get the right state (weak BC!)
@@ -1742,24 +1744,29 @@ class Solvers(object):
         #
         # plot primative variables u,v
         Mc = np.sqrt(pow(w_[:,1], 2) + pow(w_[:,2], 2))
-        figure()
+        #figure()
+        fig, ax = plt.subplots()
+        plt.title('Primative Variable Velocities')
+        ax.axis('equal')
         # Q = quiver( coords_[:,0],coords_[:,1], 
         #            w_[:,0], w_[:,1], Mc, units='x', pivot='tip',width=.005, scale=3.3/.15)
         
-        Q = quiver( coords_[:,0],coords_[:,1], 
-                   w_[:,1], w_[:,2], Mc, units='x', pivot='tip',scale=1./.15)
+        ax.quiver( coords_[:,0],coords_[:,1], 
+                   w_[:,1], w_[:,2], Mc, units='x', pivot='tip',scale=1./15.)
         
         #--------------------------------------------------------------
         #
         # plot conservative u,v
         Mu = np.sqrt(pow(u_[:,1], 2) + pow(u_[:,2], 2))
-        figure()
+        #figure()
+        fig, ax = plt.subplots()
+        plt.title('Conservative Variable Velocities')
         # Q = quiver( coords_[:,0],coords_[:,1], 
         #            u_[:,0], u_[:,1], Mu, units='x', pivot='tip',width=.005, scale=3.3/.15)
         
-        Q = quiver( coords_[:,0],coords_[:,1], 
+        ax.quiver( coords_[:,0],coords_[:,1], 
                    u_[:,1], u_[:,2], Mc, 
-                   units='xy', angles='xy', pivot='tail',scale=1./.15)
+                   units='xy', angles='xy', pivot='tail',scale=1./15.)
         # plot conservative rho
         
         
@@ -1857,6 +1864,37 @@ class Solvers(object):
         Q = quiver( coords_[:,0],coords_[:,1], 
                    u_[:,0], u_[:,1], Mu, units='x', pivot='tip',width=.005, scale=3.3/.15)
         
+        return
+    
+    def write_vtk_file(self,filename_vtk=None):
+        '''
+        #*******************************************************************************
+        # This subroutine writes a .vtk file for the grid whose name is defined by
+        # filename_vtk.
+        #
+        # Use Paraview to read .vtk and visualize it.  https://www.paraview.org
+        #
+        #******************************************************************************
+        #------------------------------------------------------------------------------
+        #------------------------------------------------------------------------------
+        #------------------------------------------------------------------------------
+        # Compute solutions at nodes from solutions in cells to simplify visualization.
+        #
+        # Note: For 2nd-order scheme, this needs to be done with linear interpolation.
+        # Note: Tecplot has an option to load cell-centered data.
+        #------------------------------------------------------------------------------
+        
+        '''
+        nnodes = self.mesh.nCells
+        dpn = self.dpn
+        wn = np.zeros((nnodes,dpn))
+        nc = 0 #<- nc(j) = # of cells contributing to node j.
+        
+        for i, cell in enumerate(self.mesh.cells):
+            #Loop over vertices of the cell i
+            for k, vtx in enumerate(cell.nodes):
+                pass
+                #wn[]
         return
 
 class FlowState(object):
@@ -2024,6 +2062,7 @@ if __name__ == '__main__':
     test = TestSteadyCylinder()
     #test = TestTEgrid()
     
+    
     #if False:
     if True:
         
@@ -2056,8 +2095,8 @@ if __name__ == '__main__':
                       1:'mms_solver',
                       2:'explicit_steady_solver'}
         #'''
-        self.solver_solve( tfinal=0.2, dt=.01, 
-                          solver_type = solvertype[2])
+        self.solver_solve( tfinal=.02, dt=.01, 
+                          solver_type = solvertype[0])
         #'''
         ################################
         '''
@@ -2072,9 +2111,17 @@ if __name__ == '__main__':
         
         #'''
         self.plot_solution( title='Final ')
-        #"""
+        #'''
         
         
+    
+        # print('--------------------------------')
+        # print('validate normals on boundaries')
+        # for bound in self.mesh.bound:
+        #     print(bound.bc_type)
+        # for face in self.mesh.boundaryList:
+        #     print(face.compute_normal(True))
+    
         
         '''
         # if memory issues are encountered:
@@ -2100,3 +2147,4 @@ if __name__ == '__main__':
         
         
         #'''
+        

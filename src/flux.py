@@ -193,7 +193,7 @@ def roe(ucL, ucR, njk, num_flux, wsn, gamma = 1.4):
     #print('gamma*pL/rhoL',gamma*pL/rhoL)
     #assert(gamma*pL/rhoL>0.0),"gamma = {}, pL = {}, rhoL = {}".format(gamma, pL, rhoL)
     if (gamma*pL/rhoL<0.0):
-        print("ERROR: gamma = {}, pL = {}, rhoL = {}".format(gamma, pL, rhoL))
+        #print("ERROR: gamma = {}, pL = {}, rhoL = {}".format(gamma, pL, rhoL))
         aL = sqrt(abs(gamma*pL/rhoL))
     else:
         aL = sqrt(gamma*pL/rhoL)

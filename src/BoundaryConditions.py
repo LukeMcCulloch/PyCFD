@@ -75,8 +75,8 @@ class BC_states(object):
         solver = self.solver
         #Local variables
         wL = np.zeros(4,float)
-        wb = np.zeros_like(wL)
-        dummy =  np.zeros_like(wL)
+        wb = np.copy(ucb) #np.zeros_like(wL)
+        #dummy =  np.zeros_like(wL)
         
         #---------------------------------------------------------
         # Get the primitive variables [rho,u,v,p] as input to
@@ -178,7 +178,7 @@ class BC_states(object):
     # Note: This is a simplified implementation similar to slip wall condition.
     #**********************************************************************
     def symmetry_y(self, *args):
-        #print("symmetry_y")
+        print("symmetry_y")
         wL = args[0]
         njk = args[1]
         wb = args[2]
@@ -242,7 +242,7 @@ class BC_states(object):
             wb = np.array(4, float)
             wL = np.array(4, float)
         """
-        #print("outflow_supersonic")
+        print("outflow_supersonic")
         #---------------------------------------------
         # Take everything from the interior.
         

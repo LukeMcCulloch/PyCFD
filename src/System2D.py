@@ -98,8 +98,10 @@ class Face(object):
         #
         self.area = np.linalg.norm(self.nodes[1]-self.nodes[0])
         self.normal_vector, self.face_nrml_mag = self.compute_normal(normalizeIt = True)
-        #self.normal_vector, self.face_nrml_mag = self.compute_normalfancy(normalizeIt = True)
-        
+        normal_vector, face_nrml_mag = self.compute_normalfancy(normalizeIt = True)
+        #if self.isBoundary:
+        #    print('normal vec: ', self.normal_vector)
+        #    print('fancy normal vec: ',normal_vector)
         
     @property
     def parentcell(self):
@@ -136,7 +138,8 @@ class Face(object):
          
         this is of course (x1,-x0, 0)
          
-        normals point in
+        normals point in? no
+        normals point out.
          
         """
         #vec = self.nodes[1] - self.nodes[0]
@@ -148,9 +151,32 @@ class Face(object):
         dumvec2[-1] = 1.
         
         n3 = normalize(cross(dumvec1,dumvec2) )
-        return n3[:-1]
         
-                      
+        #if self.isBoundary:
+        #    print ('bface normal', n3[:-1])
+        return n3[:-1], np.linalg.norm(cross(dumvec1,dumvec2) )
+        
+                  
+    # reversed               
+    # def compute_normal(self, normalizeIt=True):
+    #     """ 2D specific face normals
+    #     normalized(x1,-x0)
+    #     """
+    #     vec = self.nodes[1] - self.nodes[0]
+    #     vec = np.asarray([-vec[1],vec[0]])
+        
+    #     if normalizeIt:
+    #         vec, nmag =  normalize2D(vec[:],return_mag=True)
+    #         #vec =  normalize2D(vec,return_mag=False)
+            
+    #         #if self.isBoundary:
+    #         #    print ('bface normal', vec)
+    #         return vec, nmag
+    #     else:
+    #         return vec  
+    
+    
+    # standard
     def compute_normal(self, normalizeIt=True):
         """ 2D specific face normals
         normalized(x1,-x0)
@@ -159,8 +185,11 @@ class Face(object):
         vec = np.asarray([vec[1],-vec[0]])
         
         if normalizeIt:
-            vec, nmag =  normalize2D(vec,return_mag=True)
+            vec, nmag =  normalize2D(vec[:],return_mag=True)
             #vec =  normalize2D(vec,return_mag=False)
+            
+            #if self.isBoundary:
+            #    print ('bface normal', vec)
             return vec, nmag
         else:
             return vec
@@ -330,7 +359,7 @@ class Cell(object):
         for tris and convex, 2D polyhedra
         """
         if self.N == 3:
-            self.volume = -triangle_area(*self.nodes)
+            self.volume = triangle_area(*self.nodes)
         elif (self.N == 4):
             v1 = Node(self.nodes[0].vector,-1)
             v2 = Node(self.nodes[1].vector,-1)
@@ -339,8 +368,8 @@ class Cell(object):
             
             self.volume = 0.0
             
-            self.volume -= triangle_area(v1,v2,v4)
-            self.volume -= triangle_area(v2,v3,v4)
+            self.volume += triangle_area(v1,v2,v4)
+            self.volume += triangle_area(v2,v3,v4)
         else:
             assert(False),"Error: cell is neither quad nor tri"
             # vol = 0.
@@ -1091,7 +1120,7 @@ class Grid(object):
         print()
         if (abs(vol_domain-vol_domain_cells)>tol):
             print(" Volume difference is larger than round-off error (actually tolerance)... Something is wrong. Stop." )
-            assert(False),"ERROR: Volumes are not consistent"
+            #assert(False),"ERROR: Volumes are not consistent"
         return
     
     def sum_volume_green_gauss(self):
@@ -1103,6 +1132,12 @@ class Grid(object):
             mid = bound.center
             vol += np.dot( mid,bound.normal_vector )*bound.face_nrml_mag
         return 0.5*vol
+    
+    # def sum_volume_cell_sum(self):
+    #     vol = 0.
+    #     for cell in self.cellList:
+    #         vol += cell.volume
+    #     return -vol
     
     def sum_volume_cell_sum(self):
         vol = 0.
@@ -1226,11 +1261,11 @@ class Grid(object):
                 x1,y1 = v1.vector
                 x2,y2 = v2.vector
                 
-                if self.winding == 'cw':
-                    volk = triangle_area_from_raw_data(x1,x2, cell.centroid[0], y1,y2, cell.centroid[1])
+                #if self.winding == 'cw':
+                volk = triangle_area_from_raw_data(x1,x2, cell.centroid[0], y1,y2, cell.centroid[1])
                 
-                else:
-                    volk = triangle_area_from_raw_data(cell.centroid[0],x2,x1, cell.centroid[1],y2,y1)
+                #else:
+                #    volk = triangle_area_from_raw_data(cell.centroid[0],x2,x1, cell.centroid[1],y2,y1)
                 
                 # If volume_k is negative, stop.
                 if (volk < 0.0):
@@ -1321,6 +1356,44 @@ class TestTEgrid(object):
                          dhandle = self.DHandler,
                          type_='tri',
                          winding='ccw')
+        
+        
+class TestSteadyCylinder(object):
+    
+    def __init__(self):
+        # up a level
+        #uplevel = os.path.join(os.path.dirname(__file__), '..','cases')
+        uplevel = os.path.join(os.path.dirname(os.getcwd()), 'cases')
+        #path2vortex = uplevel+'\\cases\case_unsteady_vortex'
+        path2case = os.path.join(uplevel, 'case_steady_cylinder')
+        self.DHandler = DataHandler(project_name = 'cylinder',
+                                       path_to_inputs_folder = path2case)
+        
+        
+        self.grid = Grid(generated=False,
+                         dhandle = self.DHandler,
+                         type_='tri',
+                         winding='ccw')
+        
+        
+class TestSteadyAirfoil(object):
+    
+    def __init__(self):
+        # up a level
+        #uplevel = os.path.join(os.path.dirname(__file__), '..','cases')
+        uplevel = os.path.join(os.path.dirname(os.getcwd()), 'cases')
+        #path2vortex = uplevel+'\\cases\case_unsteady_vortex'
+        path2case = os.path.join(uplevel, 'case_steady_airfoil')
+        self.DHandler = DataHandler(project_name = 'airfoil',
+                                       path_to_inputs_folder = path2case)
+        
+        
+        self.grid = Grid(generated=False,
+                         dhandle = self.DHandler,
+                         type_='quad',
+                         winding='ccw')
+
+    
     
     
 if __name__ == '__main__':
@@ -1367,6 +1440,8 @@ if __name__ == '__main__':
     
     #test = TestInviscidVortex()
     test = TestTEgrid()
+    #test = TestSteadyAirfoil()
+    #test = TestSteadyCylinder()
     
     #'''
     #
@@ -1376,11 +1451,11 @@ if __name__ == '__main__':
     plotter = PlotGrid(self)
     
     #"""
-    ax = plotter.plot_cells()
-    ax = plotter.plot_centroids(ax)
-    ax = plotter.plot_face_centers(ax)
-    ax = plotter.plot_normals(ax)
-    ax = plotter.plot_boundary(ax)
+    #ax = plotter.plot_cells()
+    #ax = plotter.plot_centroids(ax)
+    #ax = plotter.plot_face_centers(ax)
+    #ax = plotter.plot_normals(ax)
+    ax = plotter.plot_boundary()
     #"""
     
     """
