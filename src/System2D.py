@@ -615,9 +615,12 @@ class Grid(object):
         self.EToF = None # cell to face
         self.EToE = None # cell to cell
         self.VToE = None # vertex to cell incidence
+        self.Cellindex2Nodesindex = {} # cell index to nodes indicies map
         
         self.nodes = []
         self.cells = []
+        self.tria = []
+        self.quad = []
         self.FaceCellMap = {}
         
         # check mesh
@@ -729,8 +732,10 @@ class Grid(object):
                             nface = self.nFaces,
                             facelist = self.faceList
                             )
+                self.Cellindex2Nodesindex[self.nCells] = elm
                 
                 self.cells.append(cell)
+                self.tria.append(cell)
                 self.cellList.append(self.cells[-1])
                 self.nCells +=1
                 self.nFaces += 3
@@ -756,12 +761,15 @@ class Grid(object):
                             )
                 
                 self.cells.append(cell)
+                self.quad.append(cell)
                 self.cellList.append(self.cells[-1])
                 self.nFaces += 4
                 self.nCells +=1
             self.elm = np.asarray(self.elm)
             
             self.cells = np.asarray(self.cells)
+            self.tria = np.asarray(self.tria)
+            self.quad = np.asarray(self.quad)
             
             print('\n Total Numbers')
             print('          nodes = {}'.format(nnodes))

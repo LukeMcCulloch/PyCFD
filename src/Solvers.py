@@ -1875,6 +1875,17 @@ class Solvers(object):
         # Use Paraview to read .vtk and visualize it.  https://www.paraview.org
         #
         #******************************************************************************
+       
+        '''
+        self.solution_dir = '..\output\\vtk'
+        zero = 0.0
+        ntria = self.mesh.ntria
+        nquad = self.mesh.nquad
+        nnodes = self.mesh.nNodes
+        dpn = self.dpn
+        wn = np.zeros((nnodes,dpn))
+        nc = np.zeros((nnodes))#<- nc(j) = # of cells contributing to node j.
+        
         #------------------------------------------------------------------------------
         #------------------------------------------------------------------------------
         #------------------------------------------------------------------------------
@@ -1884,19 +1895,137 @@ class Solvers(object):
         # Note: Tecplot has an option to load cell-centered data.
         #------------------------------------------------------------------------------
         
-        '''
-        nnodes = self.mesh.nCells
-        dpn = self.dpn
-        wn = np.zeros((nnodes,dpn))
-        nc = 0 #<- nc(j) = # of cells contributing to node j.
-        
         for i, cell in enumerate(self.mesh.cells):
             #Loop over vertices of the cell i
             for k, vtx in enumerate(cell.nodes):
-                pass
-                #wn[]
+                wn[vtx.nid,:] += self.w[i,:] #<- Add up solutions
+                nc[vtx.nid] += 1. #<- Count # of contributing cells
+                
+        for k, vtx in enumerate(cell.nodes):
+            wn[vtx.nid,:] = wn[vtx.nid,:] / float(nc[vtx.nid])
+        #------------------------------------------------------------------------------
+        #------------------------------------------------------------------------------
+        #------------------------------------------------------------------------------
+        print("\n\n-------------------------------------------------------\n")
+        
+        #------------------------------------------------------------------------------
+        #header information
+        
+        lines = ['# vtk DataFile Version 3.0 \n']
+        lines.append(filename_vtk+'\n')
+        lines.append('ASCII'+'\n')
+        lines.append('DATASET UNSTRUCTURED_GRID'+'\n')
+        
+        #------------------------------------------------------------------------------
+        #nodal information
+        lines.append('POINTS         '+ str(nnodes) + ' double'+'\n')
+        for k, vtx in enumerate(self.mesh.nodes):
+            lines.append(str(vtx.vector[0]) + ' ' 
+                         +str(vtx.vector[1]) + ' ' +
+                         str(zero)+'\n'
+                         )
+        
+        #------------------------------------------------------------------------------
+        #cell information
+        lines.append('CELLS '+str(ntria+nquad) + ' ' +
+                     str((3+1)*ntria + (4+1)*nquad)
+                     +'\n'
+                     )
+        # Note: The latter is the number of integer values written below as data.
+        #           4 for triangles (# of vertices + 3 vertices), and
+        #           5 for quads     (# of vertices + 4 vertices).
+        
+        #---------------------------------
+        # 2.1 List of triangles (counterclockwise vertex ordering)
+        if ntria>0:
+            # for i in range(ntria):
+            #     lines.append('3', 
+            #                  self.mesh.tria[i].nodes[0], 
+            #                  self.mesh.tria[i].nodes[1], 
+            #                  self.mesh.tria[i].nodes[2])
+            for i in range(ntria):
+                lines.append('3 '+ 
+                             str(self.mesh.cells[i].nodes[0].nid) +' ' 
+                             +str(self.mesh.cells[i].nodes[1].nid) +' '  
+                             +str(self.mesh.cells[i].nodes[2].nid)
+                             +'\n'
+                             )
+                
+        
+        #---------------------------------
+        # 2.1 List of quads (counterclockwise vertex ordering)
+        if nquad>0:
+            # for i in range(nquad):
+            #     lines.append('4', 
+            #                  self.mesh.quad[i,0], 
+            #                  self.mesh.quad[i,1], 
+            #                  self.mesh.quad[i,2], 
+            #                  self.mesh.quad[i,2])
+            for i in range(nquad):
+                lines.append('4 '+ 
+                             str(self.mesh.cells[i].nodes[0].nid) +' ' 
+                             +str(self.mesh.cells[i].nodes[1].nid) +' '  
+                             +str(self.mesh.cells[i].nodes[2].nid) +' ' 
+                             +str(self.mesh.cells[i].nodes[3])
+                             +'\n'
+                             )
+                
+        
+        #---------------------------------
+        # Cell type information.
+        lines.append('CELL_TYPES  ' + str(ntria+nquad)+'\n')
+        
+        # Triangle is classified as the cell type 5 in the .vtk format.
+        if ntria>0:
+            for i in range(ntria):
+                lines.append('5'+'\n')
+        # quad is classified as the cell type 9 in the .vtk format.
+        if nquad>0:
+            for i in range(nquad):
+                lines.append('9'+'\n')
+                
+        
+        #---------------------------------
+        # field data (density, pressure, velocity)
+        lines.append('POINT_DATA  '+ str(nnodes)+'\n')
+        lines.append('FIELD  FlowField  4'+'\n')
+        
+        lines.append('Density    1 ' + str(nnodes) + '  double'+'\n')
+        for i in range(nnodes):
+            lines.append(str(wn[i,0])+'\n')
+        
+        lines.append('X-velocity    1 ' + str(nnodes) + '  double'+'\n')
+        for i in range(nnodes):
+            lines.append(str(wn[i,1])+'\n')
+        
+        lines.append('Y-velocity    1 ' + str(nnodes) + '  double'+'\n')
+        for i in range(nnodes):
+            lines.append(str(wn[i,2])+'\n')
+        
+        lines.append('Pressure    1 ' + str(nnodes) + '  double'+'\n')
+        for i in range(nnodes):
+            lines.append(str(wn[i,3])+'\n')
+        
+        
+        FT.WriteLines(directory=self.solution_dir,
+                      filename=filename_vtk,
+                      lines = lines)
+        
+        print(' End of Writing .vtk file = ' + filename_vtk)
+        print("-------------------------------------------------------")
+        #---------------------------------------------------------------------------
+        
         return
-
+# def linewriter_array(inistr, data):
+#     lend = len(data)
+#     for i, el in enumerate(data):
+#         inistr.append(str(el))
+#     return
+# def linewriter_float(inistr, data):
+    
+#     return
+    
+    
 class FlowState(object):
     
     def __init__(self, rho_inf=1., u_inf=1., v_inf=1., p_inf=1.):
