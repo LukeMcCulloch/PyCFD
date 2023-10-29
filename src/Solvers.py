@@ -461,6 +461,9 @@ class Solvers(object):
         
         heffv = mesh.heffv
         
+        for i in range(self.mesh.nbound):
+            print("  Dirichlet BC enforced: ", i, self.mesh.bound[i].bc_type )
+        
         # Allocate a forcing term array:
         f = np.zeros((nCells,4),float)
         
@@ -1966,7 +1969,7 @@ class Solvers(object):
                              str(self.mesh.cells[i].nodes[0].nid) +' ' 
                              +str(self.mesh.cells[i].nodes[1].nid) +' '  
                              +str(self.mesh.cells[i].nodes[2].nid) +' ' 
-                             +str(self.mesh.cells[i].nodes[3])
+                             +str(self.mesh.cells[i].nodes[3].nid)
                              +'\n'
                              )
                 
@@ -2005,6 +2008,13 @@ class Solvers(object):
         lines.append('Pressure    1 ' + str(nnodes) + '  double'+'\n')
         for i in range(nnodes):
             lines.append(str(wn[i,3])+'\n')
+            
+        
+        #vector data
+        
+        lines.append('\nVECTORS Velocity double \n')
+        for i in range(nnodes):
+            lines.append(str(wn[i,1])+' ' +str(wn[i,2])+' 0.0 \n')
         
         
         FT.WriteLines(directory=self.solution_dir,
@@ -2188,8 +2198,8 @@ if __name__ == '__main__':
     
     #test = TestInviscidVortex()
     #test = TestSteadyAirfoil()
-    test = TestSteadyCylinder()
-    #test = TestTEgrid()
+    #test = TestSteadyCylinder()
+    test = TestTEgrid()
     
     
     #if False:
@@ -2215,20 +2225,20 @@ if __name__ == '__main__':
         #'''
         
         #"""
-        #self.solver_boot(flowtype = 'mms') #TODO fixme compute_manufactured_sol_and_f_euler return vals
-        self.solver_boot(flowtype = 'freestream')
+        self.solver_boot(flowtype = 'mms') #TODO fixme compute_manufactured_sol_and_f_euler return vals
+        #self.solver_boot(flowtype = 'freestream')
         #self.solver_boot(flowtype = 'vortex')
         #self.solver_boot(flowtype = 'shock-diffraction')
         
         solvertype = {0:'explicit_unsteady_solver',
                       1:'mms_solver',
                       2:'explicit_steady_solver'}
-        #'''
+        '''
         self.solver_solve( tfinal=.02, dt=.01, 
                           solver_type = solvertype[0])
         #'''
         ################################
-        '''
+        #'''
         self.solver_solve( tfinal=0.2, dt=.01, 
                            solver_type = solvertype[1])
         #'''
@@ -2242,7 +2252,7 @@ if __name__ == '__main__':
         self.plot_solution( title='Final ')
         #'''
         
-        
+        self.write_vtk_file('test.vtk')
     
         # print('--------------------------------')
         # print('validate normals on boundaries')

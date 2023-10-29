@@ -835,7 +835,7 @@ class Grid(object):
                     print(' boundary, {},   bc_type = {}'.format(i,self.bound[i].bc_type))
                 
             handleBC.close() #done with  grid file read
-            
+            self.nbound = len(self.bound) #todo: use property to make this more official (probably needed lots of places...()
             # now cells and faces:
             self.FaceCellMap = {}
             # maps
