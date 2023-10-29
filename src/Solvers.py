@@ -1869,7 +1869,7 @@ class Solvers(object):
         
         return
     
-    def write_vtk_file(self,filename_vtk=None):
+    def write_solution_to_vtk(self,filename_vtk=None):
         '''
         #*******************************************************************************
         # This subroutine writes a .vtk file for the grid whose name is defined by
@@ -2248,11 +2248,11 @@ if __name__ == '__main__':
                            solver_type = solvertype[2])
         #'''
         
-        #'''
+        '''
         self.plot_solution( title='Final ')
         #'''
         
-        self.write_vtk_file('test.vtk')
+        self.write_solution_to_vtk('test.vtk')
     
         # print('--------------------------------')
         # print('validate normals on boundaries')
