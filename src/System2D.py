@@ -1451,33 +1451,33 @@ class Grid(object):
                 lines.append('9'+'\n')
                 
         
-        #---------------------------------
-        # field data (density, pressure, velocity)
-        lines.append('POINT_DATA  '+ str(nnodes)+'\n')
-        lines.append('FIELD  FlowField  4'+'\n')
+        # #---------------------------------
+        # # field data (density, pressure, velocity)
+        # lines.append('POINT_DATA  '+ str(nnodes)+'\n')
+        # lines.append('FIELD  FlowField  4'+'\n')
         
-        lines.append('Density    1 ' + str(nnodes) + '  double'+'\n')
-        for i in range(nnodes):
-            lines.append(str(wn[i,0])+'\n')
+        # lines.append('Density    1 ' + str(nnodes) + '  double'+'\n')
+        # for i in range(nnodes):
+        #     lines.append(str(wn[i,0])+'\n')
         
-        lines.append('X-velocity    1 ' + str(nnodes) + '  double'+'\n')
-        for i in range(nnodes):
-            lines.append(str(wn[i,1])+'\n')
+        # lines.append('X-velocity    1 ' + str(nnodes) + '  double'+'\n')
+        # for i in range(nnodes):
+        #     lines.append(str(wn[i,1])+'\n')
         
-        lines.append('Y-velocity    1 ' + str(nnodes) + '  double'+'\n')
-        for i in range(nnodes):
-            lines.append(str(wn[i,2])+'\n')
+        # lines.append('Y-velocity    1 ' + str(nnodes) + '  double'+'\n')
+        # for i in range(nnodes):
+        #     lines.append(str(wn[i,2])+'\n')
         
-        lines.append('Pressure    1 ' + str(nnodes) + '  double'+'\n')
-        for i in range(nnodes):
-            lines.append(str(wn[i,3])+'\n')
+        # lines.append('Pressure    1 ' + str(nnodes) + '  double'+'\n')
+        # for i in range(nnodes):
+        #     lines.append(str(wn[i,3])+'\n')
             
         
-        #vector data
+        # #vector data
         
-        lines.append('\nVECTORS Normals double \n')
-        for i in range(nnodes):
-            lines.append(str(wn[i,1])+' ' +str(wn[i,2])+' 0.0 \n')
+        # lines.append('\nVECTORS Normals double \n')
+        # for i in range(nnodes):
+        #     lines.append(str(wn[i,1])+' ' +str(wn[i,2])+' 0.0 \n')
         
         
         FT.WriteLines(directory=self.out_dir,

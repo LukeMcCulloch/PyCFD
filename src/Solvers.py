@@ -1033,7 +1033,7 @@ class Solvers(object):
                                     u1[:], 
                                     self.unit_face_normal, 
                                     self.bc_type[ib], #CBD (could be done): store these on the faces instead of seperate  (tlm what?...cells?) 
-                                    self.ub[:])
+                                    )
             #print('ub = {}'.format(self.ub))
             
             self.gradw2 = self.gradw2 #<- Gradient at the right state. Give the same gradient for now.
@@ -2198,8 +2198,8 @@ if __name__ == '__main__':
     
     #test = TestInviscidVortex()
     #test = TestSteadyAirfoil()
-    #test = TestSteadyCylinder()
-    test = TestTEgrid()
+    test = TestSteadyCylinder()
+    #test = TestTEgrid()
     
     
     #if False:
@@ -2225,20 +2225,20 @@ if __name__ == '__main__':
         #'''
         
         #"""
-        self.solver_boot(flowtype = 'mms') #TODO fixme compute_manufactured_sol_and_f_euler return vals
-        #self.solver_boot(flowtype = 'freestream')
+        #self.solver_boot(flowtype = 'mms') #TODO fixme compute_manufactured_sol_and_f_euler return vals
+        self.solver_boot(flowtype = 'freestream')
         #self.solver_boot(flowtype = 'vortex')
         #self.solver_boot(flowtype = 'shock-diffraction')
         
         solvertype = {0:'explicit_unsteady_solver',
                       1:'mms_solver',
                       2:'explicit_steady_solver'}
-        '''
-        self.solver_solve( tfinal=.02, dt=.01, 
+        #'''
+        self.solver_solve( tfinal=.1, dt=.01, 
                           solver_type = solvertype[0])
         #'''
         ################################
-        #'''
+        '''
         self.solver_solve( tfinal=0.2, dt=.01, 
                            solver_type = solvertype[1])
         #'''
