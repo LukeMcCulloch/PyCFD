@@ -805,6 +805,7 @@ class Solvers(object):
         #----------------------------------------------------------------------
         savei = 0
         print('do interior residual')
+        #print('nfaces = ',len(self.mesh.faceList))
         for i,face in enumerate(mesh.faceList):
             """
             #debugging:
@@ -828,6 +829,10 @@ class Solvers(object):
                 v1 = face.nodes[0] # Left node of the face
                 v2 = face.nodes[1] # Right node of the face
                 
+                
+                #print('v1 = ',v1.nid)
+                #print('v2 = ',v2.nid)
+                
                 u1 = self.u[c1.cid] #Conservative variables at c1
                 u2 = self.u[c2.cid] #Conservative variables at c2
                 
@@ -836,6 +841,7 @@ class Solvers(object):
                 
                 self.unit_face_normal[:] = face.normal_vector[:] # Unit face normal vector: c1 -> c2.
                 
+                #print('unit_face_normal = ',self.unit_face_normal)
                 #Face midpoint at which we compute the flux.
                 xm,ym = face.center
                 
@@ -1005,6 +1011,9 @@ class Solvers(object):
             savei = ib
             v1 = bface.nodes[0] # Left node of the face
             v2 = bface.nodes[1] # Right node of the face
+            
+            #print('v1 = ',v1.nid)
+            #print('v2 = ',v2.nid)
             
             #Face midpoint at which we compute the flux.
             xm,ym = bface.center
@@ -2194,12 +2203,16 @@ if __name__ == '__main__':
     
     #cell.plot_cell()
     
-    
-    
+    thisTest = 0
+    whichTest = {0:TestInviscidVortex,
+                 1:TestSteadyAirfoil,
+                 2:TestSteadyCylinder,
+                 3:TestTEgrid}
     #test = TestInviscidVortex()
     #test = TestSteadyAirfoil()
-    test = TestSteadyCylinder()
+    #test = TestSteadyCylinder()
     #test = TestTEgrid()
+    test = whichTest[thisTest]()
     
     
     #if False:
@@ -2225,22 +2238,38 @@ if __name__ == '__main__':
         #'''
         
         #"""
+        whichSolver = {0: 'vortex',
+                       1: 'freestream',
+                       2: 'freestream',
+                       3: 'mms'}
         #self.solver_boot(flowtype = 'mms') #TODO fixme compute_manufactured_sol_and_f_euler return vals
-        self.solver_boot(flowtype = 'freestream')
+        #self.solver_boot(flowtype = 'freestream')
         #self.solver_boot(flowtype = 'vortex')
         #self.solver_boot(flowtype = 'shock-diffraction')
         
+        self.solver_boot(flowtype = whichSolver[thisTest])
+        
         solvertype = {0:'explicit_unsteady_solver',
-                      1:'mms_solver',
-                      2:'explicit_steady_solver'}
+                      1:'explicit_steady_solver',
+                      2:'explicit_unsteady_solver',
+                      3:'mms_solver',}
         #'''
         self.solver_solve( tfinal=.1, dt=.01, 
-                          solver_type = solvertype[0])
+                          solver_type = solvertype[thisTest])
+        
+        vtkNames = {0:'vortex.vtk',
+                    1:'airfoil.vtk',
+                    2:'cylinder.vtk',
+                    3:'test.vtk'}
+        self.write_solution_to_vtk(vtkNames[thisTest])
         #'''
         ################################
         '''
         self.solver_solve( tfinal=0.2, dt=.01, 
                            solver_type = solvertype[1])
+        print ('nfaces :',len(self.mesh.faceList))
+        #self.write_solution_to_vtk('test.vtk')
+        self.write_solution_to_vtk(vtkNames[thisTest])
         #'''
         ################################
         '''
@@ -2252,7 +2281,6 @@ if __name__ == '__main__':
         self.plot_solution( title='Final ')
         #'''
         
-        self.write_solution_to_vtk('test.vtk')
     
         # print('--------------------------------')
         # print('validate normals on boundaries')

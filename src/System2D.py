@@ -848,6 +848,8 @@ class Grid(object):
             self.buildFaceToNodeIncidence() # self.FToV
             self.buildVertexToCellIncidence() # self.VToC
             
+            self.cleanFaceList()
+            
         if self.generated:
             # now cells and faces:
             self.FaceCellMap = {}
@@ -1060,6 +1062,31 @@ class Grid(object):
         #self.bound = np.asarray(self.boundaryList)
         return
     
+    def cleanFaceList(self):
+        '''
+        (back-Fix duplicate face mesh issue to avoid rearchitecting at this time!)
+        heal degenerate face list 
+        by culling duplicate faces
+        such that each ("half") face 
+        points from a smaller cell number to a larger cell number
+        
+        (differential geometry etc ops need the additional face data for convinience
+         we don't want it for CFD!')
+        '''
+        culledList = []
+        for face in self.faceList:
+            if not face.isBoundary:
+                    
+                cell = face.parentcell
+                adjface = face.adjacentface
+                oppcell = adjface.parentcell
+                
+                if face.fid < adjface.fid:
+                    culledList.append(face)
+        
+        self.faceList = culledList
+        return
+    
     
     def buildFaceToNodeIncidence(self):
         """
@@ -1190,36 +1217,39 @@ class Grid(object):
         #'''
         
         #'''
-        for face in self.faceList:
-            if face.isBoundary:
-                pass
-                #cid1 = face.parentcell.cid
-                #sum_face_normal[cid1,0] += face.normal_vector[0] * face.face_nrml_mag
-                #sum_face_normal[cid1,1] += face.normal_vector[1] * face.face_nrml_mag
-            else:
-                cid1 = face.parentcell.cid
-                sum_face_normal[cid1,0] += face.normal_vector[0] * face.face_nrml_mag
-                sum_face_normal[cid1,1] += face.normal_vector[1] * face.face_nrml_mag
-                sum_face_normal[cid1,2] = 0.0 # not a boundary
+        ###################################
+        ## no longer valid because we have culled the faceList
+        ##
+        # for face in self.faceList:
+        #     if face.isBoundary:
+        #         pass
+        #         #cid1 = face.parentcell.cid
+        #         #sum_face_normal[cid1,0] += face.normal_vector[0] * face.face_nrml_mag
+        #         #sum_face_normal[cid1,1] += face.normal_vector[1] * face.face_nrml_mag
+        #     else:
+        #         cid1 = face.parentcell.cid
+        #         sum_face_normal[cid1,0] += face.normal_vector[0] * face.face_nrml_mag
+        #         sum_face_normal[cid1,1] += face.normal_vector[1] * face.face_nrml_mag
+        #         sum_face_normal[cid1,2] = 0.0 # not a boundary
             
-                #face = face.adjacentface
-                #cid2 = face.parentcell.cid
-                #sum_face_normal[cid2,0] += face.normal_vector[0] * face.face_nrml_mag
-                #sum_face_normal[cid2,1] += face.normal_vector[1] * face.face_nrml_mag
-                #sum_face_normal[cid2,2] = 0.0 #not a boundary
-        print("\nFaces are currently counted twice - once for each cell,")
-        print(" and nodes are aranged to match depending on which cell this version of the face belongs to\n")
-        #'''
-        #----------------------------------------------------
-        # Add boundary face normal contributions to cells by looping over boundary faces.
+        #         #face = face.adjacentface
+        #         #cid2 = face.parentcell.cid
+        #         #sum_face_normal[cid2,0] += face.normal_vector[0] * face.face_nrml_mag
+        #         #sum_face_normal[cid2,1] += face.normal_vector[1] * face.face_nrml_mag
+        #         #sum_face_normal[cid2,2] = 0.0 #not a boundary
+        # print("\nFaces are currently counted twice - once for each cell,")
+        # print(" and nodes are aranged to match depending on which cell this version of the face belongs to\n")
+        # #'''
+        # #----------------------------------------------------
+        # # Add boundary face normal contributions to cells by looping over boundary faces.
         
-        # actually I think these are included above?
-        #'''
-        for bound in self.boundaryList:
-            cid = bound.parentcell.cid
-            sum_face_normal[cid,0] += bound.normal_vector[0] * bound.face_nrml_mag
-            sum_face_normal[cid,1] += bound.normal_vector[1] * bound.face_nrml_mag
-            sum_face_normal[cid,2] = 1.0 # a boundary
+        # # actually I think these are included above?
+        # #'''
+        # for bound in self.boundaryList:
+        #     cid = bound.parentcell.cid
+        #     sum_face_normal[cid,0] += bound.normal_vector[0] * bound.face_nrml_mag
+        #     sum_face_normal[cid,1] += bound.normal_vector[1] * bound.face_nrml_mag
+        #     sum_face_normal[cid,2] = 1.0 # a boundary
             
         #'''
         
@@ -1229,8 +1259,8 @@ class Grid(object):
         print()
         print(" method1 Max of |sum_faces face normal (nx)| = ", np.max(abs(sum_face_normal_method1[:,0])))
         print(" method1 Max of |sum_faces face normal (ny)| = ", np.max(abs(sum_face_normal_method1[:,1])))
-        print("     Max of |sum_faces face normal (nx)| = ", np.max(abs(sum_face_normal[:,0])))
-        print("     Max of |sum_faces face normal (ny)| = ", np.max(abs(sum_face_normal[:,1])))
+        #print("     Max of |sum_faces face normal (nx)| = ", np.max(abs(sum_face_normal[:,0])))
+        #print("     Max of |sum_faces face normal (ny)| = ", np.max(abs(sum_face_normal[:,1])))
         
         
         #----------------------------------------------------
