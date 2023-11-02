@@ -2201,6 +2201,10 @@ class TestTEgrid(object):
                          dhandle = self.DHandler,
                          type_='quad',
                          winding='ccw')
+        
+
+class TestShockDiffractiongrid(object):
+    pass
     
         
         
