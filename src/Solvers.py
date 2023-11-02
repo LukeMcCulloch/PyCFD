@@ -305,7 +305,7 @@ class Solvers(object):
         else:
             switchdict[flowtype]()
         
-        self.plot_flow_at_cell_centers(title = 'Initial Solution')
+        
         
         
         self.BC = BC_states(solver = self, 
@@ -557,13 +557,13 @@ class Solvers(object):
             print(time)
             #------------------------------------------------------------------
             # Compute the residual: res(i,:)
-            print("stage 1 compute residual")
+            #print("stage 1 compute residual")
             self.compute_residual()
             
             #sys.exit()
             
             self.compute_residual_norm()
-            print('res_norm = {}'.format(self.res_norm))
+            #print('res_norm = {}'.format(self.res_norm))
             
             #------------------------------------------------------------------
             # Compute the global time step, dt. One dt for all cells.
@@ -596,7 +596,7 @@ class Solvers(object):
                 
             #-----------------------------
             #- 2nd Stage of Runge-Kutta:
-            print("stage 2 compute residual")
+            #print("stage 2 compute residual")
             self.compute_residual()
             #exit()
             for i in range(self.mesh.nCells):
@@ -630,7 +630,11 @@ class Solvers(object):
     # by explicit iteration schemes.
     #
     #-------------------------------------------------------------------------#
-    def explicit_steady_solver(self, tfinal=1.0, dt=.01, tol=1.e-5, max_iteration = 1000):
+    def explicit_steady_solver(self, 
+                               tfinal=1.0, 
+                               dt=.01, 
+                               tol=1.e-5, 
+                               max_iteration = 1000):
         """
         
         debugging:
@@ -660,7 +664,7 @@ class Solvers(object):
         pseudo_time_loop = True
         
         while (pseudo_time_loop):
-            print(time)
+            #print(time)
             #------------------------------------------------------------------
             # Compute the residual: res(i,:) (gradient computation is done within)
             #print("stage 1 compute residual")
@@ -677,7 +681,7 @@ class Solvers(object):
             #--- Initial (no solution update yet) ------------
             if (i_iteration == 0) :
                 #Save the initial max res norm.
-                res_norm_initial = self.res_norm
+                res_norm_initial = np.copy(self.res_norm)
                 
                 print(" Iteration   max(res)    max(res)/max(res)_initial ")
                 print(i_iteration, np.max( self.res_norm[:] ), 1.0)
@@ -688,7 +692,7 @@ class Solvers(object):
                       np.max( self.res_norm[:] / res_norm_initial[:] )
                       )
                 
-                print(i_iteration, np.max( self.res_norm[:]/res_norm_initial[:] ))
+                #print(i_iteration, np.max( self.res_norm[:]/res_norm_initial[:] ))
             
             
             #------------------------------------------------------
@@ -1175,8 +1179,8 @@ class Solvers(object):
             # # no c2 on the boundary
             # print('face_nrml_mag = ',bface.face_nrml_mag)
             
-            # print('ib, residual [c1,:] = ',c1.cid,self.res[c1.cid,:])
-            # print('ib, wsn [c1] = ',c1.cid,self.wsn[c1.cid] )
+            #print('ib, residual [c1,:] = ',c1.cid,self.res[c1.cid,:])
+            #print('ib, wsn [c1] = ',c1.cid,self.wsn[c1.cid] )
 
             # End of Residual computation: exterior faces
             #------------------------------------------------------------------
@@ -1944,8 +1948,8 @@ class Solvers(object):
             for k, vtx in enumerate(cell.nodes):
                 wn[vtx.nid,:] += self.w[i,:] #<- Add up solutions
                 nc[vtx.nid] += 1. #<- Count # of contributing cells
-                
-        for k, vtx in enumerate(cell.nodes):
+        
+        for i, vtx in enumerate(self.mesh.nodes):
             wn[vtx.nid,:] = wn[vtx.nid,:] / float(nc[vtx.nid])
         #------------------------------------------------------------------------------
         #------------------------------------------------------------------------------
@@ -2286,6 +2290,7 @@ if __name__ == '__main__':
         
         self.solver_boot(flowtype = whichSolver[thisTest])
         
+        #self.plot_flow_at_cell_centers(title = 'Initial Solution')
         
         self.write_solution_to_vtk('init_'+vtkNames[thisTest])
         
