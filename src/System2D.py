@@ -97,8 +97,8 @@ class Face(object):
         # Basic geometry
         #
         self.area = np.linalg.norm(self.nodes[1]-self.nodes[0])
-        #self.normal_vector, self.face_nrml_mag = self.compute_normal(normalizeIt = True)
-        self.normal_vector, self.face_nrml_mag = self.compute_normalfancy(normalizeIt = True)
+        self.normal_vector, self.face_nrml_mag = self.compute_normal(normalizeIt = True)
+        #self.normal_vector, self.face_nrml_mag = self.compute_normalfancy(normalizeIt = True)
         #if self.isBoundary:
         #    print('normal vec: ', self.normal_vector)
         #    print('fancy normal vec: ',normal_vector)
@@ -851,7 +851,7 @@ class Grid(object):
             
             
             for i in range(nbound):#loop over the  different boundaries
-                print(i)
+                #print(i)
                 self.bound.append(BGrid('unknownType',
                                   nbnodes=self.boundcount[i], 
                                   bnode = [],
@@ -867,14 +867,14 @@ class Grid(object):
                 
             nface = 0
             for i in range(nbound):#loop over the  different boundaries
-                print(i)
-                print('self.boundcount[i] = ',self.boundcount[i])
-                print('i bound[i] = ',i,self.bound[i])
-                #print('self.bound[i].bnode = ',self.bound[i].bnode )
-                print('len(self.bound[i].bnode) = ', len(self.bound[i].bnode))
-                print('self.bound[i].bnode = ',self.bound[i].bnode)
+                #print(i)
+                #print('self.boundcount[i] = ',self.boundcount[i])
+                #print('i bound[i] = ',i,self.bound[i])
+                # #print('self.bound[i].bnode = ',self.bound[i].bnode )
+                #print('len(self.bound[i].bnode) = ', len(self.bound[i].bnode))
+                #print('self.bound[i].bnode = ',self.bound[i].bnode)
                 for j in range(self.boundcount[i]-1):
-                    print('j = ',j)
+                    #print('j = ',j)
                     nid1 = self.bound[i].bnode[j]
                     nid2 = self.bound[i].bnode[j+1]
                     bface = Face([self.nodes[nid1],

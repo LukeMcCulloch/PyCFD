@@ -663,15 +663,15 @@ class Solvers(object):
             print(time)
             #------------------------------------------------------------------
             # Compute the residual: res(i,:) (gradient computation is done within)
-            print("stage 1 compute residual")
+            #print("stage 1 compute residual")
             self.compute_residual()
-            sys.exit()
+            #sys.exit()
             
             #Compute the residual norm for checking convergence.
             self.compute_residual_norm()
             
             
-            print('res_norm = {}'.format(self.res_norm))
+            #print('res_norm = {}'.format(self.res_norm))
             
             
             #--- Initial (no solution update yet) ------------
@@ -738,7 +738,7 @@ class Solvers(object):
                 
             #-----------------------------
             #- 2nd Stage of Runge-Kutta:
-            print("stage 2 compute residual")
+            #print("stage 2 compute residual")
             self.compute_residual()
             #exit()
             for i in range(self.mesh.nCells):
@@ -819,7 +819,7 @@ class Solvers(object):
         #
         #----------------------------------------------------------------------
         savei = 0
-        print('do interior residual')
+        #print('do interior residual')
         #print('nfaces = ',len(self.mesh.faceList))
         for i,face in enumerate(mesh.faceList):
             """
@@ -1018,7 +1018,7 @@ class Solvers(object):
         # c = bcell, the cell having the boundary face j.
         #
         savei = 0
-        print('do boundary residual')
+        #print('do boundary residual')
         for ib, bface in enumerate(self.mesh.boundaryList):
             """
             ib = self.save[0]
@@ -1031,8 +1031,8 @@ class Solvers(object):
             v1 = bface.nodes[0] # Left node of the face
             v2 = bface.nodes[1] # Right node of the face
             
-            print('v1 = ',v1.nid)
-            print('v2 = ',v2.nid)
+            #print('v1 = ',v1.nid)
+            #print('v2 = ',v2.nid)
             
             #Face midpoint at which we compute the flux.
             xm,ym = bface.center
@@ -1053,7 +1053,7 @@ class Solvers(object):
             
             # print('xm,ym = ',xm,ym)
             # print('u1 = ',u1)
-            # print('bface normal = ',self.unit_face_normal)
+            #print('bface normal = ',self.unit_face_normal)
             #print('input ub = {}, gradw2 = {}'.format(self.ub, self.gradw2))
             #---------------------------------------------------
             # Get the right state (weak BC!)
@@ -1096,7 +1096,7 @@ class Solvers(object):
                 print(ib, num_flux, wave_speed)
                 self.save = [ib, bface, num_flux, wave_speed]
                 self.save = {'i' : ib,
-                             'face' : face,
+                             'face' : bface,
                              'num_flux':num_flux,
                              'wave_speed':wave_speed,
                              'u1':u1,
@@ -1109,7 +1109,7 @@ class Solvers(object):
                              'phi2':phi2
                              }
             assert(not test), "Found a NAN in boundary residual"
-            print(c1.cid, num_flux, wave_speed)
+            #print(c1.cid, num_flux, wave_speed)
             
             """
             debugging:
@@ -1164,25 +1164,28 @@ class Solvers(object):
             #      that doesn't exist is automatically cancelled: wR=wb+gradw*(xm-xc2)=wb.
             # so assert(wR == wb)
             
-            print('ib, residual [c1,:] = ',c1.cid,self.res[c1.cid,:])
-            print('ib, wsn [c1] = ',c1.cid,self.wsn[c1.cid] )
+            # print('ib, residual [c1,:] = ',c1.cid,self.res[c1.cid,:])
+            # print('ib, wsn [c1] = ',c1.cid,self.wsn[c1.cid] )
 
             #---------------------------------------------------
             #  Add the boundary contributions to the residual.
-            self.res[c1.cid,:] += num_flux * face.face_nrml_mag
-            self.wsn[c1.cid] += wave_speed * face.face_nrml_mag
+            self.res[c1.cid,:] += num_flux * bface.face_nrml_mag
+            self.wsn[c1.cid] += wave_speed * bface.face_nrml_mag
 
-            # no c2 on the boundary
-            print('face_nrml_mag = ',face.face_nrml_mag)
+            # # no c2 on the boundary
+            # print('face_nrml_mag = ',bface.face_nrml_mag)
             
-            print('ib, residual [c1,:] = ',c1.cid,self.res[c1.cid,:])
-            print('ib, wsn [c1] = ',c1.cid,self.wsn[c1.cid] )
+            # print('ib, residual [c1,:] = ',c1.cid,self.res[c1.cid,:])
+            # print('ib, wsn [c1] = ',c1.cid,self.wsn[c1.cid] )
 
             # End of Residual computation: exterior faces
             #------------------------------------------------------------------
             #
             #end  compute_residual
             #S*****************************************************************
+        
+        # for bface in self.mesh.boundaryList:
+        #     print(bface.parentcell.cid,bface.face_nrml_mag)
         return
     
     
@@ -2331,7 +2334,8 @@ if __name__ == '__main__':
         canvas = plotmesh = PlotGrid(self.mesh)
         plotmesh.plot_boundary() #normals should be outward facing
         
-        
+        for bface in self.mesh.boundaryList:
+            print(bface.parentcell.cid,bface.face_nrml_mag)
         
         plotmesh = PlotGrid(self.mesh)
         axTri = plotmesh.plot_cells()
