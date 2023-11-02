@@ -221,6 +221,7 @@ class BC_states(object):
         #print("slip_wall")
 
         un = wL[1]*njk[0] + wL[2]*njk[1]
+        #print('un = ',un)
         
         #-------------------------
         # Define the right state:
@@ -229,8 +230,8 @@ class BC_states(object):
         
         # Ensure zero normal velocity on average:
         
-        wb[1] = wL[1] - 2.0*un*njk[0]
-        wb[2] = wL[2] - 2.0*un*njk[1]
+        wb[1] = wL[1] - un*njk[0]
+        wb[2] = wL[2] - un*njk[1]
         
         #print('wb dot njk= {}'.format(wb[1:3].dot(njk)))
         #tol= 1.e-10
@@ -246,7 +247,7 @@ class BC_states(object):
             wb = np.array(4, float)
             wL = np.array(4, float)
         """
-        print("outflow_supersonic")
+        #print("outflow_supersonic")
         #---------------------------------------------
         # Take everything from the interior.
         

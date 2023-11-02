@@ -97,8 +97,8 @@ class Face(object):
         # Basic geometry
         #
         self.area = np.linalg.norm(self.nodes[1]-self.nodes[0])
-        self.normal_vector, self.face_nrml_mag = self.compute_normal(normalizeIt = True)
-        normal_vector, face_nrml_mag = self.compute_normalfancy(normalizeIt = True)
+        #self.normal_vector, self.face_nrml_mag = self.compute_normal(normalizeIt = True)
+        self.normal_vector, self.face_nrml_mag = self.compute_normalfancy(normalizeIt = True)
         #if self.isBoundary:
         #    print('normal vec: ', self.normal_vector)
         #    print('fancy normal vec: ',normal_vector)
@@ -181,15 +181,73 @@ class Face(object):
         """ 2D specific face normals
         normalized(x1,-x0)
         """
-        vec = self.nodes[1] - self.nodes[0]
-        vec = np.asarray([vec[1],-vec[0]])
+        
+        x1 = self.nodes[0].vector[0]
+        y1 = self.nodes[0].vector[1]
+        
+        
+        x2 = self.nodes[1].vector[0]
+        y2 = self.nodes[1].vector[1]
+        
+        
+        
+        vec = np.asarray([-(y1-y2),x1-x2],float)
+        
+        nmag = np.linalg.norm(vec)
+        vec = vec/nmag
+        
+        ################
+        
+        #vec = self.nodes[1] - self.nodes[0]
+        #vec = np.asarray([vec[1],-vec[0]])
+        
+        #nmag = np.linalg.norm(vec)
         
         if normalizeIt:
-            vec, nmag =  normalize2D(vec[:],return_mag=True)
-            #vec =  normalize2D(vec,return_mag=False)
+            #vec, nmag_dummy =  normalize2D(vec[:],return_mag=True)
+            ##vec =  normalize2D(vec,return_mag=False)
             
-            #if self.isBoundary:
-            #    print ('bface normal', vec)
+            ##if self.isBoundary:
+            ##    print ('bface normal', vec)
+            return vec, nmag
+        else:
+            return vec
+        
+    def fix_boundary_normal(self):
+        """ 2D specific face normals
+        normalized(x1,-x0)
+        
+        TODO fixme: this is redundent
+        """
+        normalizeIt=True
+        
+        x1 = self.nodes[0].vector[0]
+        y1 = self.nodes[0].vector[1]
+        
+        
+        x2 = self.nodes[1].vector[0]
+        y2 = self.nodes[1].vector[1]
+        
+        
+        
+        vec = np.asarray([y2-y1,x1-x2],float)
+        
+        nmag = np.linalg.norm(vec)
+        vec = vec/nmag
+        
+        ################
+        
+        #vec = self.nodes[1] - self.nodes[0]
+        #vec = np.asarray([vec[1],-vec[0]])
+        
+        #nmag = np.linalg.norm(vec)
+        
+        if normalizeIt:
+            #vec, nmag_dummy =  normalize2D(vec[:],return_mag=True)
+            ##vec =  normalize2D(vec,return_mag=False)
+            
+            ##if self.isBoundary:
+            ##    print ('bface normal', vec)
             return vec, nmag
         else:
             return vec
@@ -295,10 +353,11 @@ class BGrid(object):
      Note: Each boundary segment has the following data.
     ----------------------------------------------------------
     '''
-    def __init__(self, bc_type, nbnodes, bnode, nbfaces):
+    def __init__(self, bc_type, nbnodes, bnode, nbfaces, faces):
         self.bc_type = bc_type #type of boundary nodes for this segment
         self.nbnodes = nbnodes #number of boundary nodes for this segment
         self.bnode = bnode     #list of boundary nodes for this segment
+        self.faces = faces #list of boundary faces for this segment
         
         #to be constructed from the code
         self.nbfaces = nbfaces # number of boundary faces
@@ -788,25 +847,44 @@ class Grid(object):
                     self.boundcount.append(int(nbn))
                 
             handle.readline()#hard coded line break is a smell!
-            #nface = 0
+            
+            
+            
             for i in range(nbound):#loop over the  different boundaries
-                print (i)
-                self.bound.append(BGrid('unknownType', 
-                                        nbnodes=self.boundcount[i], 
-                                        bnode = [],
-                                        nbfaces = self.boundcount[i]-1))
+                print(i)
+                self.bound.append(BGrid('unknownType',
+                                  nbnodes=self.boundcount[i], 
+                                  bnode = [],
+                                  nbfaces = self.boundcount[i]-1,
+                                  faces = [])
+                                  )
                 for j in range(self.boundcount[i]): #read in this many nodes on this boundary
                     thing = (handle.readline()).split()
                     if len(thing)>0:
                         thing = int(thing[0])-1
                         self.bound[i].bnode.append(thing)
-                # bface = Face([self.nodes[i],
-                #                  self.nodes[(i+1)%self.N] 
-                #                 ],
-                #                 parentcell=self,
-                #                 fid = nface
-                #                 )
-                #     nface += 1
+                
+                
+            nface = 0
+            for i in range(nbound):#loop over the  different boundaries
+                print(i)
+                print('self.boundcount[i] = ',self.boundcount[i])
+                print('i bound[i] = ',i,self.bound[i])
+                #print('self.bound[i].bnode = ',self.bound[i].bnode )
+                print('len(self.bound[i].bnode) = ', len(self.bound[i].bnode))
+                print('self.bound[i].bnode = ',self.bound[i].bnode)
+                for j in range(self.boundcount[i]-1):
+                    print('j = ',j)
+                    nid1 = self.bound[i].bnode[j]
+                    nid2 = self.bound[i].bnode[j+1]
+                    bface = Face([self.nodes[nid1],
+                                      self.nodes[nid2] 
+                                    ],
+                                    parentcell=None,
+                                    fid = nface
+                                    )
+                    self.bound[i].faces.append(bface)
+                nface += 1
             
             self.bound = np.asarray(self.bound)
             handle.close() #done with  grid file read
@@ -849,6 +927,7 @@ class Grid(object):
             self.buildVertexToCellIncidence() # self.VToC
             
             self.cleanFaceList()
+            self.orderBoundaryList()
             
         if self.generated:
             # now cells and faces:
@@ -1048,6 +1127,9 @@ class Grid(object):
         i.e. if there is a neighbor,
         then add that to the cells nghbr list
         """
+        
+        #self.bc_type = {} #adding face to bc_type map 
+        
         for cell in self.cellList:
             for face in cell.faces:
                 #https://stackoverflow.com/questions/2710940/python-if-x-is-not-none-or-if-not-x-is-none
@@ -1057,9 +1139,25 @@ class Grid(object):
                     # you've got the information to define the boundary 
                     # so do it here!:
                     face.isBoundary = True
+                    face.fix_boundary_normal()
                     self.boundaryList.append(face)
         self.nBoundaries = len(self.boundaryList)
         #self.bound = np.asarray(self.boundaryList)
+        
+        return
+    
+    def orderBoundaryList(self):
+        new_list = []
+        for i,bound in enumerate(self.bound):
+            for bface in bound.faces:
+                node1 = bface.nodes[0]
+                node2 = bface.nodes[1]
+                for face in self.boundaryList:
+                    if node1.nid == face.nodes[0].nid:
+                        new_list.append(face)
+                        
+        self.boundaryList = new_list
+        
         return
     
     def cleanFaceList(self):

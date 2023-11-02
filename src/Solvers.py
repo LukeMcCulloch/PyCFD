@@ -237,18 +237,28 @@ class Solvers(object):
         #--------------------------------------
         # initial conditions
         
-        self.bc_type = {}
+        # self.bc_type = {}
         # global_counter = 0
         # for i, el in enumerate(mesh.boundcount):
         #     print('parsing boundary {}, number of components {}'.format(i, el))
-        #     #btype = mesh.bound[i].bc_type
+        #     btype = mesh.bound[i].bc_type
         #     #local_counter = 0
-        #     for j in range(0,el):
-        #         global_counter += 1
+        #     for j in range(bb.nbfaces):
         #         #mesh.nBoundaries[global_counter]
-        #         #self.bc_type.append(btype)
-        # print('b elements set = {} =?= mesh.nBoundaries {}'.format(global_counter, mesh.nBoundaries))
+        #         self.bc_type[i*] = btype
+        #         global_counter += 1
+        # #print('b elements set = {} =?= mesh.nBoundaries {}'.format(global_counter, mesh.nBoundaries))
         
+        
+        self.bc_type = {}
+        global_counter = 0
+        for bound in mesh.bound:
+            btype = bound.bc_type
+            nfaces = bound.nbfaces
+            for f in range(nfaces):
+                self.bc_type[global_counter] = btype
+                global_counter += 1
+            
         
         #print('\n Boundary nodes:')
         #print('    segments = {}'.format(len(self.mesh.boundcount)) )
@@ -256,12 +266,12 @@ class Solvers(object):
         #    print(' boundary, {},   bnodes = {}'.format(i,self.mesh.bound[i].bnode))
         #    print('                bfaces = {}'.format(self.mesh.bound[i].nbnodes-1))
             
-        count = 0
-        for ii, bb in enumerate(self.mesh.bound):
-            for jj, node in enumerate(bb.bnode):
-                #self.bc_type[node] = bb.bc_type
-                self.bc_type[count] = bb.bc_type #yes, the index is 0,1,2,.. len(self.mesh.bound)
-                count += 1
+        # count = 0
+        # for ii, bb in enumerate(self.mesh.bound):
+        #     for jj, node in enumerate(bb.bnode):
+        #         #self.bc_type[node] = bb.bc_type
+        #         self.bc_type[count] = bb.bc_type #yes, the index is 0,1,2,.. len(self.mesh.bound)
+        #         count += 1
         
         
         # self.BC = BC_states(solver = self, 
@@ -620,7 +630,7 @@ class Solvers(object):
     # by explicit iteration schemes.
     #
     #-------------------------------------------------------------------------#
-    def explicit_steady_solver(self, tfinal=1.0, dt=.01, tol=1.e-5, max_iteration = 100):
+    def explicit_steady_solver(self, tfinal=1.0, dt=.01, tol=1.e-5, max_iteration = 1000):
         """
         
         debugging:
@@ -655,10 +665,13 @@ class Solvers(object):
             # Compute the residual: res(i,:) (gradient computation is done within)
             print("stage 1 compute residual")
             self.compute_residual()
-            #sys.exit()
+            sys.exit()
             
             #Compute the residual norm for checking convergence.
             self.compute_residual_norm()
+            
+            
+            print('res_norm = {}'.format(self.res_norm))
             
             
             #--- Initial (no solution update yet) ------------
@@ -732,8 +745,10 @@ class Solvers(object):
                 self.u[i,:] = 0.5*( self.u[i,:] + self.u0[i,:] )  - \
                                 0.5*(dt/self.mesh.cells[i].volume) * self.res[i,:]
                 self.w[i,:] = self.u2w( self.u[i,:]  )
+                
+            #pseudo_time_loop = False
             
-        print(" End of Physical Time-Stepping")
+        print(" End of Pseudo Time-Stepping")
         print("---------------------------------------")
         return
     
@@ -970,7 +985,11 @@ class Solvers(object):
     
                 # End of Residual computation: interior faces
                 #--------------------------------------------------------------------------------
-    
+                
+                # print('i, residual [c1,:] = ',i,self.res[c1.cid,:])
+                # print('i, residual [c2,:] = ',i,self.res[c2.cid,:])
+                # print('i, wsn [c1] = ',i,self.wsn[c1.cid] )
+                # print('i, wsn [c2] = ',i,self.wsn[c2.cid] )
     
     
     
@@ -1012,8 +1031,8 @@ class Solvers(object):
             v1 = bface.nodes[0] # Left node of the face
             v2 = bface.nodes[1] # Right node of the face
             
-            #print('v1 = ',v1.nid)
-            #print('v2 = ',v2.nid)
+            print('v1 = ',v1.nid)
+            print('v2 = ',v2.nid)
             
             #Face midpoint at which we compute the flux.
             xm,ym = bface.center
@@ -1032,12 +1051,14 @@ class Solvers(object):
             
             self.unit_face_normal[:] = bface.normal_vector[:]
             
-            #print('bface normal = ',self.unit_face_normal)
+            # print('xm,ym = ',xm,ym)
+            # print('u1 = ',u1)
+            # print('bface normal = ',self.unit_face_normal)
             #print('input ub = {}, gradw2 = {}'.format(self.ub, self.gradw2))
             #---------------------------------------------------
             # Get the right state (weak BC!)
-            #print('ib = ',ib)
-            #print('self.bc_type[ib] = {}'.format(self.bc_type[ib]))
+            # print('ib = ',ib)
+            # print('self.bc_type[ib] = {}'.format(self.bc_type[ib]))
             self.ub = self.BC.get_right_state(xm,ym, 
                                     u1[:], 
                                     self.unit_face_normal, 
@@ -1051,7 +1072,8 @@ class Solvers(object):
             
             #---------------------------------------------------
             # Compute a flux at the boundary face.
-            #print('ub = ',self.ub
+            # print('ub = ',self.ub)
+            # print('------------------')
             num_flux, wave_speed = self.interface_flux(u1[:], self.ub,                      #<- Left/right states
                                                        self.gradw1, self.gradw2,    #<- Left/right same gradients
                                                        self.unit_face_normal,       #<- unit face normal
@@ -1087,7 +1109,7 @@ class Solvers(object):
                              'phi2':phi2
                              }
             assert(not test), "Found a NAN in boundary residual"
-            #print(ib, num_flux, wave_speed)
+            print(c1.cid, num_flux, wave_speed)
             
             """
             debugging:
@@ -1141,6 +1163,9 @@ class Solvers(object):
             #Note: Set right centroid = (xm,ym) so that the reconstruction from the right cell
             #      that doesn't exist is automatically cancelled: wR=wb+gradw*(xm-xc2)=wb.
             # so assert(wR == wb)
+            
+            print('ib, residual [c1,:] = ',c1.cid,self.res[c1.cid,:])
+            print('ib, wsn [c1] = ',c1.cid,self.wsn[c1.cid] )
 
             #---------------------------------------------------
             #  Add the boundary contributions to the residual.
@@ -1148,6 +1173,10 @@ class Solvers(object):
             self.wsn[c1.cid] += wave_speed * face.face_nrml_mag
 
             # no c2 on the boundary
+            print('face_nrml_mag = ',face.face_nrml_mag)
+            
+            print('ib, residual [c1,:] = ',c1.cid,self.res[c1.cid,:])
+            print('ib, wsn [c1] = ',c1.cid,self.wsn[c1.cid] )
 
             # End of Residual computation: exterior faces
             #------------------------------------------------------------------
@@ -1895,8 +1924,8 @@ class Solvers(object):
         nquad = self.mesh.nquad
         nnodes = self.mesh.nNodes
         dpn = self.dpn
-        wn = np.zeros((nnodes,dpn))
-        nc = np.zeros((nnodes))#<- nc(j) = # of cells contributing to node j.
+        wn = np.zeros((nnodes,dpn),float)
+        nc = np.zeros((nnodes),float)#<- nc(j) = # of cells contributing to node j.
         
         #------------------------------------------------------------------------------
         #------------------------------------------------------------------------------
@@ -2203,7 +2232,12 @@ if __name__ == '__main__':
     
     #cell.plot_cell()
     
-    thisTest = 0
+    vtkNames = {0:'vortex.vtk',
+                1:'airfoil.vtk',
+                2:'cylinder.vtk',
+                3:'test.vtk'}
+    
+    thisTest = 2
     whichTest = {0:TestInviscidVortex,
                  1:TestSteadyAirfoil,
                  2:TestSteadyCylinder,
@@ -2249,18 +2283,17 @@ if __name__ == '__main__':
         
         self.solver_boot(flowtype = whichSolver[thisTest])
         
+        
+        self.write_solution_to_vtk('init_'+vtkNames[thisTest])
+        
         solvertype = {0:'explicit_unsteady_solver',
                       1:'explicit_steady_solver',
-                      2:'explicit_unsteady_solver',
+                      2:'explicit_steady_solver',
                       3:'mms_solver',}
         #'''
         self.solver_solve( tfinal=.1, dt=.01, 
                           solver_type = solvertype[thisTest])
         
-        vtkNames = {0:'vortex.vtk',
-                    1:'airfoil.vtk',
-                    2:'cylinder.vtk',
-                    3:'test.vtk'}
         self.write_solution_to_vtk(vtkNames[thisTest])
         #'''
         ################################
