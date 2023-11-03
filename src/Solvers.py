@@ -613,6 +613,99 @@ class Solvers(object):
     
     
     
+    #-------------------------------------------------------------------------#
+    # Euler solver: Explicit Unsteady Solver: Ut + Fx + Gy = S
+    # (efficient shock-diffraction grid version)
+    #
+    # This subroutine solves an un steady problem by 2nd-order TVD-RK with a
+    # global time step.
+    #-------------------------------------------------------------------------#
+    def explicit_unsteady_solver_efficient_shockdiffraction(self, tfinal=1.0, dt=.01):
+        """
+        
+        debugging:
+           
+        self.t_final = 1.0
+        time = 0.0
+            
+        """
+        print('call explicit_unsteady_solver')
+        time = 0.0
+        
+        self.t_final = tfinal
+        
+        
+        #-----------------------------------------------------------------------------
+        #-----------------------------------------------------------------------------
+        # Physical time-stepping
+        #-----------------------------------------------------------------------------
+        #-----------------------------------------------------------------------------
+        
+        #--------------------------------------------------------------------------------
+        # First, make sure that normal mass flux is zero at all solid boundary nodes.
+        # NOTE: Necessary because initial solution may generate the normal component.
+        #--------------------------------------------------------------------------------
+        self.eliminate_normal_mass_flux()
+        
+        #for jj in range(1): #debugging!
+        while (time < self.t_final):
+            print(time)
+            #------------------------------------------------------------------
+            # Compute the residual: res(i,:)
+            #print("stage 1 compute residual")
+            self.compute_residual()
+            
+            #sys.exit()
+            
+            self.compute_residual_norm()
+            #print('res_norm = {}'.format(self.res_norm))
+            
+            #------------------------------------------------------------------
+            # Compute the global time step, dt. One dt for all cells.
+            dt = self.compute_global_time_step()#*.5
+            
+            #adjust time step?
+            #code here
+            
+            #------------------------------------------------------------------
+            # Increment the physical time and exit if the final time is reached
+            time += dt #TBD dt was undefined
+            
+            #-------------------------------------------------------------------
+            # Update the solution by 2nd-order TVD-RK.: u^n is saved as u0(:,:)
+            #  1. u^*     = u^n - (dt/vol)*Res(u^n)
+            #  2. u^{n+1} = 1/2*(u^n + u^*) - 1/2*(dt/vol)*Res(u^*)
+            
+            
+            #-----------------------------
+            #- 1st Stage of Runge-Kutta:
+            #u0 = u: is solution data -  conservative variables at the cell centers I think
+            
+            self.u0[:] = self.u[:]
+            # slow test first
+            for i in range(self.mesh.nCells):
+                self.u[i,:] = self.u0[i,:] - \
+                                (dt/self.mesh.cells[i].volume) * self.res[i,:] #This is R.K. intermediate u*.
+                self.w[i,:] = self.u2w( self.u[i,:]  )
+                
+                
+            #-----------------------------
+            #- 2nd Stage of Runge-Kutta:
+            #print("stage 2 compute residual")
+            self.compute_residual()
+            #exit()
+            for i in range(self.mesh.nCells):
+                self.u[i,:] = 0.5*( self.u[i,:] + self.u0[i,:] )  - \
+                                0.5*(dt/self.mesh.cells[i].volume) * self.res[i,:]
+                self.w[i,:] = self.u2w( self.u[i,:]  )
+            
+            self.compute_residual_norm()
+            print('res_norm = {}'.format(self.res_norm))
+            
+        print(" End of Physical Time-Stepping")
+        print("---------------------------------------")
+        return
+    
     
     
         
@@ -1215,6 +1308,62 @@ class Solvers(object):
         return physical_time_step
     
     
+    #********************************************************************************
+    #* Prepararion for Tangency condition (slip wall):
+    #*
+    #* Eliminate normal mass flux component at all solid-boundary nodes at the
+    #* beginning. The normal component will never be changed in the solver: the
+    #* residuals will be constrained to have zero normal component.
+    #*
+    #********************************************************************************
+    def eliminate_normal_mass_flux(self):
+        
+        
+        ################################################################
+        # THIS IS A SPECIAL TREATMENT FOR SHOCK DIFFRACTION PROBLEM.
+        #
+        # NOTE: This is a corner point between the inflow boundary and
+        #       the lower-left wall. Enforce zero y-momentum, which is
+        #       not ensured by the standard BCs.
+        #       This special treatment is necessary because the domain
+        #       is rectangular (the left boundary is a straight ine) and
+        #       the midpoint node on the left boundary is actually a corner.
+        #
+        #       Our computational domain:
+        #
+        #                 ---------------
+        #          Inflow |             |
+        #                 |             |  o: Corner node
+        #          .......o             |
+        #            Wall |             |  This node is a corner.
+        #                 |             |
+        #                 ---------------
+        #
+        #       This is to simulate the actual domain shown below:
+        #      
+        #         -----------------------
+        # Inflow  |                     |
+        #         |                     |  o: Corner node
+        #         --------o             |
+        #            Wall |             |
+        #                 |             |
+        #                 ---------------
+        #      In effect, we're simulating this flow by a simplified
+        #      rectangular domain (easier to generate the grid).
+        #      So, an appropriate slip BC at the corner node needs to be applied,
+        #      which is "zero y-momentum", and that's all.
+        #
+        
+        # if (i==2 and j==1):
+        #             inode = bound(i)%bnode(j)
+        #  node(inode)%u(3) = zero               # Make sure zero y-momentum.
+        #  node(inode)%w    = u2w(node(inode)%u) #Update primitive variables
+        #  cycle bnodes_slip_wall # That's all we neeed. Go to the next.
+        
+        ################################################################
+
+        return
+    
     #-------------------------------------------------------------------------#
     #
     # compute w from u
@@ -1718,7 +1867,9 @@ class Solvers(object):
         v0 = zero
         p0 = one/gamma
         
-        for i, cell in enumerate(self.mesh.cells):
+        #vertex or cell based?
+        #for i, vtx in enumerate(self.mesh.nodes) #example is vertex (node) centered
+        for i, cell in enumerate(self.mesh.cells): #this code is set up to be cell centered
             
             # Incoming shock speed
             
@@ -2131,22 +2282,6 @@ class TestInviscidVortex(object):
         
         
 
-# class TestSteadyCylinder(object):
-    
-#     def __init__(self):
-#         # up a level
-#         #uplevel = os.path.join(os.path.dirname(__file__), '..','cases')
-#         uplevel = os.path.join(os.path.dirname(os.getcwd()), 'cases')
-#         #path2vortex = uplevel+'\\cases\case_unsteady_vortex'
-#         path2case = os.path.join(uplevel, 'case_steady_cylinder')
-#         self.DHandler = DataHandler(project_name = 'cylinder',
-#                                        path_to_inputs_folder = path2case)
-        
-        
-#         self.grid = Grid(generated=False,
-#                          dhandle = self.DHandler,
-#                          type_='tri',
-#                          winding='ccw')
         
 class TestSteadyCylinder(object):
     
@@ -2204,7 +2339,19 @@ class TestTEgrid(object):
         
 
 class TestShockDiffractiongrid(object):
-    pass
+    
+    def __init__(self):
+        # up a level
+        uplevel = os.path.join(os.path.dirname(os.getcwd()), 'cases')
+        path2case = os.path.join(uplevel, 'case_shock_diffraction')
+        self.DHandler = DataHandler(project_name = 'shock',
+                                       path_to_inputs_folder = path2case)
+        
+        
+        self.grid = Grid(generated=False,
+                         dhandle = self.DHandler,
+                         type_='quad',
+                         winding='ccw')
     
         
         
@@ -2246,17 +2393,20 @@ if __name__ == '__main__':
     vtkNames = {0:'vortex.vtk',
                 1:'airfoil.vtk',
                 2:'cylinder.vtk',
-                3:'test.vtk'}
+                3:'test.vtk',
+                4:'shock_diffraction.vtk'}
     
     thisTest = 2
     whichTest = {0:TestInviscidVortex,
                  1:TestSteadyAirfoil,
                  2:TestSteadyCylinder,
-                 3:TestTEgrid}
+                 3:TestTEgrid,
+                 4:TestShockDiffractiongrid}
     #test = TestInviscidVortex()
     #test = TestSteadyAirfoil()
     #test = TestSteadyCylinder()
     #test = TestTEgrid()
+    #test = TestShockDiffractiongrid()
     test = whichTest[thisTest]()
     
     
@@ -2286,7 +2436,8 @@ if __name__ == '__main__':
         whichSolver = {0: 'vortex',
                        1: 'freestream',
                        2: 'freestream',
-                       3: 'mms'}
+                       3: 'mms',
+                       4:'shock-diffraction'}
         #self.solver_boot(flowtype = 'mms') #TODO fixme compute_manufactured_sol_and_f_euler return vals
         #self.solver_boot(flowtype = 'freestream')
         #self.solver_boot(flowtype = 'vortex')
