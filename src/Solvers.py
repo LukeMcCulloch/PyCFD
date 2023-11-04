@@ -1957,7 +1957,10 @@ class Solvers(object):
         #******************************************************************************
        
         '''
-        self.solution_dir = '..\output\\vtk'
+        if os.name == 'nt':
+            self.solution_dir = '..\output\\vtk'
+        else:
+            self.solution_dir = '../output//vtk'
         zero = 0.0
         ntria = self.mesh.ntria
         nquad = self.mesh.nquad
@@ -2277,7 +2280,7 @@ if __name__ == '__main__':
                 3:'test.vtk',
                 4:'shock_diffraction.vtk'}
     
-    thisTest = 1
+    thisTest = 2
     whichTest = {0:TestInviscidVortex,
                  1:TestSteadyAirfoil,
                  2:TestSteadyCylinder,
