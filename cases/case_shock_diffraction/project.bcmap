@@ -1,0 +1,6 @@
+ Boundary Segment  Boundary Condition
+                1          freestream
+                2           slip_wall
+                3  outflow_supersonic
+                4  outflow_supersonic
+                5           slip_wall

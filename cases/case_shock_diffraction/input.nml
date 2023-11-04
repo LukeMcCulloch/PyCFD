@@ -1,0 +1,24 @@
+&input_parameters
+
+        project_name = shock
+  steady_or_unsteady = unsteady
+   generate_tec_file = T
+   generate_vtk_file = T
+
+               M_inf = 0.0
+                 aoa = 0.0
+
+      compute_te_mms = F
+
+ inviscid_flux       = roe
+ eig_limiting_factor = 0.2, 0.2, 0.2, 0.2, 0.2
+
+                 CFL = 0.95
+       max_iteration = 5000
+           tolerance = 1.0e-05
+
+        second_order = F
+
+
+/
+
