@@ -8,6 +8,8 @@ import numpy as np
 Array = np.zeros
 sqrt = np.sqrt
 
+from Utilities import u2w
+
 
 
 #********************************************************************************
@@ -93,7 +95,7 @@ sqrt = np.sqrt
 #* converted to python by Luke McCulloch
 #*
 #********************************************************************************
-def roe(ucL, ucR, njk, num_flux, wsn, gamma = 1.4):
+def roe3D(ucL, ucR, njk, num_flux, wsn, gamma = 1.4):
     """
     3D Roe approximate Riemann Solver for 
     the flux across a face
@@ -344,6 +346,210 @@ def roe(ucL, ucR, njk, num_flux, wsn, gamma = 1.4):
         
         
     return num_flux, wsn
+
+
+##
+#
+# downsample the 3d data to 2d and pass conservative variables to primative
+#
+##
+def roe2D(ucL, ucR, njk, num_flux, wsn, gamma = 1.4):
+    
+    primL = u2w(ucL)
+    primR = u2w(ucR)
+    
+    # primL = np.zeros((4),float)
+    # primL[0] = primL5[0]
+    # primL[1] = primL5[1]
+    # primL[2] = primL5[2]
+    # primL[3] = primL5[4]
+    
+    # primR = np.zeros((4),float)
+    # primR[0] = primR5[0]
+    # primR[1] = primR5[1]
+    # primR[2] = primR5[2]
+    # primR[3] = primR5[4]
+    
+    njk2D = np.zeros((2),float)
+    njk2D[0] = njk[0]
+    njk2D[1] = njk[1]
+    
+    flux, wsn = roe_primative(primL, primR, njk, gamma = 1.4)
+    
+    num_flux = np.zeros((5),float)
+    num_flux[0] = flux[0]
+    num_flux[1] = flux[1]
+    num_flux[2] = flux[2]
+    num_flux[4] = flux[3] 
+    
+    return  num_flux, wsn
+    
+#********************************************************************************
+#* -- Roe's Flux Function with entropy fix---
+#*
+#* P. L. Roe, Approximate Riemann Solvers, Parameter Vectors and Difference
+#* Schemes, Journal of Computational Physics, 43, pp. 357-372.
+#*
+#* NOTE: 3D version of this subroutine is available for download at
+#*       http://cfdbooks.com/cfdcodes.html
+#*
+#* ------------------------------------------------------------------------------
+#*  Input:   primL(1:5) =  left state (rhoL, uL, vL, pL)
+#*           primR(1:5) = right state (rhoR, uR, vR, pR)
+#*               njk(2) = Face normal (L -> R). Must be a unit vector.
+#*
+#* Output:    flux(1:5) = numerical flux
+#*                  wsn = half the max wave speed
+#*                        (to be used for time step calculations)
+#* ------------------------------------------------------------------------------
+#*
+#********************************************************************************
+def roe_primative(primL, primR, njk, gamma = 1.4):
+    '''
+    primative variable formulation of the Roe flux: 
+        approximate Riemann solver for flux across a face
+
+    Parameters
+    ----------
+    
+    primL : primative variable left state 
+    primR : primative variable right state 
+    
+    
+    njk : normal vector pointing out of the face
+    flux : delta w
+    wsn : wave speed
+    gamma : air is 1.4.
+
+    Returns
+    -------
+    flux : delta
+    wsn : wave speed
+
+    '''
+    zero = 0.0
+    one = 1.0
+    half = 0.5
+    two = 2.0
+    #fourth = 1./4.
+    fifth = 1./5.
+    
+    LdU = np.zeros((4),float)   #wave strengths
+    diss = np.zeros((4),float)  # Fluxes ad dissipation term
+    ws = np.zeros((4),float)    # Wave speeds
+    Rv = np.zeros((4,4),float)  # right-eigevectors
+    fL = np.zeros((4),float)    # Fluxes ad dissipation term
+    fR = np.zeros((4),float)    # Fluxes ad dissipation term
+    dws = np.zeros((4),float)   # User-specified width for entropy fix
+    
+    nx = njk[0]
+    ny = njk[1]
+    
+    # Tangent vector (Do you like it? Actually, Roe flux can be implemented 
+    #   without any tangent vector. See "I do like CFD, VOL.1" for details.)
+    mx = -ny
+    my =  nx
+    
+    
+    #Primitive and other variables.
+    #  Left state
+    rhoL = primL[0]
+    uL = primL[1]
+    vL = primL[2]
+    unL = uL*nx+vL*ny
+    umL = uL*mx+vL*my
+    pL = primL[3]
+    aL = sqrt(gamma*pL/rhoL)
+    HL = aL*aL/(gamma-one) + half*(uL*uL+vL*vL)
+    #  Right state
+    rhoR = primR[0]
+    uR = primR[1]
+    vR = primR[2]
+    unR = uR*nx+vR*ny
+    umR = uR*mx+vR*my
+    pR = primR[3]
+    aR = sqrt(gamma*pR/rhoR)
+    HR = aR*aR/(gamma-one) + half*(uR*uR+vR*vR)
+    
+    # compute the Roe Averages
+    RT = sqrt(rhoR/rhoL)
+    rho = RT*rhoL
+    u = (uL+RT*uR)/(one+RT)
+    v = (vL+RT*vR)/(one+RT)
+    H = (HL+RT* HR)/(one+RT)
+    a = sqrt( (gamma-one)*(H-half*(u*u+v*v)) )
+    un = u*nx+v*ny
+    um = u*mx+v*my
+    
+    #Wave Strengths
+    drho = rhoR - rhoL 
+    dp =   pR - pL
+    dun =  unR - unL
+    dum =  umR - umL
+    
+    LdU[0] = (dp - rho*a*dun )/(two*a*a)
+    LdU[1] = rho*dum
+    LdU[2] =  drho - dp/(a*a)
+    LdU[3] = (dp + rho*a*dun )/(two*a*a)
+    
+    #Wave Speed
+    ws[0] = abs(un-a)
+    ws[1] = abs(un)
+    ws[2] = abs(un)
+    ws[3] = abs(un+a)
+    
+    #Harten's Entropy Fix JCP(1983), 49, pp357-393:
+    # only for the nonlinear fields.
+    dws[0] = fifth
+    if ( ws[0] < dws[0] ): ws[0] = half * ( ws[0]*ws[0]/dws[0]+dws[0] )
+    dws[3] = fifth
+    if ( ws[3] < dws[3] ): ws[3] = half * ( ws[3]*ws[3]/dws[3]+dws[3] )
+    
+    #Right Eigenvectors
+    Rv[0,0] = one    
+    Rv[1,0] = u - a*nx
+    Rv[2,0] = v - a*ny
+    Rv[3,0] = H - un*a
+    
+    Rv[0,1] = zero
+    Rv[1,1] = mx
+    Rv[2,1] = my
+    Rv[3,1] = um
+    
+    Rv[0,2] = one
+    Rv[1,2] = u
+    Rv[2,2] = v 
+    Rv[3,2] = half*(u*u+v*v)
+    
+    Rv[0,3] = one
+    Rv[1,3] = u + a*nx
+    Rv[2,3] = v + a*ny
+    Rv[3,3] = H + un*a
+    
+    #Dissipation Term
+    diss[:] = 0.0
+    for i in range(4):
+        for j in range(4):
+            diss[i] += ws[j]*LdU[j]*Rv[i,j]
+            
+    #Compute the flux.
+    fL[0] = rhoL*unL
+    fL[1] = rhoL*unL * uL + pL*nx
+    fL[2] = rhoL*unL * vL + pL*ny
+    fL[3] = rhoL*unL * HL
+    
+    fR[0] = rhoR*unR
+    fR[1] = rhoR*unR * uR + pR*nx
+    fR[2] = rhoR*unR * vR + pR*ny
+    fR[3] = rhoR*unR * HR
+    
+    flux = half * (fL[:] + fR[:] - diss[:])
+    wsn = half*(abs(un) + a)  #Normal max wave speed times half
+    return flux, wsn
+    
+    
+
+
 
 
 #-----------------------------------------------------------------------------#

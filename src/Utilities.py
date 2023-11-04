@@ -314,6 +314,40 @@ def normalized(vec, zeroError=False):
 
     return vec
 
+def u2w(u, gamma = 1.4):
+        '''
+        Compute primitive variables from conservative variables.
+
+        Parameters
+        ----------
+        u : conservative variables (rho, rho*u, rho*v, rho*E)
+
+        Returns
+        -------
+        w : primitive variables (rho,     u,     v,     p)
+
+        '''
+        nq=4
+        w = np.zeros((nq),float)
+        
+        ir = 0#self.ir
+        iu = 1#self.iu
+        iv = 2#self.iv
+        ip = 3#self.ip
+        
+        
+        #if u[0] == 0.0: 
+        #    u[0] = 1.0e-15#1.e15
+        #    #print('setting u density to 1e-15 to fix devide by zero in u2w')
+        
+        w[ir] = u[0]
+        w[iu] = u[1]/u[0]
+        w[iv] = u[2]/u[0]
+        w[ip] = (gamma-1.0)*( u[3] - \
+                              0.5*w[0]*(w[1]*w[1] + w[2]*w[2]) )
+        return w
+        
+
 #******************************************************************************
 # Printing Utilities
 #

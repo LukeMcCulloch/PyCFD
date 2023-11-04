@@ -26,7 +26,7 @@ import matplotlib.tri as tri #plot unstructured data
 
 pi = np.pi
 
-from flux import roe
+from flux import roe3D, roe2D #NOTE!: roe3D operates on conservative variables u, roe2D operates on primative variables w
 from System2D import Grid
 from BoundaryConditions import BC_states
 from ManufacturedSolutions import compute_manufactured_sol_and_f_euler
@@ -334,7 +334,8 @@ class Solvers(object):
         
         self.solver_switch = {'mms_solver':[],
                               'explicit_unsteady_solver':[tfinal, dt],
-                              'explicit_steady_solver':[tfinal, dt]}
+                              'explicit_steady_solver':[tfinal, dt],
+                              'explicit_unsteady_solver_efficient_shockdiffraction':[tfinal,dt]}
         
         
         
@@ -558,7 +559,7 @@ class Solvers(object):
             #------------------------------------------------------------------
             # Compute the residual: res(i,:)
             #print("stage 1 compute residual")
-            self.compute_residual()
+            self.compute_residual(roe3D)
             
             #sys.exit()
             
@@ -597,7 +598,7 @@ class Solvers(object):
             #-----------------------------
             #- 2nd Stage of Runge-Kutta:
             #print("stage 2 compute residual")
-            self.compute_residual()
+            self.compute_residual(roe3D)
             #exit()
             for i in range(self.mesh.nCells):
                 self.u[i,:] = 0.5*( self.u[i,:] + self.u0[i,:] )  - \
@@ -648,17 +649,31 @@ class Solvers(object):
         self.eliminate_normal_mass_flux()
         
         #for jj in range(1): #debugging!
+        i_iteration = 0
         while (time < self.t_final):
             print(time)
             #------------------------------------------------------------------
             # Compute the residual: res(i,:)
             #print("stage 1 compute residual")
-            self.compute_residual()
+            self.compute_residual(roe2D)
             
             #sys.exit()
             
             self.compute_residual_norm()
             #print('res_norm = {}'.format(self.res_norm))
+            
+            
+            #--- Initial (no solution update yet) ------------
+            if (i_iteration == 0) :
+                
+                
+                print('t, step, Density    X-momentum  Y-momentum   Energy')
+                #print(" Iteration   max(res)    max(res)/max(res)_initial ")
+                print(time, i_iteration, np.max( self.res_norm[:] ))
+                
+            #--- After the first solution upate ------------
+            elif(i_iteration%1 == 0):
+                print(time, i_iteration, np.max( self.res_norm[:] ) )
             
             #------------------------------------------------------------------
             # Compute the global time step, dt. One dt for all cells.
@@ -679,8 +694,7 @@ class Solvers(object):
             
             #-----------------------------
             #- 1st Stage of Runge-Kutta:
-            #u0 = u: is solution data -  conservative variables at the cell centers I think
-            
+            #u0 = u: is solution data -save it-  conservative variables at the cell centers I think
             self.u0[:] = self.u[:]
             # slow test first
             for i in range(self.mesh.nCells):
@@ -692,7 +706,7 @@ class Solvers(object):
             #-----------------------------
             #- 2nd Stage of Runge-Kutta:
             #print("stage 2 compute residual")
-            self.compute_residual()
+            self.compute_residual(roe2D)
             #exit()
             for i in range(self.mesh.nCells):
                 self.u[i,:] = 0.5*( self.u[i,:] + self.u0[i,:] )  - \
@@ -700,7 +714,7 @@ class Solvers(object):
                 self.w[i,:] = self.u2w( self.u[i,:]  )
             
             self.compute_residual_norm()
-            print('res_norm = {}'.format(self.res_norm))
+            i_iteration += 1
             
         print(" End of Physical Time-Stepping")
         print("---------------------------------------")
@@ -761,7 +775,7 @@ class Solvers(object):
             #------------------------------------------------------------------
             # Compute the residual: res(i,:) (gradient computation is done within)
             #print("stage 1 compute residual")
-            self.compute_residual()
+            self.compute_residual(roe3D)
             #sys.exit()
             
             #Compute the residual norm for checking convergence.
@@ -836,7 +850,7 @@ class Solvers(object):
             #-----------------------------
             #- 2nd Stage of Runge-Kutta:
             #print("stage 2 compute residual")
-            self.compute_residual()
+            self.compute_residual(roe3D)
             #exit()
             for i in range(self.mesh.nCells):
                 self.u[i,:] = 0.5*( self.u[i,:] + self.u0[i,:] )  - \
@@ -874,9 +888,12 @@ class Solvers(object):
     # the cell-centered finite-volume discretization.
     #
     #-------------------------------------------------------------------------#
-    def compute_residual(self):
+    def compute_residual(self, flux=None):
         mesh = self.mesh
         
+        if flux==None:
+            flux = roe3D
+            
         # Gradients of primitive variables
         self.gradw1[:,:] = 0.0
         self.gradw2[:,:] = 0.0
@@ -915,7 +932,7 @@ class Solvers(object):
         # 3. Add it to the residual for 1, and subtract it from the residual for 2.
         #
         #----------------------------------------------------------------------
-        savei = 0
+        #savei = 0
         #print('do interior residual')
         #print('nfaces = ',len(self.mesh.faceList))
         for i,face in enumerate(mesh.faceList):
@@ -938,8 +955,8 @@ class Solvers(object):
                 c1 = face.parentcell     # Left cell of the face
                 c2 = adj_face.parentcell # Right cell of the face
                 
-                v1 = face.nodes[0] # Left node of the face
-                v2 = face.nodes[1] # Right node of the face
+                #v1 = face.nodes[0] # Left node of the face
+                #v2 = face.nodes[1] # Right node of the face
                 
                 
                 #print('v1 = ',v1.nid)
@@ -977,97 +994,19 @@ class Solvers(object):
                                                            c2.centroid,                #<- right cell centroid
                                                            xm, ym,                     #<- face midpoint
                                                            phi1, phi2,                 #<- Limiter functions
-                                                           )
+                                                           flux)
                 
                 #print(i, num_flux, wave_speed)
                 test = np.any(np.isnan(num_flux)) or np.isnan(wave_speed)
-                self.dbugIF = dbInterfaceFlux(u1, u2,                     #<- Left/right states
-                                    self.gradw1, self.gradw2,   #<- Left/right same gradients
-                                    face,                       #<- unit face //normal
-                                    c1,                         #<- Left cell // centroid
-                                    c2,                         #<- right cell // centroid
-                                    xm, ym,                     #<- face midpoint
-                                    phi1, phi2,                 #<- Limiter functions)
-                                    )
-                if test:
-                    self.dbugIF = dbInterfaceFlux(u1, u2,                     #<- Left/right states
-                                        self.gradw1, self.gradw2,   #<- Left/right same gradients
-                                        face,                       #<- unit //face normal
-                                        c1,                         #<- Left cell centroid
-                                        c2,                         #<- right cell centroid
-                                        xm, ym,                     #<- face midpoint
-                                        phi1, phi2,                 #<- Limiter functions)
-                                        )
-                    print('NAN on the interior')
-                    print(i, num_flux, wave_speed)
-                    self.save = [i, face, num_flux, wave_speed]
-                    self.save = {'i' : i,
-                                 'face' : face,
-                                 'num_flux':num_flux,
-                                 'wave_speed':wave_speed,
-                                 'u1':u1,
-                                 'u2':u2,
-                                 'c1':c1,
-                                 'c2':c2,
-                                 'xm':xm,
-                                 'ym':ym,
-                                 'phi1':phi1, 
-                                 'phi2':phi2
-                                 }
-                    #self.save = [i, face]
-                    '''
-                    i = self.save[0]
-                    face = self.save[1]
-                    wave_speed = self.save[2]
-                    '''
+                # self.dbugIF = dbInterfaceFlux(u1, u2,                     #<- Left/right states
+                #                     self.gradw1, self.gradw2,   #<- Left/right same gradients
+                #                     face,                       #<- unit face //normal
+                #                     c1,                         #<- Left cell // centroid
+                #                     c2,                         #<- right cell // centroid
+                #                     xm, ym,                     #<- face midpoint
+                #                     phi1, phi2,                 #<- Limiter functions)
+                #                     )
                 assert(not test), "Found a NAN in interior residual"
-                """
-                #debugging:
-                    
-                print( u1, u2     )
-                print( self.gradw1    )
-                print( self.gradw2    )
-                print( self.unit_face_normal    )
-                print( c1    )
-                print( c2    )
-                print( xm,ym    )
-                print( phi1,phi2    )
-                
-                print(self.dbugIF)
-                u1 = self.dbugIF.u1
-                u2 = self.dbugIF.u2
-                face = self.dbugIF.face
-                c1 = self.dbugIF.c1
-                c2 = self.dbugIF.c2
-                xm = self.dbugIF.xm
-                ym = self.dbugIF.ym
-                phi1 = self.dbugIF.phi1
-                phi2 = self.dbugIF.phi2
-                #dbugIF data
-                
-                print(u1)
-                print(u2)
-                print(face.normal_vector)
-                print(c1)
-                print(c2)
-                print(xm)
-                print(ym)
-                print(c1)
-                print(phi1)
-                print(phi2)
-                
-                
-                num_flux, wave_speed = self.interface_flux(u1, u2,                     #<- Left/right states
-                                                           self.gradw1, self.gradw2,   #<- Left/right same gradients
-                                                           face.normal_vector,         #<- unit face normal
-                                                           c1.centroid,                #<- Left cell centroid
-                                                           c2.centroid,                #<- right cell centroid
-                                                           xm, ym,                     #<- face midpoint
-                                                           phi1, phi2,                 #<- Limiter functions
-                                                           )
-                
-                
-                #"""
                 
                 #  Add the flux multiplied by the magnitude of the directed area vector to c1.
     
@@ -1083,10 +1022,6 @@ class Solvers(object):
                 # End of Residual computation: interior faces
                 #--------------------------------------------------------------------------------
                 
-                # print('i, residual [c1,:] = ',i,self.res[c1.cid,:])
-                # print('i, residual [c2,:] = ',i,self.res[c2.cid,:])
-                # print('i, wsn [c1] = ',i,self.wsn[c1.cid] )
-                # print('i, wsn [c2] = ',i,self.wsn[c2.cid] )
     
     
     
@@ -1114,7 +1049,7 @@ class Solvers(object):
         #
         # c = bcell, the cell having the boundary face j.
         #
-        savei = 0
+        #savei = 0
         #print('do boundary residual')
         for ib, bface in enumerate(self.mesh.boundaryList):
             """
@@ -1124,9 +1059,9 @@ class Solvers(object):
             #Cell having a boundary face defined by the set of nodes j and j+1.
             c1 = bface.parentcell
             
-            savei = ib
-            v1 = bface.nodes[0] # Left node of the face
-            v2 = bface.nodes[1] # Right node of the face
+            #savei = ib
+            #v1 = bface.nodes[0] # Left node of the face
+            #v2 = bface.nodes[1] # Right node of the face
             
             #print('v1 = ',v1.nid)
             #print('v2 = ',v2.nid)
@@ -1148,24 +1083,16 @@ class Solvers(object):
             
             self.unit_face_normal[:] = bface.normal_vector[:]
             
-            # print('xm,ym = ',xm,ym)
-            # print('u1 = ',u1)
-            #print('bface normal = ',self.unit_face_normal)
-            #print('input ub = {}, gradw2 = {}'.format(self.ub, self.gradw2))
             #---------------------------------------------------
             # Get the right state (weak BC!)
-            # print('ib = ',ib)
-            # print('self.bc_type[ib] = {}'.format(self.bc_type[ib]))
             self.ub = self.BC.get_right_state(xm,ym, 
                                     u1[:], 
                                     self.unit_face_normal, 
                                     self.bc_type[ib], #CBD (could be done): store these on the faces instead of seperate  (tlm what?...cells?) 
                                     )
-            #print('ub = {}'.format(self.ub))
             
             self.gradw2 = self.gradw2 #<- Gradient at the right state. Give the same gradient for now.
             
-            #print('ub = {}, gradw2 = {}'.format(self.ub, self.gradw2))
             
             #---------------------------------------------------
             # Compute a flux at the boundary face.
@@ -1178,81 +1105,10 @@ class Solvers(object):
                                                        [xm, ym],                    #<- Set right centroid = (xm,ym)
                                                        xm, ym,                      #<- face midpoint
                                                        phi1, phi2,                  #<- Limiter functions
-                                                       )
-            self.dbugIF = dbInterfaceFlux(u1, self.ub,                     #<- Left/right states
-                                    self.gradw1, self.gradw2,   #<- Left/right same gradients
-                                    bface,                      #<- unit face //normal
-                                    c1,                         #<- Left cell // centroid
-                                    [xm, ym],                         #<- TLM todo:  no cell availible here
-                                    xm, ym,                     #<- face midpoint
-                                    phi1, phi2,                 #<- Limiter functions)
-                                    )
+                                                       flux)
             test = np.any(np.isnan(self.wsn))  or np.isnan(wave_speed)
-            if test:
-                print('NAN at a boundary')
-                print(ib, num_flux, wave_speed)
-                self.save = [ib, bface, num_flux, wave_speed]
-                self.save = {'i' : ib,
-                             'face' : bface,
-                             'num_flux':num_flux,
-                             'wave_speed':wave_speed,
-                             'u1':u1,
-                             'u2':self.ub,
-                             'c1':c1,
-                             'c2':[xm, ym],
-                             'xm':xm,
-                             'ym':ym,
-                             'phi1':phi1, 
-                             'phi2':phi2
-                             }
             assert(not test), "Found a NAN in boundary residual"
             #print(c1.cid, num_flux, wave_speed)
-            
-            """
-            debugging:
-                
-                print(self.dbugIF)
-                u1 = self.dbugIF.u1
-                u2 = self.dbugIF.u2
-                face = self.dbugIF.face
-                c1 = self.dbugIF.c1
-                c2 = self.dbugIF.c2
-                xm = self.dbugIF.xm
-                ym = self.dbugIF.ym
-                phi1 = self.dbugIF.phi1
-                phi2 = self.dbugIF.phi2
-                #dbugIF data
-                
-                u1 = self.dbugIF.u1
-                u2 = self.dbugIF.u2
-                face = self.dbugIF.face
-                c1 = self.dbugIF.c1
-                c2 = self.dbugIF.c2
-                xm = self.dbugIF.xm
-                ym = self.dbugIF.ym
-                phi1 = self.dbugIF.phi1
-                phi2 = self.dbugIF.phi2
-                
-                gradw1 = self.dbugIF.gradw1
-                gradw2 = self.dbugIF.gradw2
-                
-                n12 =   self.dbugIF.face.normal_vector
-                C1  = c1.centroid
-                C2  = c2
-                
-                print( u1, u2     )
-                print( self.gradw1    )
-                print( self.gradw2    )
-                print( self.unit_face_normal    )
-                print( c1.centroid    )
-                print( c2    )
-                print( xm,ym    )
-                print( phi1,phi2    )
-                print( n12    )
-                print( C1    )
-                print( C2    )
-                
-            #"""
             #Note: No gradients available outside the domain, and use the gradient at cell c
             #      for the right state. This does nothing to inviscid fluxes (see below) but
             #      is important for viscous fluxes.
@@ -1261,8 +1117,6 @@ class Solvers(object):
             #      that doesn't exist is automatically cancelled: wR=wb+gradw*(xm-xc2)=wb.
             # so assert(wR == wb)
             
-            # print('ib, residual [c1,:] = ',c1.cid,self.res[c1.cid,:])
-            # print('ib, wsn [c1] = ',c1.cid,self.wsn[c1.cid] )
 
             #---------------------------------------------------
             #  Add the boundary contributions to the residual.
@@ -1272,8 +1126,6 @@ class Solvers(object):
             # # no c2 on the boundary
             # print('face_nrml_mag = ',bface.face_nrml_mag)
             
-            #print('ib, residual [c1,:] = ',c1.cid,self.res[c1.cid,:])
-            #print('ib, wsn [c1] = ',c1.cid,self.wsn[c1.cid] )
 
             # End of Residual computation: exterior faces
             #------------------------------------------------------------------
@@ -1318,50 +1170,77 @@ class Solvers(object):
     #********************************************************************************
     def eliminate_normal_mass_flux(self):
         
+        only_slip_wall = False
+        savei = -1
+        for i, bg in enumerate(self.mesh.bound):
+            if bg.bc_type == 'slip_wall': 
+                only_slip_wall = True #use this to only set the boundary node on the single corner node!  (very specilaized gridding, indeed)
+                savei = i
+                print(" Eliminating the normal momentum on slip wall boundary ", i)
+                
+                
+                
+        for ib, bface in enumerate(self.mesh.boundaryList):
+            if self.bc_type[ib] == 'slip_wall' and only_slip_wall:
+                ################################################################
+                # THIS IS A SPECIAL TREATMENT FOR SHOCK DIFFRACTION PROBLEM.
+                #
+                # NOTE: This is a corner point between the inflow boundary and
+                #       the lower-left wall. Enforce zero y-momentum, which is
+                #       not ensured by the standard BCs.
+                #       This special treatment is necessary because the domain
+                #       is rectangular (the left boundary is a straight ine) and
+                #       the midpoint node on the left boundary is actually a corner.
+                #
+                #       Our computational domain:
+                #
+                #                 ---------------
+                #          Inflow |             |
+                #                 |             |  o: Corner node
+                #          .......o             |
+                #            Wall |             |  This node is a corner.
+                #                 |             |
+                #                 ---------------
+                #
+                #       This is to simulate the actual domain shown below:
+                #      
+                #         -----------------------
+                # Inflow  |                     |
+                #         |                     |  o: Corner node
+                #         --------o             |
+                #            Wall |             |
+                #                 |             |
+                #                 ---------------
+                #      In effect, we're simulating this flow by a simplified
+                #      rectangular domain (easier to generate the grid).
+                #      So, an appropriate slip BC at the corner node needs to be applied,
+                #      which is "zero y-momentum", and that's all.
+                #
+                
+                # if (i==2 and j==1):
+                #             inode = bound(i)%bnode(j)
+                #  node(inode)%u(3) = zero               # Make sure zero y-momentum.
+                #  node(inode)%w    = u2w(node(inode)%u) #Update primitive variables
+                #  cycle bnodes_slip_wall # That's all we neeed. Go to the next.
+                
+                ################################################################
+                cid = bface.parentcell.cid
+                if only_slip_wall:
+                    self.u[cid,2] = 0.0                      # Make sure zero y-momentum.
+                    self.w[cid,:] = self.u2w(self.u[cid,:])  # Update primitive variables
+                    only_slip_wall = False
+                ################################################################
+                else:
+                    nij = bface.normal_vector
+                    normal_mass_flux = self.u[cid,1]*nij[0] + self.u[cid,2]*nij[1]
+                    
+                    #zero the normal mass flux:
+                    self.u[cid,1] = self.u[cid,1] - normal_mass_flux * nij[0]
+                    self.u[cid,2] = self.u[cid,2] - normal_mass_flux * nij[1]
+                    
+                    self.w[cid,:] = self.u2w(self.u[cid,:])
         
-        ################################################################
-        # THIS IS A SPECIAL TREATMENT FOR SHOCK DIFFRACTION PROBLEM.
-        #
-        # NOTE: This is a corner point between the inflow boundary and
-        #       the lower-left wall. Enforce zero y-momentum, which is
-        #       not ensured by the standard BCs.
-        #       This special treatment is necessary because the domain
-        #       is rectangular (the left boundary is a straight ine) and
-        #       the midpoint node on the left boundary is actually a corner.
-        #
-        #       Our computational domain:
-        #
-        #                 ---------------
-        #          Inflow |             |
-        #                 |             |  o: Corner node
-        #          .......o             |
-        #            Wall |             |  This node is a corner.
-        #                 |             |
-        #                 ---------------
-        #
-        #       This is to simulate the actual domain shown below:
-        #      
-        #         -----------------------
-        # Inflow  |                     |
-        #         |                     |  o: Corner node
-        #         --------o             |
-        #            Wall |             |
-        #                 |             |
-        #                 ---------------
-        #      In effect, we're simulating this flow by a simplified
-        #      rectangular domain (easier to generate the grid).
-        #      So, an appropriate slip BC at the corner node needs to be applied,
-        #      which is "zero y-momentum", and that's all.
-        #
-        
-        # if (i==2 and j==1):
-        #             inode = bound(i)%bnode(j)
-        #  node(inode)%u(3) = zero               # Make sure zero y-momentum.
-        #  node(inode)%w    = u2w(node(inode)%u) #Update primitive variables
-        #  cycle bnodes_slip_wall # That's all we neeed. Go to the next.
-        
-        ################################################################
-
+        print(" Finished eliminating the normal momentum on slip wall boundary ", savei)
         return
     
     #-------------------------------------------------------------------------#
@@ -1391,11 +1270,12 @@ class Solvers(object):
 
         '''
         #print('u',u)
+        nq=4
         w = np.zeros((nq),float)
         
+        ir = self.ir
         iu = self.iu
         iv = self.iv
-        ir = self.ir
         ip = self.ip
         
         
@@ -1633,7 +1513,7 @@ class Solvers(object):
                        C2,            # right centroid
                        xm, ym,              # face midpoint
                        phi1, phi2,          # limiter
-                       ):
+                       inviscid_flux):
         """
         outputs:
             num_flux,            # numerical flux (output)
@@ -1666,7 +1546,8 @@ class Solvers(object):
         xc1, yc1 = C1
         xc2, yc2 = C2
         zero = 0.0
-        inviscid_flux = roe
+        #if inviscid_flux is None:
+        #    inviscid_flux = roe #roe_primative
         
         # convert consertative to primitive variables at centroids.
         #print('u1 ',u1)
@@ -1830,7 +1711,7 @@ class Solvers(object):
             
         return
     
-    def initial_solution_shock_diffraction():
+    def initial_solution_shock_diffraction(self):
         '''
         ********************************************************************************
         * Initial solution for the shock diffraction problem:
@@ -2396,7 +2277,7 @@ if __name__ == '__main__':
                 3:'test.vtk',
                 4:'shock_diffraction.vtk'}
     
-    thisTest = 2
+    thisTest = 1
     whichTest = {0:TestInviscidVortex,
                  1:TestSteadyAirfoil,
                  2:TestSteadyCylinder,
@@ -2452,7 +2333,8 @@ if __name__ == '__main__':
         solvertype = {0:'explicit_unsteady_solver',
                       1:'explicit_steady_solver',
                       2:'explicit_steady_solver',
-                      3:'mms_solver',}
+                      3:'mms_solver',
+                      4:'explicit_unsteady_solver_efficient_shockdiffraction'}
         #'''
         self.solver_solve( tfinal=.1, dt=.01, 
                           solver_type = solvertype[thisTest])
