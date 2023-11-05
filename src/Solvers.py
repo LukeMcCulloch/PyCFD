@@ -1797,6 +1797,10 @@ class Solvers(object):
             self.M_inf = u_inf / np.sqrt(gamma*p_inf/rho_inf)
             self.v_inf = zero
             
+            
+            self.u_inf  = u_inf
+            self.p_inf = p_inf
+            
             # Set the initial solution: set the pre-shock state inside the domain.
             
             #node[i].w = np.asarray([ rho0, u0, v0, p0 ])
