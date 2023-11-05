@@ -7,7 +7,7 @@ Created on Mon Oct  9 08:21:51 2023
 
 import numpy as np
 
-def compute_manufactured_sol_and_f_euler(x,y):
+def compute_manufactured_sol_and_f_euler(x,y,f):
     
     pi = np.pi
     half = 0.5
@@ -232,7 +232,7 @@ def compute_manufactured_sol_and_f_euler(x,y):
     f[ienrgy]  =    rhouHx   +   rhovHy
     
     
-    return w,f
+    return w[:],f[:]
        
     # Note: Later, we'll perform the following to compute the residual for
     #                   dF(w)/dx + dG(w)/dy = f

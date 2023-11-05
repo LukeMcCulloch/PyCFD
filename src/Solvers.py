@@ -162,6 +162,10 @@ class Solvers(object):
         self.u = np.zeros((mesh.nCells,nq),float) # conservative variables at cells/nodes
         self.w = np.zeros((mesh.nCells,nq),float) # primative variables at cells/nodes
         self.gradw = np.zeros((mesh.nCells,nq,self.dim),float) # gradients of w at cells/nodes.
+        
+        #source (forcing) data, if any
+        self.f = np.zeros((mesh.nCells,nq),float)
+        
         #
         self.u0 = np.zeros((mesh.nCells,nq),float) #work array
         #
@@ -475,18 +479,24 @@ class Solvers(object):
         for i in range(self.mesh.nbound):
             print("  Dirichlet BC enforced: ", i, self.mesh.bound[i].bc_type )
         
-        # Allocate a forcing term array:
-        f = np.zeros((nCells,4),float)
+        # zero a forcing term array:
+        self.f[:,:] = zero
         
         #----------------------------------------------------------------------
         #----------------------------------------------------------------------
         # loop over all cells
         #for i in range(self.mesh.nCells):
         #    cell = self.mesh.cells[i]
-        for i, cell in enumerate(mesh.cells):
+        for cell in mesh.cells:
+            i = cell.cid
             # Compute and store w (exact soltion in primitive variables) and f:
-            self.w[i,:], f[i,:] = compute_manufactured_sol_and_f_euler(cell.centroid[0],
-                                                                       cell.centroid[1])
+            self.w[i,:], self.f[i,:] = compute_manufactured_sol_and_f_euler(cell.centroid[0],
+                                                             cell.centroid[1],
+                                                             self.f[i,:])
+            
+            
+            #print('i, w(c1) = ',i, self.w[i,:])
+            #print('i, f(c1) = ',i, self.f[i,:])
             
             # Compute conservative variables from primitive variables.
             
@@ -500,7 +510,7 @@ class Solvers(object):
         #Note: Res is an integral of Fx+Gy. So, the forcing term is also integrated,
         #      and so multiplied by the cell volume.
         for i, cell in enumerate(mesh.cells):
-            self.res[i,:] -= f[i,:]*cell.volume
+            self.res[i,:] -= self.f[i,:]*cell.volume
         
         # Compute L1 norms and print them on screen.
         
@@ -527,7 +537,7 @@ class Solvers(object):
     # This subroutine solves an un steady problem by 2nd-order TVD-RK with a
     # global time step.
     #-------------------------------------------------------------------------#
-    def explicit_unsteady_solver(self, tfinal=1.0, dt=.01):
+    def explicit_unsteady_solver(self, tfinal=1.0, dt=.01, itermax=1):
         """
         
         debugging:
@@ -538,6 +548,7 @@ class Solvers(object):
         """
         print('call explicit_unsteady_solver')
         time = 0.0
+        itercount = 0
         
         self.t_final = tfinal
         
@@ -554,7 +565,7 @@ class Solvers(object):
         #self.eliminate_normal_mass_flux()
         
         #for jj in range(1): #debugging!
-        while (time < self.t_final):
+        while (time < self.t_final and itercount < itermax):
             print(time)
             #------------------------------------------------------------------
             # Compute the residual: res(i,:)
@@ -608,6 +619,7 @@ class Solvers(object):
             self.compute_residual_norm()
             print('res_norm = {}'.format(self.res_norm))
             
+            itercount += 1
         print(" End of Physical Time-Stepping")
         print("---------------------------------------")
         return
@@ -741,7 +753,7 @@ class Solvers(object):
                                tfinal=1.0, 
                                dt=.01, 
                                tol=1.e-5, 
-                               max_iteration = 1000):
+                               max_iteration = 500):
         """
         
         debugging:
@@ -820,7 +832,7 @@ class Solvers(object):
             
             #------------------------------------------------------
             # Compute the local time step, dtau.
-            dt = self.compute_global_time_step()#*.5
+            self.compute_local_time_step_dtau()
             
             
             #------------------------------------------------------------------
@@ -843,7 +855,7 @@ class Solvers(object):
             # slow test first
             for i in range(self.mesh.nCells):
                 self.u[i,:] = self.u0[i,:] - \
-                                (dt/self.mesh.cells[i].volume) * self.res[i,:] #This is R.K. intermediate u*.
+                                (self.dtau[i]/self.mesh.cells[i].volume) * self.res[i,:] #This is R.K. intermediate u*.
                 self.w[i,:] = self.u2w( self.u[i,:]  )
                 
                 
@@ -854,7 +866,7 @@ class Solvers(object):
             #exit()
             for i in range(self.mesh.nCells):
                 self.u[i,:] = 0.5*( self.u[i,:] + self.u0[i,:] )  - \
-                                0.5*(dt/self.mesh.cells[i].volume) * self.res[i,:]
+                                0.5*(self.dtau[i]/self.mesh.cells[i].volume) * self.res[i,:]
                 self.w[i,:] = self.u2w( self.u[i,:]  )
                 
             #pseudo_time_loop = False
@@ -935,7 +947,7 @@ class Solvers(object):
         #savei = 0
         #print('do interior residual')
         #print('nfaces = ',len(self.mesh.faceList))
-        for i,face in enumerate(mesh.faceList):
+        for face in mesh.faceList:
             """
             #debugging:
             i = self.save[0]
@@ -970,7 +982,9 @@ class Solvers(object):
                 
                 self.unit_face_normal[:] = face.normal_vector[:] # Unit face normal vector: c1 -> c2.
                 
-                #print('unit_face_normal = ',self.unit_face_normal)
+                print('self.gradw1 = ',self.gradw1)
+                print('self.gradw2 = ',self.gradw2)
+                print('unit_face_normal = ',self.unit_face_normal)
                 #Face midpoint at which we compute the flux.
                 xm,ym = face.center
                 
@@ -996,7 +1010,7 @@ class Solvers(object):
                                                            phi1, phi2,                 #<- Limiter functions
                                                            flux)
                 
-                #print(i, num_flux, wave_speed)
+                print('id, num_flux, wave_speed = ',c1.cid, num_flux, wave_speed)
                 test = np.any(np.isnan(num_flux)) or np.isnan(wave_speed)
                 # self.dbugIF = dbInterfaceFlux(u1, u2,                     #<- Left/right states
                 #                     self.gradw1, self.gradw2,   #<- Left/right same gradients
@@ -1018,6 +1032,13 @@ class Solvers(object):
                 
                 self.res[c2.cid,:] -= num_flux * face.face_nrml_mag
                 self.wsn[c2.cid] += wave_speed * face.face_nrml_mag
+                
+                print('i, res(c1) = ',c1.cid, self.res[c1.cid,:])
+                print('i, res(c2) = ',c2.cid, self.res[c2.cid,:])
+                print('i, wsn(c1) = ',c1.cid, self.wsn[c1.cid])
+                print('i, wsn(c2) = ',c2.cid, self.wsn[c2.cid])
+                
+                print('--------------------------')
     
                 # End of Residual computation: interior faces
                 #--------------------------------------------------------------------------------
@@ -1060,11 +1081,11 @@ class Solvers(object):
             c1 = bface.parentcell
             
             #savei = ib
-            #v1 = bface.nodes[0] # Left node of the face
-            #v2 = bface.nodes[1] # Right node of the face
+            v1 = bface.nodes[0] # Left node of the face
+            v2 = bface.nodes[1] # Right node of the face
             
-            #print('v1 = ',v1.nid)
-            #print('v2 = ',v2.nid)
+            print('v1 = ',v1.nid)
+            print('v2 = ',v2.nid)
             
             #Face midpoint at which we compute the flux.
             xm,ym = bface.center
@@ -1089,15 +1110,17 @@ class Solvers(object):
                                     u1[:], 
                                     self.unit_face_normal, 
                                     self.bc_type[ib], #CBD (could be done): store these on the faces instead of seperate  (tlm what?...cells?) 
-                                    )
+                                    f=self.f[c1.cid])
             
             self.gradw2 = self.gradw2 #<- Gradient at the right state. Give the same gradient for now.
             
             
+            
+            print('u1 = ',u1)
             #---------------------------------------------------
             # Compute a flux at the boundary face.
-            # print('ub = ',self.ub)
-            # print('------------------')
+            print('bface normal = ', self.unit_face_normal)
+            print('ub = ',self.ub)
             num_flux, wave_speed = self.interface_flux(u1[:], self.ub,                      #<- Left/right states
                                                        self.gradw1, self.gradw2,    #<- Left/right same gradients
                                                        self.unit_face_normal,       #<- unit face normal
@@ -1124,8 +1147,12 @@ class Solvers(object):
             self.wsn[c1.cid] += wave_speed * bface.face_nrml_mag
 
             # # no c2 on the boundary
-            # print('face_nrml_mag = ',bface.face_nrml_mag)
+            print('face_nrml_mag = ',bface.face_nrml_mag)
             
+            
+            print(' res(c1) = ', self.res[c1.cid,:])
+            print(' wsn(c1) = ', self.wsn[c1.cid])
+            print('------------------')
 
             # End of Residual computation: exterior faces
             #------------------------------------------------------------------
@@ -1158,6 +1185,12 @@ class Solvers(object):
                                      )
         
         return physical_time_step
+    
+    def compute_local_time_step_dtau(self):
+        CFL = self.Parameters.CFL
+        for i, cell in enumerate(self.mesh.cells):
+            self.dtau[i] =  CFL*self.mesh.cells[i].volume / ( 0.5*self.wsn[i] )
+        return 
     
     
     #********************************************************************************
@@ -2280,7 +2313,7 @@ if __name__ == '__main__':
                 3:'test.vtk',
                 4:'shock_diffraction.vtk'}
     
-    thisTest = 2
+    thisTest = 3
     whichTest = {0:TestInviscidVortex,
                  1:TestSteadyAirfoil,
                  2:TestSteadyCylinder,

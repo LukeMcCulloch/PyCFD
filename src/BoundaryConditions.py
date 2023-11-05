@@ -42,7 +42,8 @@ class BC_states(object):
     def get_right_state(self, 
                         xb, yb,
                         ucL, njk,
-                        bc_state_type):
+                        bc_state_type,
+                        f):
         """
         # ---------------------------------------------------------------------
         #
@@ -94,7 +95,7 @@ class BC_states(object):
                     'symmetry_y':[wL,njk,wb],
                     'slip_wall':[wL,njk, wb],
                     'outflow_supersonic':[wL, wb],
-                    'dirichlet':[xb,yb]
+                    'dirichlet':[xb,yb,f[:]]
                     }
         
         #print('before:  wL,njk, wb',wL,njk, wb)
@@ -129,7 +130,7 @@ class BC_states(object):
     #**************************************************************************
     # Dirichlet
     #**************************************************************************
-    def dirichlet(self, xb, yb):
+    def dirichlet(self, xb, yb, f):
         #print("dirichlet, mms")
         #print( 'got wb',wb)
         # flowstate = self.flowstate
@@ -137,7 +138,7 @@ class BC_states(object):
         # wb[2] = 0.0
         # #print( 'set wb',wb)
         #Dirichlet assumes the manufactured solution: so, compute wb for (xb,yb)
-        return compute_manufactured_sol_and_f_euler(xb,yb) #TODO: fix return!
+        return compute_manufactured_sol_and_f_euler(xb,yb,f[:]) #TODO: fix return!
     
     
     #**************************************************************************
