@@ -1023,9 +1023,9 @@ class Solvers(object):
                 
                 self.unit_face_normal[:] = face.normal_vector[:] # Unit face normal vector: c1 -> c2.
                 
-                print('self.gradw1 = ',self.gradw1)
-                print('self.gradw2 = ',self.gradw2)
-                print('unit_face_normal = ',self.unit_face_normal)
+                #print('self.gradw1 = ',self.gradw1)
+                #print('self.gradw2 = ',self.gradw2)
+                #print('unit_face_normal = ',self.unit_face_normal)
                 #Face midpoint at which we compute the flux.
                 xm,ym = face.center
                 
@@ -1051,7 +1051,7 @@ class Solvers(object):
                                                            phi1, phi2,                 #<- Limiter functions
                                                            flux)
                 
-                print('id, num_flux, wave_speed = ',c1.cid, num_flux, wave_speed)
+                #print('id, num_flux, wave_speed = ',c1.cid, num_flux, wave_speed)
                 test = np.any(np.isnan(num_flux)) or np.isnan(wave_speed)
                 # self.dbugIF = dbInterfaceFlux(u1, u2,                     #<- Left/right states
                 #                     self.gradw1, self.gradw2,   #<- Left/right same gradients
@@ -1074,12 +1074,12 @@ class Solvers(object):
                 self.res[c2.cid,:] -= num_flux * face.face_nrml_mag
                 self.wsn[c2.cid] += wave_speed * face.face_nrml_mag
                 
-                print('i, res(c1) = ',c1.cid, self.res[c1.cid,:])
-                print('i, res(c2) = ',c2.cid, self.res[c2.cid,:])
-                print('i, wsn(c1) = ',c1.cid, self.wsn[c1.cid])
-                print('i, wsn(c2) = ',c2.cid, self.wsn[c2.cid])
+                # print('i, res(c1) = ',c1.cid, self.res[c1.cid,:])
+                # print('i, res(c2) = ',c2.cid, self.res[c2.cid,:])
+                # print('i, wsn(c1) = ',c1.cid, self.wsn[c1.cid])
+                # print('i, wsn(c2) = ',c2.cid, self.wsn[c2.cid])
                 
-                print('--------------------------')
+                # print('--------------------------')
     
                 # End of Residual computation: interior faces
                 #--------------------------------------------------------------------------------
@@ -1125,8 +1125,8 @@ class Solvers(object):
             v1 = bface.nodes[0] # Left node of the face
             v2 = bface.nodes[1] # Right node of the face
             
-            print('v1 = ',v1.nid)
-            print('v2 = ',v2.nid)
+            # print('v1 = ',v1.nid)
+            # print('v2 = ',v2.nid)
             
             #Face midpoint at which we compute the flux.
             xm,ym = bface.center
@@ -1157,11 +1157,11 @@ class Solvers(object):
             
             
             
-            print('u1 = ',u1)
+            # print('u1 = ',u1)
             #---------------------------------------------------
             # Compute a flux at the boundary face.
-            print('bface normal = ', self.unit_face_normal)
-            print('ub = ',self.ub)
+            # print('bface normal = ', self.unit_face_normal)
+            # print('ub = ',self.ub)
             num_flux, wave_speed = self.interface_flux(u1[:], self.ub,                      #<- Left/right states
                                                        self.gradw1, self.gradw2,    #<- Left/right same gradients
                                                        self.unit_face_normal,       #<- unit face normal
@@ -1188,12 +1188,12 @@ class Solvers(object):
             self.wsn[c1.cid] += wave_speed * bface.face_nrml_mag
 
             # # no c2 on the boundary
-            print('face_nrml_mag = ',bface.face_nrml_mag)
+            # print('face_nrml_mag = ',bface.face_nrml_mag)
             
             
-            print(' res(c1) = ', self.res[c1.cid,:])
-            print(' wsn(c1) = ', self.wsn[c1.cid])
-            print('------------------')
+            # print(' res(c1) = ', self.res[c1.cid,:])
+            # print(' wsn(c1) = ', self.wsn[c1.cid])
+            # print('------------------')
 
             # End of Residual computation: exterior faces
             #------------------------------------------------------------------
@@ -1409,6 +1409,7 @@ class Solvers(object):
     #
     #**************************************************************************
     def compute_limiter(self):
+        #print('compute_limiter')
         # loop cells
         for cell in self.mesh.cells:
             i = cell.cid
@@ -1557,7 +1558,7 @@ class Solvers(object):
         #
         #*******************************************************************************
         """
-        print('compute_gradients')
+        #print('compute_gradients')
         #init gradient to zero
         self.gradw[:,:,:] = 0.
         
