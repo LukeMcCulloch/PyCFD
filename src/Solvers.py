@@ -406,14 +406,17 @@ class Solvers(object):
         #instability known for Euler solvers. So, this is the unweighted LSQ gradient.
         #More accurate gradients are obtained with 1.0, and such can be used for the
         #viscous terms and source terms in turbulence models.
-        lsq_weight_invdis_power = 1.0
+        lsq_weight_invdis_power = 0.0
+        #lsq_weight_invdis_power = 1.0
         
         
         #----------------------------------------------------------------------
         #----------------------------------------------------------------------
         # compute the LSQ coefficients (cx, cy) in all cells
-        for i in range(self.mesh.nCells):
-            cell = self.mesh.cells[i]
+        #for i in range(self.mesh.nCells): #note: this original i loop also works
+        for cell in self.mesh.cells:
+            #cell = self.mesh.cells[i] #note: this also works with the original i loop
+            i = cell.cid
             #------------------------------------------------------------------
             #Define the LSQ problem size
             m = self.cclsq[i].nnghbrs_lsq
@@ -1552,7 +1555,8 @@ class Solvers(object):
         #   where [cx,cy] are the LSQ coefficients.
         #
         #*******************************************************************************
-        """        
+        """
+        print('compute_gradients')
         #init gradient to zero
         self.gradw[:,:,:] = 0.
         
@@ -1560,7 +1564,7 @@ class Solvers(object):
         for ivar in range(nq):
             
             #compute gradients in all cells
-            for i, cell in enumerate(self.mesh.cells):
+            for cell in self.mesh.cells:
                 ci = cell.cid
                 
                 wi = self.w[ci, ivar] #solution at this cell
