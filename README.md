@@ -25,21 +25,6 @@ An unstructured solver for the Euler equations on a 2D grid, prototyped in Pytho
 
 
 
-# Cartesian mesh
-
-![LSQ gradient stencil at the cell colored in green](pics/CarteasianCheckMesh.png)
-
-Normals, centroids, face centers, edges, and vertices shown.
-
-# Tri mesh
-
-![LSQ gradient stencil at the cell colored in green](pics/TriangularCheckMesh.png)
-
-Normals, centroids, face centers, edges, and vertices shown.
-
-
-
-
 # Testing
 
 The implemenatation is pretty well finished, but I am expanding it.  Right now, the explicity steady solver is known to work well for the cylinder and airfoil test cases.  You can also run the "System2D.py" file and get plots showing small tri and quad grids.  The solver treats all meshes as unstructured by design.  The point of this exercise is to go through the motions of implementing an unstructrued Euler solver before "doing the real thing" in C++.  
@@ -56,6 +41,8 @@ Update:  need to update the initial vortex:
 
 ![StrongVortex](pics/solution/AlmostVortex.png)
 
+
+
 Here are plots of density and pressure, done with two different methods of interpolating unstructured data to a cartesian grid for plotting.  Not sure which is better just yet.
 
 ![DensityPress](pics/solution/DensityAndPressure.png)
@@ -68,6 +55,23 @@ Hmm... That was for a tri-mesh.  Here is the same on a quad mesh:
 
 
 ![DensityPress](pics/solution/DensityAndPressureQuad.png)
+
+# Unstructured mesh physics reconstruction
+
+# # Quad Mesh
+
+![LSQ gradient stencil at the cell colored in green](pics/CarteasianCheckMesh.png)
+
+Normals, centroids, face centers, edges, and vertices shown.
+
+# # Tri mesh
+
+![LSQ gradient stencil at the cell colored in green](pics/TriangularCheckMesh.png)
+
+Normals, centroids, face centers, edges, and vertices shown.
+
+
+
 
 Cheers,
 
