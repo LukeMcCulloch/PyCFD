@@ -806,7 +806,7 @@ class Solvers(object):
         time = 0.0
         
         self.t_final = tfinal
-        
+        self.max_iteration = max_iteration
         
         #-----------------------------------------------------------------------------
         #-----------------------------------------------------------------------------
@@ -816,6 +816,7 @@ class Solvers(object):
         print()
         print("---------------------------------------")
         print(" Pseudo time-Stepping")
+        print('max_iteration = ',max_iteration)
         print()
         
         
@@ -1708,17 +1709,10 @@ class Solvers(object):
         """
         print( "setting: set_initial_solution freestream")
         
-        iparam = self.mesh.dhandle.inputParameters
-        if not(iparam['aoa'] == False):
-            self.aoa = iparam['aoa']
-            aoa = self.aoa
+        aoa = self.aoa
+        
+        M_inf = self.M_inf
             
-        if not(iparam['M_inf'] == False):
-            self.M_inf = iparam['M_inf']
-            M_inf = self.M_inf
-            
-        if not(iparam['CFL'] == False):
-            self.CFL = iparam['CFL']
             
         
             
@@ -2373,7 +2367,7 @@ if __name__ == '__main__':
                 3:'test.vtk',
                 4:'shock_diffraction.vtk'}
     
-    thisTest = 3
+    thisTest = 1
     whichTest = {0:TestInviscidVortex,
                  1:TestSteadyAirfoil,
                  2:TestSteadyCylinder,
