@@ -76,7 +76,8 @@ class DataHandler(object):
                               'CFL' : False,
                               'second_order' : False,
                               'first_order' : False,
-                              'use_limiter' : False}
+                              'use_limiter' : False,
+                              'compute_te_mms' : False}
     
     def readinput(self):
         self.ilines = GetLines(directory = self.path_to_inputs_folder,

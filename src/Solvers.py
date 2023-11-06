@@ -577,7 +577,7 @@ class Solvers(object):
     # This subroutine solves an un steady problem by 2nd-order TVD-RK with a
     # global time step.
     #-------------------------------------------------------------------------#
-    def explicit_unsteady_solver(self, tfinal=1.0, dt=.01, itermax=1):
+    def explicit_unsteady_solver(self, tfinal=10.0, dt=.01, itermax=1000):
         """
         
         debugging:
@@ -2368,7 +2368,7 @@ if __name__ == '__main__':
                 3:'test.vtk',
                 4:'shock_diffraction.vtk'}
     
-    thisTest = 1
+    thisTest = 0
     whichTest = {0:TestInviscidVortex,
                  1:TestSteadyAirfoil,
                  2:TestSteadyCylinder,
@@ -2427,7 +2427,7 @@ if __name__ == '__main__':
                       3:'mms_solver',
                       4:'explicit_unsteady_solver_efficient_shockdiffraction'}
         #'''
-        self.solver_solve( tfinal=.1, dt=.01, 
+        self.solver_solve( tfinal=10., dt=.01, 
                           solver_type = solvertype[thisTest])
         
         self.write_solution_to_vtk(vtkNames[thisTest])
