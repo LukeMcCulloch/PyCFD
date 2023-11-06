@@ -42,9 +42,17 @@ Normals, centroids, face centers, edges, and vertices shown.
 
 # Testing
 
-The implemenatation is not yet finished.  Right now, I am working through the explicit Euler solver (Runge Kutta time stepping at the moment)  You can run the "solver.py" file directly and make pictures of LSQ stencils around any cell.  You can also run the "System2D.py" file (sorry for stupid naming) and get plots showing small tri and quad grids, generated in a structured fashion, but used as if they were fully unstructured.  This is by design.  The point of this exercise is to go through the motions of implementing an unstructrued Euler solver before "doing the real thing" in C++.  At any rate, this code should have utility in showing how things fit together.  
+The implemenatation is pretty well finished, but I am expanding it.  Right now, the explicity steady solver is known to work well for the cylinder and airfoil test cases.  You can also run the "System2D.py" file and get plots showing small tri and quad grids.  The solver treats all meshes as unstructured by design.  The point of this exercise is to go through the motions of implementing an unstructrued Euler solver before "doing the real thing" in C++.  
 
-Update:  getting quite a bit closer.  Need to check through everything as time permits but here we have an initial vortex:
+Here's a sample result of flow over an airfoil:
+
+![AirfoilDensity](pics/test_cases/steady_airfoil/density.png)
+![AirfoilDensity](pics/test_cases/steady_airfoil/x-velocity.png)
+![AirfoilDensity](pics/test_cases/steady_airfoil/y-velocity.png)
+![AirfoilDensity](pics/test_cases/steady_airfoil/pressure.png)
+
+
+Update:  need to update the initial vortex:
 
 ![StrongVortex](pics/solution/AlmostVortex.png)
 
