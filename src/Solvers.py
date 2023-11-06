@@ -152,11 +152,20 @@ class Solvers(object):
         #                      'explicit':self.explicit_unsteady_solver,
         #                      'implicit':None}
         
-        self.Parameters = Parameters()
+        self.iparams = self.mesh.dhandle.inputParameters #parse the dictionary of input.nml data that the mesher read in through dhandle.inputParameters
+        self.Parameters = Parameters(self.iparams)
+        self.aoa = self.Parameters.aoa
+        self.M_inf = self.Parameters.M_inf
+        self.CFL = self.Parameters.CFL
+        self.use_limiter = self.Parameters.use_limiter
+        self.second_order = self.Parameters.second_order
+        self.eig_limiting_factor = self.Parameters.eig_limiting_factor
+        self.inviscid_flux = self.Parameters.inviscid_flux
+        self.compute_te_mms = self.Parameters.compute_te_mms
         
         
-        self.second_order = True
-        self.use_limiter = True
+        #self.second_order = True
+        #self.use_limiter = True
         
         # solution data
         self.u = np.zeros((mesh.nCells,nq),float) # conservative variables at cells/nodes
@@ -285,7 +294,33 @@ class Solvers(object):
         #                                           self.p_inf) ) 
         
         
+    def print_nml_data(self):
+        # for data in [self.aoa,
+        #              self.M_inf,
+        #              self.CFL,
+        #              self.use_limiter,
+        #              self.second_order,
+        #              self.eig_limiting_factor]:
+        #     name = f'{data=}'.split('=')[0].split('.')[-1]
+        #     print(name = data)
         
+        print('----------------------------')
+        print('input.nml data')
+        print('aoa =',self.aoa)
+        print('M_inf =',self.M_inf)
+        print('CFL =',self.CFL)
+        
+        print('compute_te_mms = ',self.compute_te_mms)
+        
+              
+        print('inviscid_flux =',self.inviscid_flux)
+        print('eig_limiting_factor =',self.eig_limiting_factor)
+        
+        print('second_order =',self.second_order)
+        print('use_limiter =',self.use_limiter)
+        print('----------------------------')
+        return
+    
     def solver_boot(self, flowtype = 'vortex'):
         
         #self.compute_lsq_coefficients()
@@ -495,8 +530,8 @@ class Solvers(object):
                                                              self.f[i,:])
             
             
-            #print('i, w(c1) = ',i, self.w[i,:])
-            #print('i, f(c1) = ',i, self.f[i,:])
+            print('i, w(c1) = ',i, self.w[i,:])
+            print('i, f(c1) = ',i, self.f[i,:])
             
             # Compute conservative variables from primitive variables.
             
@@ -509,7 +544,8 @@ class Solvers(object):
         #Subtract the forcing term.
         #Note: Res is an integral of Fx+Gy. So, the forcing term is also integrated,
         #      and so multiplied by the cell volume.
-        for i, cell in enumerate(mesh.cells):
+        for cell in mesh.cells:
+            i = cell.cid
             self.res[i,:] -= self.f[i,:]*cell.volume
         
         # Compute L1 norms and print them on screen.
@@ -518,7 +554,8 @@ class Solvers(object):
         norm1 = zero
         
         # Sum of absolute values:
-        for i, cell in enumerate(mesh.cells):
+        for cell in mesh.cells:
+            i = cell.cid
             norm1 += abs(self.res[i,:]/cell.volume) #TE = Res/Volume.
             
         # Take an average; this is the TE.
@@ -1667,6 +1704,21 @@ class Solvers(object):
         """
         print( "setting: set_initial_solution freestream")
         
+        iparam = self.mesh.dhandle.inputParameters
+        if not(iparam['aoa'] == False):
+            self.aoa = iparam['aoa']
+            aoa = self.aoa
+            
+        if not(iparam['M_inf'] == False):
+            self.M_inf = iparam['M_inf']
+            M_inf = self.M_inf
+            
+        if not(iparam['CFL'] == False):
+            self.CFL = iparam['CFL']
+            
+        
+            
+        
         # Set free stream values based on the input Mach number.
         self.rho_inf = 1.0
         self.u_inf = M_inf*np.cos(aoa *np.pi/180.0) #aoa converted from degree to radian
@@ -2433,4 +2485,4 @@ if __name__ == '__main__':
         
         
         #'''
-        
+        self.print_nml_data()

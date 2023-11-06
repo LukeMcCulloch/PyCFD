@@ -17,6 +17,10 @@ class DataHandler(object):
         
         self.path_to_inputs_folder = path_to_inputs_folder
         
+        
+        #----------------------------------------------------------
+        # Input parameters file
+        self.filename_nml = 'input.nml'
         self.makeDictionary()
         self.readinput()
         project_name = self.inputParameters['project_name']
@@ -28,6 +32,7 @@ class DataHandler(object):
         #----------------------------------------------------------
         # Input boundary condition file (ASCII file)
         self.filename_bc = project_name + ".bc"
+        
         
         #----------------------------------------------------------
         # Output: plot file (ASCII file)
@@ -41,9 +46,23 @@ class DataHandler(object):
         # Output: plot file (ASCII file)
         self.filename_plot_hist = project_name + "._plot_hist.dat"
         
+        #for key in self.inputParameters.keys():
+        #    val = self.inputParameters[key]
+        #    #print(key, ' , ', val)
+        #    if val == 'T':
+        #        self.inputParameters[key] = True
+                
+                
+            
+        
+        
         print(" End of file names setup..... ")
     
     def makeDictionary(self):
+        '''
+        todo: make dictionary completely on the fly 
+        handle all else with defaults in the solver parameters
+        '''
         
         self.inputParameters = {'project_name' : False,
                               'steady_or_unsteady' : False,
@@ -55,12 +74,20 @@ class DataHandler(object):
                               'inviscid_flux' : False,
                               'eig_limiting_factor' : False,
                               'CFL' : False,
-                              'second_order' : False}
+                              'second_order' : False,
+                              'first_order' : False,
+                              'use_limiter' : False}
     
     def readinput(self):
-        self.ilines = GetLines(directory = self.path_to_inputs_folder,filename = 'input.nml')
+        self.ilines = GetLines(directory = self.path_to_inputs_folder,
+                               filename = self.filename_nml)
         for line in self.ilines:
             tokens = line.split()
-            if len(tokens)>2:
+            if len(tokens) == 3:
                 self.inputParameters[tokens[0]] = tokens[2]
+            elif len(tokens) > 3:
+                self.inputParameters[tokens[0]] = []
+                newtokens = line.split(',')
+                for tok in newtokens[2:]:
+                    self.inputParameters[tokens[0]].append(float(tok))
         return

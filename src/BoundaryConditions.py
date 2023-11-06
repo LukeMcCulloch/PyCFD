@@ -101,7 +101,7 @@ class BC_states(object):
         #print('before:  wL,njk, wb',wL,njk, wb)
         
         if bc_state_type == 'dirichlet':
-            wb[:], f = getattr(self, bc_state_type)(*vs_cases[bc_state_type])
+            wb[:], f[:] = getattr(self, bc_state_type)(*vs_cases[bc_state_type])
         else:
             wb[:] = getattr(self, bc_state_type)(*vs_cases[bc_state_type])
 

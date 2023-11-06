@@ -686,6 +686,8 @@ class Grid(object):
         self.heffv = None   # Effecrtive spacing based on # of nodes
         self.heffc = None   # Effecrtive spacing based on # of cells
         
+        self.dhandle = dhandle
+        
         if self.generated:
             self.nNodes = m*n
             
@@ -728,7 +730,10 @@ class Grid(object):
             self.nodes = np.asarray(self.nodes)
             self.nodes_array = np.asarray(self.nodeList) #is this at all faster?
         
-        else: #read text files...
+        else:
+            ##########################################################
+            #read input files...
+            ##########################################################
             self.generated = generated
             self.elm = []
             handle = GetLineByLine(directory = dhandle.path_to_inputs_folder,
@@ -736,6 +741,10 @@ class Grid(object):
             
             handleBC = GetLineByLine(directory = dhandle.path_to_inputs_folder,
                                        filename = dhandle.filename_bc)
+            
+            #already done
+            #handleNMl = GetLineByLine(directory = dhandle.path_to_inputs_folder,
+            #                           filename = dhandle.filename_nml)
             print('\n\nReading the grid file....{}'.format(
                   dhandle.filename_grid))
             nnodes, ntria, nquad = (handle.readline()).split()
@@ -835,7 +844,10 @@ class Grid(object):
             print('      triangles = {}'.format(self.ntria))
             print('          quads = {}'.format(self.nquad))
             
+            
+            ##########################################################
             #read boundary data
+            ##########################################################
             nbound = int((handle.readline()).split()[0]) #number of boundaries each with possible different conditions
             self.bound = []
             self.boundcount = []
@@ -928,6 +940,12 @@ class Grid(object):
             
             self.cleanFaceList()
             self.orderBoundaryList()
+            
+            
+            ##########################################################
+            #not to be done here: read input.iml file
+            ##########################################################
+            # already done in DataHandler.py
             
         if self.generated:
             # now cells and faces:
