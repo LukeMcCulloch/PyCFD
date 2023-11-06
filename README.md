@@ -18,8 +18,9 @@ An unstructured solver for the Euler equations on a 2D grid, prototyped in Pytho
 
 # Optional
 1. memory_profile
+2. paraview for viewing vtk output files
 
-# Some implementation details pictured
+# Unstructured mesh physics reconstruction
 
 ![LSQ gradient stencil at the cell colored in green](pics/stencil_57.png)
 
@@ -56,7 +57,8 @@ Hmm... That was for a tri-mesh.  Here is the same on a quad mesh:
 
 ![DensityPress](pics/solution/DensityAndPressureQuad.png)
 
-# Unstructured mesh physics reconstruction
+
+# Basic Mesh Plots in Python
 
 # # Quad Mesh
 
