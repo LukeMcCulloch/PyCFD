@@ -14,7 +14,7 @@ def compute_manufactured_sol_and_f_euler(x,y,f):
     one = 1.0
     
     w = np.zeros(4)
-    f = np.zeros(4)
+    #f = np.zeros(4)
     
     
     #-----------------------------------------------------------
@@ -86,6 +86,7 @@ def compute_manufactured_sol_and_f_euler(x,y,f):
     rhox = manufactured_sol(cr0,crs,crx,cry, 1,0,x,y)
     rhoy = manufactured_sol(cr0,crs,crx,cry, 0,1,x,y)
     
+    
     #------------------------------------------------------------------------
     # u: x-velocity and its derivatives
     
@@ -111,6 +112,12 @@ def compute_manufactured_sol_and_f_euler(x,y,f):
     # Store the exact solution in the array for return.
     
     w = np.asarray([ rho, u, v, p ])
+    
+    
+    print('rho, rhox, rhoy = ', rho, rhox, rhoy)
+    print('u, ux, uy = ', u, ux, uy)
+    print('u, ux, uy = ', u, ux, uy)
+    print('p, px, py = ', p, px, py)
  
     #-----------------------------------------------------------------------------
     #

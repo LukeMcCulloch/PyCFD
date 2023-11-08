@@ -1,6 +1,6 @@
  Boundary Segment  Boundary Condition
                 1          dirichlet  !Left
-                2          freestream  !Bottom
-                3          outflow_subsonic  !Right
-                4          slip_wall  !Top
+                2          dirichlet  !Bottom
+                3          dirichlet  !Right
+                4          dirichlet  !Top
 

@@ -263,8 +263,9 @@ def roe3D(ucL, ucR, njk, num_flux, wsn, gamma = 1.4):
     drho = rhoR - rhoL #Density difference
     dp =   pR - pL   #Pressure difference
     dqn =  qnR - qnL  #Normal velocity difference
-    
+    #print('a = ',a)
     LdU[0] = (dp - rho*a*dqn )/(two*a*a) #Left-moving acoustic wave strength
+    #print('LdU[0] = ',LdU[0])
     LdU[1] = (dp + rho*a*dqn )/(two*a*a) #Right-moving acoustic wave strength
     LdU[2] =  drho - dp/(a*a)            #Entropy wave strength
     LdU[3] = rho                         #Shear wave strength (not really, just a factor)
@@ -486,8 +487,9 @@ def roe_primative(primL, primR, njk, gamma = 1.4):
     dp =   pR - pL
     dun =  unR - unL
     dum =  umR - umL
-    
+    #print('primative a = ',a)
     LdU[0] = (dp - rho*a*dun )/(two*a*a)
+    #print('primative LdU[0] = ',LdU[0])
     LdU[1] = rho*dum
     LdU[2] =  drho - dp/(a*a)
     LdU[3] = (dp + rho*a*dun )/(two*a*a)

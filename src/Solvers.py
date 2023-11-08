@@ -698,7 +698,7 @@ class Solvers(object):
         # First, make sure that normal mass flux is zero at all solid boundary nodes.
         # NOTE: Necessary because initial solution may generate the normal component.
         #--------------------------------------------------------------------------------
-        self.eliminate_normal_mass_flux()
+        #self.eliminate_normal_mass_flux()
         
         #for jj in range(1): #debugging!
         i_iteration = 0
@@ -707,7 +707,8 @@ class Solvers(object):
             #------------------------------------------------------------------
             # Compute the residual: res(i,:)
             #print("stage 1 compute residual")
-            self.compute_residual(roe2D)
+            self.compute_residual(roe3D)
+            #self.compute_residual(roe2D)
             
             #sys.exit()
             
@@ -758,7 +759,8 @@ class Solvers(object):
             #-----------------------------
             #- 2nd Stage of Runge-Kutta:
             #print("stage 2 compute residual")
-            self.compute_residual(roe2D)
+            self.compute_residual(roe3D)
+            #self.compute_residual(roe2D)
             #exit()
             for i in range(self.mesh.nCells):
                 self.u[i,:] = 0.5*( self.u[i,:] + self.u0[i,:] )  - \
@@ -956,6 +958,9 @@ class Solvers(object):
         
         self.gradw[:,:,:] = 0.0
         
+        
+        dummyF = np.zeros_like((self.f[0,:]),float) #for mms dummy forces (we do not recompute )
+        
         #----------------------------------------------------------------------
         # Compute gradients at cells
         if (self.second_order): self.compute_gradients()
@@ -1008,12 +1013,8 @@ class Solvers(object):
                 c1 = face.parentcell     # Left cell of the face
                 c2 = adj_face.parentcell # Right cell of the face
                 
-                #v1 = face.nodes[0] # Left node of the face
-                #v2 = face.nodes[1] # Right node of the face
-                
-                
-                #print('v1 = ',v1.nid)
-                #print('v2 = ',v2.nid)
+                v1 = face.nodes[0] # Left node of the face
+                v2 = face.nodes[1] # Right node of the face
                 
                 u1 = self.u[c1.cid] #Conservative variables at c1
                 u2 = self.u[c2.cid] #Conservative variables at c2
@@ -1023,9 +1024,6 @@ class Solvers(object):
                 
                 self.unit_face_normal[:] = face.normal_vector[:] # Unit face normal vector: c1 -> c2.
                 
-                #print('self.gradw1 = ',self.gradw1)
-                #print('self.gradw2 = ',self.gradw2)
-                #print('unit_face_normal = ',self.unit_face_normal)
                 #Face midpoint at which we compute the flux.
                 xm,ym = face.center
                 
@@ -1051,7 +1049,6 @@ class Solvers(object):
                                                            phi1, phi2,                 #<- Limiter functions
                                                            flux)
                 
-                #print('id, num_flux, wave_speed = ',c1.cid, num_flux, wave_speed)
                 test = np.any(np.isnan(num_flux)) or np.isnan(wave_speed)
                 # self.dbugIF = dbInterfaceFlux(u1, u2,                     #<- Left/right states
                 #                     self.gradw1, self.gradw2,   #<- Left/right same gradients
@@ -1074,16 +1071,27 @@ class Solvers(object):
                 self.res[c2.cid,:] -= num_flux * face.face_nrml_mag
                 self.wsn[c2.cid] += wave_speed * face.face_nrml_mag
                 
+                # print('c1 = ',c1.cid)
+                # print('c2 = ',c2.cid)
+                # print('v1 = ',v1.nid)
+                # print('v2 = ',v2.nid)
+                # print('unit_face_normal = ',self.unit_face_normal)
+                # print('u1 = ',u1)
+                # print('u2 = ',u2)
+                # print('c1.centroid = ',c1.centroid)
+                # print('c2.centroid = ',c2.centroid)
+                # print('self.gradw1 = ',self.gradw1)
+                # print('self.gradw2 = ',self.gradw2)
+                # print('id, num_flux, wave_speed = ',c1.cid, num_flux, wave_speed)
                 # print('i, res(c1) = ',c1.cid, self.res[c1.cid,:])
                 # print('i, res(c2) = ',c2.cid, self.res[c2.cid,:])
                 # print('i, wsn(c1) = ',c1.cid, self.wsn[c1.cid])
                 # print('i, wsn(c2) = ',c2.cid, self.wsn[c2.cid])
-                
                 # print('--------------------------')
     
                 # End of Residual computation: interior faces
                 #--------------------------------------------------------------------------------
-                
+                #sys.exit()
     
     
     
@@ -1125,8 +1133,6 @@ class Solvers(object):
             v1 = bface.nodes[0] # Left node of the face
             v2 = bface.nodes[1] # Right node of the face
             
-            # print('v1 = ',v1.nid)
-            # print('v2 = ',v2.nid)
             
             #Face midpoint at which we compute the flux.
             xm,ym = bface.center
@@ -1151,17 +1157,21 @@ class Solvers(object):
                                     u1[:], 
                                     self.unit_face_normal, 
                                     self.bc_type[ib], #CBD (could be done): store these on the faces instead of seperate  (tlm what?...cells?) 
-                                    f=self.f[c1.cid])
+                                    f = dummyF)
+                                    #f=self.f[c1.cid])
             
             self.gradw2 = self.gradw2 #<- Gradient at the right state. Give the same gradient for now.
             
             
+            print('v1 = ',v1.nid)
+            print('v2 = ',v2.nid)
+            print('u1 = ',u1)
+            print('xm, ym = ',xm,ym)
+            print('bface normal = ', self.unit_face_normal)
+            print('face_nrml_mag = ',bface.face_nrml_mag)
+            print('ub = ',self.ub)
             
-            # print('u1 = ',u1)
-            #---------------------------------------------------
-            # Compute a flux at the boundary face.
-            # print('bface normal = ', self.unit_face_normal)
-            # print('ub = ',self.ub)
+            ## Compute a flux at the boundary face.
             num_flux, wave_speed = self.interface_flux(u1[:], self.ub,                      #<- Left/right states
                                                        self.gradw1, self.gradw2,    #<- Left/right same gradients
                                                        self.unit_face_normal,       #<- unit face normal
@@ -1172,7 +1182,6 @@ class Solvers(object):
                                                        flux)
             test = np.any(np.isnan(self.wsn))  or np.isnan(wave_speed)
             assert(not test), "Found a NAN in boundary residual"
-            #print(c1.cid, num_flux, wave_speed)
             #Note: No gradients available outside the domain, and use the gradient at cell c
             #      for the right state. This does nothing to inviscid fluxes (see below) but
             #      is important for viscous fluxes.
@@ -1188,18 +1197,19 @@ class Solvers(object):
             self.wsn[c1.cid] += wave_speed * bface.face_nrml_mag
 
             # # no c2 on the boundary
-            # print('face_nrml_mag = ',bface.face_nrml_mag)
             
+            print('self.gradw1 = ',self.gradw1)
+            print('self.gradw2 = ',self.gradw2)
+            print('c1.cid, num_flux, wave_speed = ',c1.cid, num_flux, wave_speed)
+            print(' res(c1) = ', self.res[c1.cid,:])
+            print(' wsn(c1) = ', self.wsn[c1.cid])
+            print('------------------')
             
-            # print(' res(c1) = ', self.res[c1.cid,:])
-            # print(' wsn(c1) = ', self.wsn[c1.cid])
-            # print('------------------')
-
             # End of Residual computation: exterior faces
-            #------------------------------------------------------------------
+            ##------------------------------------------------------------------
             #
             #end  compute_residual
-            #S*****************************************************************
+            #******************************************************************
         
         # for bface in self.mesh.boundaryList:
         #     print(bface.parentcell.cid,bface.face_nrml_mag)
@@ -2368,7 +2378,7 @@ if __name__ == '__main__':
                 3:'test.vtk',
                 4:'shock_diffraction.vtk'}
     
-    thisTest = 0
+    thisTest = 4
     whichTest = {0:TestInviscidVortex,
                  1:TestSteadyAirfoil,
                  2:TestSteadyCylinder,
@@ -2405,11 +2415,16 @@ if __name__ == '__main__':
         #'''
         
         #"""
+        # whichSolver = {0: 'vortex',
+        #                1: 'freestream',
+        #                2: 'freestream',
+        #                3: 'mms',
+        #                4:'shock-diffraction'}
         whichSolver = {0: 'vortex',
                        1: 'freestream',
                        2: 'freestream',
                        3: 'mms',
-                       4:'shock-diffraction'}
+                       4:'freestream'}
         #self.solver_boot(flowtype = 'mms') #TODO fixme compute_manufactured_sol_and_f_euler return vals
         #self.solver_boot(flowtype = 'freestream')
         #self.solver_boot(flowtype = 'vortex')
@@ -2421,12 +2436,18 @@ if __name__ == '__main__':
         
         self.write_solution_to_vtk('init_'+vtkNames[thisTest])
         
+        # solvertype = {0:'explicit_unsteady_solver',
+        #               1:'explicit_steady_solver',
+        #               2:'explicit_steady_solver',
+        #               3:'mms_solver',
+        #               4:'explicit_unsteady_solver_efficient_shockdiffraction'}
         solvertype = {0:'explicit_unsteady_solver',
                       1:'explicit_steady_solver',
                       2:'explicit_steady_solver',
                       3:'mms_solver',
-                      4:'explicit_unsteady_solver_efficient_shockdiffraction'}
+                      4:'explicit_unsteady_solver'}
         #'''
+        self.print_nml_data()
         self.solver_solve( tfinal=10., dt=.01, 
                           solver_type = solvertype[thisTest])
         
