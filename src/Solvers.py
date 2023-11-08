@@ -181,6 +181,7 @@ class Solvers(object):
         # solution convergence
         self.res = np.zeros((mesh.nCells,nq),float) #residual vector
         self.res_norm = np.zeros((nq,1),float)
+        self.res_norm_shock = np.zeros((nq,3),float)
         #
         # local convergence storage saved for speed
         self.gradw1 = np.zeros((nq,self.dim),float)
@@ -702,6 +703,7 @@ class Solvers(object):
         
         #for jj in range(1): #debugging!
         i_iteration = 0
+        pic_counter = 1
         while (time < self.t_final):
             print(time)
             #------------------------------------------------------------------
@@ -722,11 +724,11 @@ class Solvers(object):
                 
                 print('t, step, Density    X-momentum  Y-momentum   Energy')
                 #print(" Iteration   max(res)    max(res)/max(res)_initial ")
-                print(time, i_iteration, np.max( self.res_norm[:] ))
+                print(time, i_iteration, np.max( self.res_norm_shock[:] ))
                 
             #--- After the first solution upate ------------
             elif(i_iteration%1 == 0):
-                print(time, i_iteration, np.max( self.res_norm[:] ) )
+                print(time, i_iteration, self.res_norm_shock[:]  )
             
             #------------------------------------------------------------------
             # Compute the global time step, dt. One dt for all cells.
@@ -770,6 +772,9 @@ class Solvers(object):
             self.compute_residual_norm()
             i_iteration += 1
             
+            if(i_iteration%1 == 0):
+                self.write_solution_to_vtk('shock_diffraction_time_series_'+str(pic_counter)+'_.vtk')
+                pic_counter += 1
         print(" End of Physical Time-Stepping")
         print("---------------------------------------")
         return
@@ -935,6 +940,26 @@ class Solvers(object):
         #self.res_norm[:] = np.sum(np.abs(self.res)) / float(self.mesh.nCells)
         for i in range(len(self.res[0,:])):
             self.res_norm[i] = np.linalg.norm(self.res[:,i]) / float(self.mesh.nCells)
+        return
+    
+    def compute_residual_norm_shock(self):
+        
+        self.res_norm_shock[:,0] = 0.0
+        self.res_norm_shock[:,1] = 0.0
+        self.res_norm_shock[:,2] = -1.0
+        #self.res_norm[:] = np.sum(np.abs(self.res)) / float(self.mesh.nCells)
+        
+        for cell in self.cells:
+            i = cell.cid
+            
+            residual = self.res / cell.volume                                   #Divided residual
+            self.res_norm_shock[:,0] += residual                                #L1   norm
+            self.res_norm_shock[:,1] += residual**2                             #L2   norm
+            self.res_norm_shock[:,2] = max(self.res_norm_shock[:,2], residual)  #Linf norm
+            
+        self.res_norm_shock[:,0] = self.res_norm_shock[:,0] / self.mesh.nCells
+        self.res_norm_shock[:,1] = np.sqrt(self.res_norm_shock[:,1]) / self.mesh.nCells
+        
         return
     
     #-------------------------------------------------------------------------#
@@ -1162,14 +1187,14 @@ class Solvers(object):
             
             self.gradw2 = self.gradw2 #<- Gradient at the right state. Give the same gradient for now.
             
-            print(' self.bc_type[ib] =',self.bc_type[ib])
-            print('v1 = ',v1.nid)
-            print('v2 = ',v2.nid)
-            print('u1 = ',u1)
-            print('xm, ym = ',xm,ym)
-            print('bface normal = ', self.unit_face_normal)
-            print('face_nrml_mag = ',bface.face_nrml_mag)
-            print('ub = ',self.ub)
+            # print(' self.bc_type[ib] =',self.bc_type[ib])
+            # print('v1 = ',v1.nid)
+            # print('v2 = ',v2.nid)
+            # print('u1 = ',u1)
+            # print('xm, ym = ',xm,ym)
+            # print('bface normal = ', self.unit_face_normal)
+            # print('face_nrml_mag = ',bface.face_nrml_mag)
+            # print('ub = ',self.ub)
             
             ## Compute a flux at the boundary face.
             num_flux, wave_speed = self.interface_flux(u1[:], self.ub,                      #<- Left/right states
@@ -1198,12 +1223,12 @@ class Solvers(object):
 
             # # no c2 on the boundary
             
-            print('self.gradw1 = ',self.gradw1)
-            print('self.gradw2 = ',self.gradw2)
-            print('c1.cid, num_flux, wave_speed = ',c1.cid, num_flux, wave_speed)
-            print(' res(c1) = ', self.res[c1.cid,:])
-            print(' wsn(c1) = ', self.wsn[c1.cid])
-            print('------------------')
+            # print('self.gradw1 = ',self.gradw1)
+            # print('self.gradw2 = ',self.gradw2)
+            # print('c1.cid, num_flux, wave_speed = ',c1.cid, num_flux, wave_speed)
+            # print(' res(c1) = ', self.res[c1.cid,:])
+            # print(' wsn(c1) = ', self.wsn[c1.cid])
+            # print('------------------')
             
             # End of Residual computation: exterior faces
             ##------------------------------------------------------------------
@@ -1211,9 +1236,7 @@ class Solvers(object):
             #end  compute_residual
             #******************************************************************
         
-        sys.exit()
-        # for bface in self.mesh.boundaryList:
-        #     print(bface.parentcell.cid,bface.face_nrml_mag)
+        #sys.exit()
         return
     
     
@@ -2416,16 +2439,16 @@ if __name__ == '__main__':
         #'''
         
         #"""
+        whichSolver = {0: 'vortex',
+                        1: 'freestream',
+                        2: 'freestream',
+                        3: 'mms',
+                        4:'shock-diffraction'}
         # whichSolver = {0: 'vortex',
         #                1: 'freestream',
         #                2: 'freestream',
         #                3: 'mms',
-        #                4:'shock-diffraction'}
-        whichSolver = {0: 'vortex',
-                       1: 'freestream',
-                       2: 'freestream',
-                       3: 'mms',
-                       4:'freestream'}
+        #                4:'freestream'}
         #self.solver_boot(flowtype = 'mms') #TODO fixme compute_manufactured_sol_and_f_euler return vals
         #self.solver_boot(flowtype = 'freestream')
         #self.solver_boot(flowtype = 'vortex')
@@ -2437,19 +2460,19 @@ if __name__ == '__main__':
         
         self.write_solution_to_vtk('init_'+vtkNames[thisTest])
         
-        # solvertype = {0:'explicit_unsteady_solver',
-        #               1:'explicit_steady_solver',
-        #               2:'explicit_steady_solver',
-        #               3:'mms_solver',
-        #               4:'explicit_unsteady_solver_efficient_shockdiffraction'}
         solvertype = {0:'explicit_unsteady_solver',
                       1:'explicit_steady_solver',
                       2:'explicit_steady_solver',
                       3:'mms_solver',
-                      4:'explicit_unsteady_solver'}
+                      4:'explicit_unsteady_solver_efficient_shockdiffraction'}
+        # solvertype = {0:'explicit_unsteady_solver',
+        #               1:'explicit_steady_solver',
+        #               2:'explicit_steady_solver',
+        #               3:'mms_solver',
+        #               4:'explicit_unsteady_solver'}
         #'''
         self.print_nml_data()
-        self.solver_solve( tfinal=10., dt=.01, 
+        self.solver_solve( tfinal=0.18, dt=.01, 
                           solver_type = solvertype[thisTest])
         
         self.write_solution_to_vtk(vtkNames[thisTest])
