@@ -94,6 +94,7 @@ class BC_states(object):
                     'outflow_subsonic':[wL, wb],
                     'symmetry_y':[wL,njk,wb],
                     'slip_wall':[wL,njk, wb],
+                    'slip_wall_ymmtm_fix':[wL,njk, wb],
                     'outflow_supersonic':[wL, wb],
                     'dirichlet':[xb,yb,f[:]]
                     }
@@ -260,7 +261,30 @@ class BC_states(object):
     #**************************************************************************
     # Special Shock diffraction
     #**************************************************************************
-    
+    def slip_wall_ymmtm_fix(self, wL,njk, wb):
+        #print("slip_wall")
+
+        un = wL[1]*njk[0] + wL[2]*njk[1]
+        #print('un = ',un)
+        
+        #-------------------------
+        # Define the right state:
+        
+        wb[:] = wL[:] 
+        #wb[2] = 0.0 #tlm todo: understand this special bc
+        
+        # Ensure zero normal velocity on average:
+        
+        wb[1] = wL[1] - un*njk[0]
+        wb[2] = wL[2] - un*njk[1]
+        
+        
+        wb[2] = 0.0 #tlm todo: understand this special bc
+        
+        #print('wb dot njk= {}'.format(wb[1:3].dot(njk)))
+        #tol= 1.e-10
+        #assert(wb[1:3].dot(njk) < tol),"slip wall failure normal velocity = {}".format(wb[1:3].dot(njk))
+        return wb
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------

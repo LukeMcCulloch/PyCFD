@@ -1,6 +1,6 @@
 Boundary Part  Boundary Condition
                 1          freestream
-                2           slip_wall
-                3  outflow_supersonic
-                4  outflow_supersonic
+                2           slip_wall_ymmtm_fix
+                3  slip_wall
+                4  slip_wall
                 5           slip_wall

@@ -683,7 +683,7 @@ class Solvers(object):
         time = 0.0
             
         """
-        print('call explicit_unsteady_solver')
+        print('call explicit_unsteady_solver, shock diffraction')
         time = 0.0
         
         self.t_final = tfinal
@@ -705,7 +705,6 @@ class Solvers(object):
         i_iteration = 0
         pic_counter = 1
         while (time < self.t_final):
-            print(time)
             #------------------------------------------------------------------
             # Compute the residual: res(i,:)
             #print("stage 1 compute residual")
@@ -714,21 +713,19 @@ class Solvers(object):
             
             #sys.exit()
             
-            self.compute_residual_norm()
+            self.compute_residual_norm_shock()
             #print('res_norm = {}'.format(self.res_norm))
             
             
             #--- Initial (no solution update yet) ------------
             if (i_iteration == 0) :
-                
-                
-                print('t, step, Density    X-momentum  Y-momentum   Energy')
+                print('t, step,                               Density    X-momentum  Y-momentum   Energy')
                 #print(" Iteration   max(res)    max(res)/max(res)_initial ")
-                print(time, i_iteration, np.max( self.res_norm_shock[:] ))
+                #print(time, i_iteration, np.max( self.res_norm_shock[:] ))
                 
             #--- After the first solution upate ------------
             elif(i_iteration%1 == 0):
-                print(time, i_iteration, self.res_norm_shock[:]  )
+                print('t = ',time, 'steps=',i_iteration,' L1(res)=', self.res_norm_shock[:,1]  )
             
             #------------------------------------------------------------------
             # Compute the global time step, dt. One dt for all cells.
@@ -772,9 +769,9 @@ class Solvers(object):
             self.compute_residual_norm()
             i_iteration += 1
             
-            if(i_iteration%1 == 0):
-                self.write_solution_to_vtk('shock_diffraction_time_series_'+str(pic_counter)+'_.vtk')
-                pic_counter += 1
+            # if(i_iteration%1 == 0):
+            #     self.write_solution_to_vtk('shock_diffraction_time_series_'+str(pic_counter)+'_.vtk')
+            #     pic_counter += 1
         print(" End of Physical Time-Stepping")
         print("---------------------------------------")
         return
@@ -949,13 +946,13 @@ class Solvers(object):
         self.res_norm_shock[:,2] = -1.0
         #self.res_norm[:] = np.sum(np.abs(self.res)) / float(self.mesh.nCells)
         
-        for cell in self.cells:
+        for cell in self.mesh.cells:
             i = cell.cid
             
-            residual = self.res / cell.volume                                   #Divided residual
+            residual = self.res[i] / cell.volume                                   #Divided residual
             self.res_norm_shock[:,0] += residual                                #L1   norm
             self.res_norm_shock[:,1] += residual**2                             #L2   norm
-            self.res_norm_shock[:,2] = max(self.res_norm_shock[:,2], residual)  #Linf norm
+            #self.res_norm_shock[:,2] = max(self.res_norm_shock[:,2], residual)  #Linf norm
             
         self.res_norm_shock[:,0] = self.res_norm_shock[:,0] / self.mesh.nCells
         self.res_norm_shock[:,1] = np.sqrt(self.res_norm_shock[:,1]) / self.mesh.nCells
@@ -1280,10 +1277,12 @@ class Solvers(object):
         
         only_slip_wall = False
         savei = -1
+        first_found = False
         for i, bg in enumerate(self.mesh.bound):
-            if bg.bc_type == 'slip_wall': 
+            if bg.bc_type == 'slip_wall' and not first_found: 
                 only_slip_wall = True #use this to only set the boundary node on the single corner node!  (very specilaized gridding, indeed)
                 savei = i
+                first_found=True
                 print(" Eliminating the normal momentum on slip wall boundary ", i)
                 
                 
@@ -1333,7 +1332,8 @@ class Solvers(object):
                 
                 ################################################################
                 cid = bface.parentcell.cid
-                if only_slip_wall:
+                if only_slip_wall and cid == savei:
+                    self.save_shock_cell = bface.parentcell
                     self.u[cid,2] = 0.0                      # Make sure zero y-momentum.
                     self.w[cid,:] = self.u2w(self.u[cid,:])  # Update primitive variables
                     only_slip_wall = False
@@ -2472,7 +2472,7 @@ if __name__ == '__main__':
         #               4:'explicit_unsteady_solver'}
         #'''
         self.print_nml_data()
-        self.solver_solve( tfinal=0.18, dt=.01, 
+        self.solver_solve( tfinal=0.5, dt=.01, 
                           solver_type = solvertype[thisTest])
         
         self.write_solution_to_vtk(vtkNames[thisTest])
