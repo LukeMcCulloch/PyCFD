@@ -243,7 +243,7 @@ class BC_states(object):
     #**************************************************************************
     # Outflow supersonic
     #**************************************************************************
-    def outflow_supersonic(self, wb, wL):
+    def outflow_supersonic(self, wL, wb):
         """
             wb = np.array(4, float)
             wL = np.array(4, float)

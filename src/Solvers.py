@@ -1091,7 +1091,7 @@ class Solvers(object):
     
                 # End of Residual computation: interior faces
                 #--------------------------------------------------------------------------------
-                #sys.exit()
+        #sys.exit()
     
     
     
@@ -1162,7 +1162,7 @@ class Solvers(object):
             
             self.gradw2 = self.gradw2 #<- Gradient at the right state. Give the same gradient for now.
             
-            
+            print(' self.bc_type[ib] =',self.bc_type[ib])
             print('v1 = ',v1.nid)
             print('v2 = ',v2.nid)
             print('u1 = ',u1)
@@ -1211,6 +1211,7 @@ class Solvers(object):
             #end  compute_residual
             #******************************************************************
         
+        sys.exit()
         # for bface in self.mesh.boundaryList:
         #     print(bface.parentcell.cid,bface.face_nrml_mag)
         return
