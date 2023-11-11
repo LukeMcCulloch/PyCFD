@@ -74,6 +74,7 @@ class Face(object):
         self.fid = fid
         self.adjacentface   = None
         self.isBoundary     = isBoundary
+        self.special_ymtm = False
         #
         # neighbor vectors
         self.e_xi           = None

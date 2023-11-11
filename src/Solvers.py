@@ -699,7 +699,7 @@ class Solvers(object):
         # First, make sure that normal mass flux is zero at all solid boundary nodes.
         # NOTE: Necessary because initial solution may generate the normal component.
         #--------------------------------------------------------------------------------
-        #self.eliminate_normal_mass_flux()
+        self.eliminate_normal_mass_flux()
         
         #for jj in range(1): #debugging!
         i_iteration = 0
@@ -711,6 +711,11 @@ class Solvers(object):
             self.compute_residual(roe3D)
             #self.compute_residual(roe2D)
             
+            #experiement:  (did not work)
+            # for cell in self.mesh.cells:
+            #     cid = cell.cid
+            #     self.res[cid,:] = -self.res[cid,:] # Switch the residual sign.
+            #     #self.wsn[cid] = -self.wsn[cid]
             #sys.exit()
             
             self.compute_residual_norm_shock()
@@ -720,23 +725,19 @@ class Solvers(object):
             #--- Initial (no solution update yet) ------------
             if (i_iteration == 0) :
                 print('t, step,                               Density    X-momentum  Y-momentum   Energy')
-                #print(" Iteration   max(res)    max(res)/max(res)_initial ")
-                #print(time, i_iteration, np.max( self.res_norm_shock[:] ))
                 
             #--- After the first solution upate ------------
             elif(i_iteration%1 == 0):
-                print('t = ',time, 'steps=',i_iteration,' L1(res)=', self.res_norm_shock[:,1]  )
+                print('t = ',time, 'steps=',i_iteration,' L1(res)=', self.res_norm_shock[:,0]  )
             
             #------------------------------------------------------------------
             # Compute the global time step, dt. One dt for all cells.
             dt = self.compute_global_time_step()#*.5
             
-            #adjust time step?
-            #code here
-            
             #------------------------------------------------------------------
             # Increment the physical time and exit if the final time is reached
             time += dt #TBD dt was undefined
+            
             
             #-------------------------------------------------------------------
             # Update the solution by 2nd-order TVD-RK.: u^n is saved as u0(:,:)
@@ -757,10 +758,13 @@ class Solvers(object):
                 
             #-----------------------------
             #- 2nd Stage of Runge-Kutta:
+                
             #print("stage 2 compute residual")
             self.compute_residual(roe3D)
             #self.compute_residual(roe2D)
             #exit()
+            
+            
             for i in range(self.mesh.nCells):
                 self.u[i,:] = 0.5*( self.u[i,:] + self.u0[i,:] )  - \
                                 0.5*(dt/self.mesh.cells[i].volume) * self.res[i,:]
@@ -769,9 +773,9 @@ class Solvers(object):
             self.compute_residual_norm()
             i_iteration += 1
             
-            # if(i_iteration%1 == 0):
-            #     self.write_solution_to_vtk('shock_diffraction_time_series_'+str(pic_counter)+'_.vtk')
-            #     pic_counter += 1
+            if(i_iteration%5 == 0):
+                self.write_solution_to_vtk('shock_diffraction_time_series_'+str(pic_counter)+'_.vtk')
+                pic_counter += 1
         print(" End of Physical Time-Stepping")
         print("---------------------------------------")
         return
@@ -954,8 +958,8 @@ class Solvers(object):
             self.res_norm_shock[:,1] += residual**2                             #L2   norm
             #self.res_norm_shock[:,2] = max(self.res_norm_shock[:,2], residual)  #Linf norm
             
-        self.res_norm_shock[:,0] = self.res_norm_shock[:,0] / self.mesh.nCells
-        self.res_norm_shock[:,1] = np.sqrt(self.res_norm_shock[:,1]) / self.mesh.nCells
+        self.res_norm_shock[:,0] = self.res_norm_shock[:,0] / float(self.mesh.nCells)
+        self.res_norm_shock[:,1] = np.sqrt(self.res_norm_shock[:,1]) / float(self.mesh.nCells)
         
         return
     
@@ -1181,6 +1185,9 @@ class Solvers(object):
                                     self.bc_type[ib], #CBD (could be done): store these on the faces instead of seperate  (tlm what?...cells?) 
                                     f = dummyF)
                                     #f=self.f[c1.cid])
+            if bface.special_ymtm: 
+                #print('shock y mmtm 0, n1 = ',bface.fid,' cid = ',c1.cid )
+                self.ub[2] = 0.0
             
             self.gradw2 = self.gradw2 #<- Gradient at the right state. Give the same gradient for now.
             
@@ -1278,17 +1285,21 @@ class Solvers(object):
         only_slip_wall = False
         savei = -1
         first_found = False
-        for i, bg in enumerate(self.mesh.bound):
-            if bg.bc_type == 'slip_wall' and not first_found: 
-                only_slip_wall = True #use this to only set the boundary node on the single corner node!  (very specilaized gridding, indeed)
-                savei = i
-                first_found=True
-                print(" Eliminating the normal momentum on slip wall boundary ", i)
-                
+        # for i, bg in enumerate(self.mesh.bound):
+        #     if bg.bc_type == 'slip_wall_ymmtm_fix' and not first_found: 
+        #         only_slip_wall = True #use this to only set the boundary node on the single corner node!  (very specilaized gridding, indeed)
+        #         savei = i
+        #         first_found=True
+        #         print(" Eliminating the normal momentum on slip wall boundary ", i)
+        for ib, bface in enumerate(self.mesh.boundaryList):
+            if self.bc_type[ib] == 'slip_wall_ymmtm_fix' and not first_found: 
+                print(" Eliminating the normal momentum on slip wall boundary ", ib, bface.fid)
+                bface.special_ymtm = True
+                first_found = True
                 
                 
         for ib, bface in enumerate(self.mesh.boundaryList):
-            if self.bc_type[ib] == 'slip_wall' and only_slip_wall:
+            if self.bc_type[ib] == 'slip_wall_ymmtm_fix' and only_slip_wall:
                 ################################################################
                 # THIS IS A SPECIAL TREATMENT FOR SHOCK DIFFRACTION PROBLEM.
                 #
@@ -1332,21 +1343,24 @@ class Solvers(object):
                 
                 ################################################################
                 cid = bface.parentcell.cid
-                if only_slip_wall and cid == savei:
+                #if only_slip_wall and cid == savei:
+                if bface.special_ymtm:
+                    #bface.special_ymtm = True
+                    #print('shock y mmtm 0, n1 = ',bface.fid,' cid = ',cid )
                     self.save_shock_cell = bface.parentcell
                     self.u[cid,2] = 0.0                      # Make sure zero y-momentum.
                     self.w[cid,:] = self.u2w(self.u[cid,:])  # Update primitive variables
                     only_slip_wall = False
-                ################################################################
-                else:
-                    nij = bface.normal_vector
-                    normal_mass_flux = self.u[cid,1]*nij[0] + self.u[cid,2]*nij[1]
-                    
-                    #zero the normal mass flux:
-                    self.u[cid,1] = self.u[cid,1] - normal_mass_flux * nij[0]
-                    self.u[cid,2] = self.u[cid,2] - normal_mass_flux * nij[1]
-                    
-                    self.w[cid,:] = self.u2w(self.u[cid,:])
+                # ################################################################
+                # else:
+                nij = bface.normal_vector
+                normal_mass_flux = self.u[cid,1]*nij[0] + self.u[cid,2]*nij[1]
+                
+                #zero the normal mass flux:
+                self.u[cid,1] = self.u[cid,1] - normal_mass_flux * nij[0]
+                self.u[cid,2] = self.u[cid,2] - normal_mass_flux * nij[1]
+                
+                self.w[cid,:] = self.u2w(self.u[cid,:])
         
         print(" Finished eliminating the normal momentum on slip wall boundary ", savei)
         return
@@ -2111,7 +2125,7 @@ class Solvers(object):
         #------------------------------------------------------------------------------
         #------------------------------------------------------------------------------
         #------------------------------------------------------------------------------
-        print("\n\n-------------------------------------------------------\n")
+        #print("\n\n-------------------------------------------------------\n")
         
         #------------------------------------------------------------------------------
         #header information
@@ -2193,7 +2207,7 @@ class Solvers(object):
         #---------------------------------
         # field data (density, pressure, velocity)
         lines.append('POINT_DATA  '+ str(nnodes)+'\n')
-        lines.append('FIELD  FlowField  4'+'\n')
+        lines.append('FIELD  FlowField  5'+'\n')
         
         lines.append('Density    1 ' + str(nnodes) + '  double'+'\n')
         for i in range(nnodes):
@@ -2211,6 +2225,12 @@ class Solvers(object):
         for i in range(nnodes):
             lines.append(str(wn[i,3])+'\n')
             
+            
+        lines.append('Mach    1 ' + str(nnodes) + '  double'+'\n')
+        for i in range(nnodes):
+            mn = np.sqrt(wn[i,1]**2 + wn[i,2]**2) / ( self.gamma * (wn[i,3]/wn[i,0]) )
+            lines.append(str(mn)+'\n')
+            
         
         #vector data
         
@@ -2223,8 +2243,8 @@ class Solvers(object):
                       filename=filename_vtk,
                       lines = lines)
         
-        print(' End of Writing .vtk file = ' + filename_vtk)
-        print("-------------------------------------------------------")
+        #print(' End of Writing .vtk file = ' + filename_vtk)
+        #print("-------------------------------------------------------")
         #---------------------------------------------------------------------------
         
         return
@@ -2472,7 +2492,7 @@ if __name__ == '__main__':
         #               4:'explicit_unsteady_solver'}
         #'''
         self.print_nml_data()
-        self.solver_solve( tfinal=0.5, dt=.01, 
+        self.solver_solve( tfinal=0.7, dt=.01, 
                           solver_type = solvertype[thisTest])
         
         self.write_solution_to_vtk(vtkNames[thisTest])

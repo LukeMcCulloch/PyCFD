@@ -262,7 +262,7 @@ class BC_states(object):
     # Special Shock diffraction
     #**************************************************************************
     def slip_wall_ymmtm_fix(self, wL,njk, wb):
-        #print("slip_wall")
+        #print("sock diffraction slip_wall y-mmtm fix")
 
         un = wL[1]*njk[0] + wL[2]*njk[1]
         #print('un = ',un)
@@ -279,7 +279,7 @@ class BC_states(object):
         wb[2] = wL[2] - un*njk[1]
         
         
-        wb[2] = 0.0 #tlm todo: understand this special bc
+        #wb[2] = 0.0 #tlm todo: understand this special bc
         
         #print('wb dot njk= {}'.format(wb[1:3].dot(njk)))
         #tol= 1.e-10
