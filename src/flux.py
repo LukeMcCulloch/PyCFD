@@ -158,7 +158,8 @@ def roe3D(ucL, ucR, njk, num_flux, wsn, gamma = 1.4):
     diss    = np.zeros(5,float)     # Dissipation term
     
     #eigen limiter
-    eig_limiting_factor = np.asarray([ 0.1, 0.1, 0.1, 0.1, 0.1 ]) #eigenvalue limiting factor
+    #eig_limiting_factor = np.asarray([ 0.1, 0.1, 0.1, 0.1, 0.1 ]) #eigenvalue limiting factor
+    eig_limiting_factor = np.asarray([ 0.2, 0.2, 0.2, 0.2, 0.2 ]) #TLM todo: get from inputs iml!!
     
     # Face normal vector (unit vector)
     #nx,ny,nz = njk
@@ -354,10 +355,29 @@ def roe3D(ucL, ucR, njk, num_flux, wsn, gamma = 1.4):
 # downsample the 3d data to 2d and pass conservative variables to primative
 #
 ##
-def roe2D(ucL, ucR, njk, num_flux, wsn, gamma = 1.4):
+def roe2D(ucL3D, ucR3D, njk, num_flux, wsn, gamma = 1.4):
     
-    primL = u2w(ucL)
-    primR = u2w(ucR)
+    ucL2 = np.zeros((4),float)
+    ucR2 = np.zeros((4),float)
+    
+    
+    #Left state: 2D <- 3D
+
+    ucL2[0] = ucL3D[0]
+    ucL2[1] = ucL3D[1]
+    ucL2[2] = ucL3D[2]
+    ucL2[3] = ucL3D[4]
+
+    #Right state: 3D <- 2D
+    
+    ucR2[0] = ucR3D[0]
+    ucR2[1] = ucR3D[1]
+    ucR2[2] = ucR3D[2]
+    ucR2[3] = ucR3D[4]
+    
+    
+    primL = u2w(ucL2)
+    primR = u2w(ucR2)
     
     # primL = np.zeros((4),float)
     # primL[0] = primL5[0]
@@ -377,6 +397,7 @@ def roe2D(ucL, ucR, njk, num_flux, wsn, gamma = 1.4):
     
     flux, wsn = roe_primative(primL, primR, njk, gamma = 1.4)
     
+    # back to 3D again!
     num_flux = np.zeros((5),float)
     num_flux[0] = flux[0]
     num_flux[1] = flux[1]
