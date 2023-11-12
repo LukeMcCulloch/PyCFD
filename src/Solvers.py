@@ -23,6 +23,9 @@ from pylab import * #quiver...
 import matplotlib.tri as tri #plot unstructured data
 # see https://matplotlib.org/gallery/images_contours_and_fields/irregulardatagrid.html
 
+from math import copysign
+sign = copysign#lambda x: copysign(1, x) # two will work 
+
 
 pi = np.pi
 
@@ -611,12 +614,12 @@ class Solvers(object):
             #------------------------------------------------------------------
             # Compute the residual: res(i,:)
             #print("stage 1 compute residual")
-            self.compute_residual(roe3D)
+            self.compute_residual(roe3D,'vk_limiter')
             
             #sys.exit()
             
             self.compute_residual_norm()
-            #print('res_norm = {}'.format(self.res_norm))
+            print('res_norm = {}'.format(self.res_norm))
             
             #------------------------------------------------------------------
             # Compute the global time step, dt. One dt for all cells.
@@ -650,15 +653,15 @@ class Solvers(object):
             #-----------------------------
             #- 2nd Stage of Runge-Kutta:
             #print("stage 2 compute residual")
-            self.compute_residual(roe3D)
+            self.compute_residual(roe3D,'vk_limiter')
             #exit()
             for i in range(self.mesh.nCells):
                 self.u[i,:] = 0.5*( self.u[i,:] + self.u0[i,:] )  - \
                                 0.5*(dt/self.mesh.cells[i].volume) * self.res[i,:]
                 self.w[i,:] = self.u2w( self.u[i,:]  )
             
-            self.compute_residual_norm()
-            print('res_norm = {}'.format(self.res_norm))
+            #self.compute_residual_norm()
+            #print('res_norm = {}'.format(self.res_norm))
             
             itercount += 1
         print(" End of Physical Time-Stepping")
@@ -700,6 +703,13 @@ class Solvers(object):
         # NOTE: Necessary because initial solution may generate the normal component.
         #--------------------------------------------------------------------------------
         self.eliminate_normal_mass_flux()
+        #self.write_solution_to_vtk('shock_mass_flux_wall_fix.vtk')
+        
+        
+        # self.compute_residual_norm_shock()
+        # print('t = ',time, ' L1(res)=', self.res_norm_shock[:,0]  )
+        
+        # sys.exit()
         
         #for jj in range(1): #debugging!
         i_iteration = 0
@@ -708,7 +718,8 @@ class Solvers(object):
             #------------------------------------------------------------------
             # Compute the residual: res(i,:)
             #print("stage 1 compute residual")
-            self.compute_residual(roe3D)
+            self.compute_residual(roe3D, 'vk_limiter', normal_scalar = 0.5)
+            #self.compute_residual(roe3D, 'vanalbada_limiter') #limiter options:  'vk_limiter , vanalbada_limiter'
             #self.compute_residual(roe2D)
             
             #experiement:  (did not work)
@@ -725,14 +736,18 @@ class Solvers(object):
             #--- Initial (no solution update yet) ------------
             if (i_iteration == 0) :
                 print('t, step,                               Density    X-momentum  Y-momentum   Energy')
+                print('t = ',time, 'steps=',i_iteration,' L1(res)=', self.res_norm_shock[:,0]  )
                 
             #--- After the first solution upate ------------
-            elif(i_iteration%1 == 0):
+            elif(i_iteration%1 == 0 or i_iteration == 0):
                 print('t = ',time, 'steps=',i_iteration,' L1(res)=', self.res_norm_shock[:,0]  )
+                
+                
+            #sys.exit()
             
             #------------------------------------------------------------------
             # Compute the global time step, dt. One dt for all cells.
-            dt = self.compute_global_time_step()#*.5
+            dt = self.compute_global_time_step_shock_diffraction()#*.5
             
             #------------------------------------------------------------------
             # Increment the physical time and exit if the final time is reached
@@ -760,7 +775,9 @@ class Solvers(object):
             #- 2nd Stage of Runge-Kutta:
                 
             #print("stage 2 compute residual")
-            self.compute_residual(roe3D)
+            #self.compute_residual(roe3D)
+            self.compute_residual(roe3D, 'vk_limiter', normal_scalar = 0.5)
+            #self.compute_residual(roe3D, 'vanalbada_limiter') 
             #self.compute_residual(roe2D)
             #exit()
             
@@ -770,7 +787,8 @@ class Solvers(object):
                                 0.5*(dt/self.mesh.cells[i].volume) * self.res[i,:]
                 self.w[i,:] = self.u2w( self.u[i,:]  )
             
-            self.compute_residual_norm()
+            
+            
             i_iteration += 1
             
             if(i_iteration%5 == 0):
@@ -836,7 +854,7 @@ class Solvers(object):
             #------------------------------------------------------------------
             # Compute the residual: res(i,:) (gradient computation is done within)
             #print("stage 1 compute residual")
-            self.compute_residual(roe3D)
+            self.compute_residual(roe3D,'vk_limiter')
             #sys.exit()
             
             #Compute the residual norm for checking convergence.
@@ -911,7 +929,7 @@ class Solvers(object):
             #-----------------------------
             #- 2nd Stage of Runge-Kutta:
             #print("stage 2 compute residual")
-            self.compute_residual(roe3D)
+            self.compute_residual(roe3D,'vk_limiter')
             #exit()
             for i in range(self.mesh.nCells):
                 self.u[i,:] = 0.5*( self.u[i,:] + self.u0[i,:] )  - \
@@ -953,7 +971,7 @@ class Solvers(object):
         for cell in self.mesh.cells:
             i = cell.cid
             
-            residual = self.res[i] / cell.volume                                   #Divided residual
+            residual = abs(self.res[i] / cell.volume)                           #Divided residual
             self.res_norm_shock[:,0] += residual                                #L1   norm
             self.res_norm_shock[:,1] += residual**2                             #L2   norm
             #self.res_norm_shock[:,2] = max(self.res_norm_shock[:,2], residual)  #Linf norm
@@ -969,7 +987,10 @@ class Solvers(object):
     # the cell-centered finite-volume discretization.
     #
     #-------------------------------------------------------------------------#
-    def compute_residual(self, flux=None):
+    def compute_residual(self, 
+                         flux=None, 
+                         limiter='vk_limiter', 
+                         normal_scalar=1.0): #normal scalar is for the shock problem.. TLM TODO why?
         mesh = self.mesh
         
         if flux==None:
@@ -990,7 +1011,7 @@ class Solvers(object):
         #----------------------------------------------------------------------
         # Compute gradients at cells
         if (self.second_order): self.compute_gradients()
-        if (self.use_limiter): self.compute_limiter()
+        if (self.use_limiter): self.compute_limiter(limiter)
         #----------------------------------------------------------------------
         
         
@@ -1088,36 +1109,37 @@ class Solvers(object):
                 
                 #  Add the flux multiplied by the magnitude of the directed area vector to c1.
     
-                self.res[c1.cid,:] += num_flux * face.face_nrml_mag
-                self.wsn[c1.cid] += wave_speed * face.face_nrml_mag
+                self.res[c1.cid,:] += num_flux * face.face_nrml_mag# * normal_scalar
+                self.wsn[c1.cid] += wave_speed * face.face_nrml_mag# * normal_scalar
     
                 #  Subtract the flux multiplied by the magnitude of the directed area vector from c2.
                 #  NOTE: Subtract because the outward face normal is -n for the c2.
                 
-                self.res[c2.cid,:] -= num_flux * face.face_nrml_mag
-                self.wsn[c2.cid] += wave_speed * face.face_nrml_mag
+                self.res[c2.cid,:] -= num_flux * face.face_nrml_mag# * normal_scalar
+                self.wsn[c2.cid] += wave_speed * face.face_nrml_mag# * normal_scalar
                 
-                # print('c1 = ',c1.cid)
-                # print('c2 = ',c2.cid)
-                # print('v1 = ',v1.nid)
-                # print('v2 = ',v2.nid)
-                # print('unit_face_normal = ',self.unit_face_normal)
-                # print('u1 = ',u1)
-                # print('u2 = ',u2)
-                # print('c1.centroid = ',c1.centroid)
-                # print('c2.centroid = ',c2.centroid)
-                # print('self.gradw1 = ',self.gradw1)
-                # print('self.gradw2 = ',self.gradw2)
-                # print('id, num_flux, wave_speed = ',c1.cid, num_flux, wave_speed)
-                # print('i, res(c1) = ',c1.cid, self.res[c1.cid,:])
-                # print('i, res(c2) = ',c2.cid, self.res[c2.cid,:])
-                # print('i, wsn(c1) = ',c1.cid, self.wsn[c1.cid])
-                # print('i, wsn(c2) = ',c2.cid, self.wsn[c2.cid])
-                # print('--------------------------')
+                print('c1 = ',c1.cid)
+                print('c2 = ',c2.cid)
+                print('v1 = ',v1.nid)
+                print('v2 = ',v2.nid)
+                print('unit_face_normal = ',self.unit_face_normal)
+                print('face.face_nrml_mag = ',face.face_nrml_mag)
+                print('u1 = ',u1)
+                print('u2 = ',u2)
+                print('c1.centroid = ',c1.centroid)
+                print('c2.centroid = ',c2.centroid)
+                print('self.gradw1 = ',self.gradw1)
+                print('self.gradw2 = ',self.gradw2)
+                print('id, num_flux, wave_speed = ',c1.cid, num_flux, wave_speed)
+                print('i, res(c1) = ',c1.cid, self.res[c1.cid,:])
+                print('i, res(c2) = ',c2.cid, self.res[c2.cid,:])
+                print('i, wsn(c1) = ',c1.cid, self.wsn[c1.cid])
+                print('i, wsn(c2) = ',c2.cid, self.wsn[c2.cid])
+                print('--------------------------')
     
                 # End of Residual computation: interior faces
                 #--------------------------------------------------------------------------------
-        #sys.exit()
+        sys.exit()
     
     
     
@@ -1187,7 +1209,10 @@ class Solvers(object):
                                     #f=self.f[c1.cid])
             if bface.special_ymtm: 
                 #print('shock y mmtm 0, n1 = ',bface.fid,' cid = ',c1.cid )
-                self.ub[2] = 0.0
+                #for vtx in bface.nodes:
+                #    print('shock y mmtm 0, nodes = ',vtx.nid)
+                #self.ub[2] = 0.0
+                self.ymmtm_save_cid = c1.cid
             
             self.gradw2 = self.gradw2 #<- Gradient at the right state. Give the same gradient for now.
             
@@ -1222,8 +1247,9 @@ class Solvers(object):
 
             #---------------------------------------------------
             #  Add the boundary contributions to the residual.
-            self.res[c1.cid,:] += num_flux * bface.face_nrml_mag
-            self.wsn[c1.cid] += wave_speed * bface.face_nrml_mag
+            self.res[c1.cid,:] += num_flux * bface.face_nrml_mag# * normal_scalar
+            self.wsn[c1.cid] += wave_speed * bface.face_nrml_mag# * normal_scalar
+            
 
             # # no c2 on the boundary
             
@@ -1240,6 +1266,7 @@ class Solvers(object):
             #end  compute_residual
             #******************************************************************
         
+        self.res[self.ymmtm_save_cid,2] = 0.0 #y mmtm correction for shock tube box approximation
         #sys.exit()
         return
     
@@ -1254,7 +1281,7 @@ class Solvers(object):
         CFL = self.Parameters.CFL
         
         #Initialize dt with the local time step at cell 1.
-        i = 1
+        i = 0
         assert(abs(self.wsn[i]) > 0.),'wsn time step initilization div by zero'
         physical_time_step = CFL*self.mesh.cells[i].volume / ( 0.5*self.wsn[i] )
         
@@ -1262,6 +1289,21 @@ class Solvers(object):
             physical_time_step = min( physical_time_step,
                         CFL*self.mesh.cells[i].volume / ( 0.5*self.wsn[i] )
                                      )
+        
+        return physical_time_step
+    
+    
+    def compute_global_time_step_shock_diffraction(self):
+        CFL = self.Parameters.CFL
+        
+        #Initialize dt with the local time step at cell 1.
+        i = 0
+        assert(abs(self.wsn[i]) > 0.),'wsn time step initilization div by zero'
+        physical_time_step = CFL*self.mesh.cells[i].volume / self.wsn[i] 
+        
+        for i, cell in enumerate(self.mesh.cells):
+            physical_time_step = min( physical_time_step,
+                        CFL*self.mesh.cells[i].volume / self.wsn[i]  )
         
         return physical_time_step
     
@@ -1283,7 +1325,7 @@ class Solvers(object):
     def eliminate_normal_mass_flux(self):
         
         only_slip_wall = False
-        savei = -1
+        #savei = -1
         first_found = False
         # for i, bg in enumerate(self.mesh.bound):
         #     if bg.bc_type == 'slip_wall_ymmtm_fix' and not first_found: 
@@ -1293,7 +1335,7 @@ class Solvers(object):
         #         print(" Eliminating the normal momentum on slip wall boundary ", i)
         for ib, bface in enumerate(self.mesh.boundaryList):
             if self.bc_type[ib] == 'slip_wall_ymmtm_fix' and not first_found: 
-                print(" Eliminating the normal momentum on slip wall boundary ", ib, bface.fid)
+                #print(" Eliminating the normal momentum on slip wall boundary ", ib, bface.fid)
                 bface.special_ymtm = True
                 first_found = True
                 
@@ -1347,6 +1389,8 @@ class Solvers(object):
                 if bface.special_ymtm:
                     #bface.special_ymtm = True
                     #print('shock y mmtm 0, n1 = ',bface.fid,' cid = ',cid )
+                    #for vtx in bface.nodes:
+                    #    print('shock y mmtm 0, nodes = ',vtx.nid)
                     self.save_shock_cell = bface.parentcell
                     self.u[cid,2] = 0.0                      # Make sure zero y-momentum.
                     self.w[cid,:] = self.u2w(self.u[cid,:])  # Update primitive variables
@@ -1362,7 +1406,7 @@ class Solvers(object):
                 
                 self.w[cid,:] = self.u2w(self.u[cid,:])
         
-        print(" Finished eliminating the normal momentum on slip wall boundary ", savei)
+        #print(" Finished eliminating the normal momentum on slip wall boundary ", savei)
         return
     
     #-------------------------------------------------------------------------#
@@ -1456,7 +1500,22 @@ class Solvers(object):
     # Compute limiter functions
     #
     #**************************************************************************
-    def compute_limiter(self):
+    def compute_limiter(self, limiter_type='vk_limiter'):
+        '''
+
+        Parameters
+        ----------
+        limiter_type : TYPE, optional
+            DESCRIPTION. The default is 'vk_limiter'.
+            
+            limiter_type options: vk_limiter , vanalbada_limiter
+
+        Returns
+        -------
+        None.
+
+        '''
+        
         #print('compute_limiter')
         # loop cells
         for cell in self.mesh.cells:
@@ -1506,8 +1565,13 @@ class Solvers(object):
                     
                     # Note: We always have dwm*dwp >= 0 by the above choice! So, r=a/b>0 always
                     
+                    
+                    self.limiter_switch = {'vk_limiter':[dwp, dwm, self.mesh.cells[i].volume],
+                                          'vanalbada_limiter':[dwp, dwm, self.mesh.cells[i].volume]}
+                    
                     # Limiter function: Venkat limiter
-                    phi_vertex = self.vk_limiter(dwp, dwm, self.mesh.cells[i].volume)
+                    #phi_vertex = self.vk_limiter(dwp, dwm, self.mesh.cells[i].volume)
+                    phi_vertex = getattr(self, limiter_type)(*self.limiter_switch[limiter_type])
                     
                     # Keep the minimum over the control points (vertices)
                     if (k==0):
@@ -1551,6 +1615,11 @@ class Solvers(object):
         * ---------------------------------------------------------------------
         *
         ***********************************************************************
+        
+        test:
+            a=0.
+            b=0.
+            vol = self.mesh.cells[i].volume
         """
         two = 2.0
         half = 0.5
@@ -1559,7 +1628,50 @@ class Solvers(object):
         eps2 = (Kp*diameter)**3
         vk_limiter = ( (a**2 + eps2) + two*b*a ) /                       \
                         (a**2 + two*b**2 + a*b + eps2)
+        #print('vk_limiter = ',vk_limiter)
         return vk_limiter
+    
+    
+    def vanalbada_limiter(self, da, db, h):
+        """
+        #********************************************************************************
+        #* -- vanAlbada Slope Limiter Function--
+        #*
+        #* 'A comparative study of computational methods in cosmic gas dynamics', 
+        #* Van Albada, G D, B. Van Leer and W. W. Roberts, Astronomy and Astrophysics,
+        #* 108, p76, 1982
+        #*
+        #* ------------------------------------------------------------------------------
+        #*  Input:   da, db     : two differences
+        #*
+        #* Output:   va_limiter : limited difference
+        #* ------------------------------------------------------------------------------
+        #*
+        #********************************************************************************
+        
+        #test:
+        da =  0.0
+        db =  0.0
+        h =  0.0001
+        #
+        
+        """
+        
+        #print('da = ',da)
+        #print('db = ',db)
+        #print('h = ',h)
+        
+        two = 2.0
+        half = 0.5
+        one = 1.0
+        
+        eps2 = (0.3*h)**3
+        
+        #TLM flag checkit:  np.sign Returns an element-wise indication of the sign of a number.
+        va_slope_limiter = half*( sign(one,da*db) + one ) * \
+            ( (db**2 + eps2)*da + (da**2 + eps2)*db )/(da**2 + db**2 + two*eps2)
+        #print('va_slope_limiter = ',va_slope_limiter)
+        return va_slope_limiter
     
     
     # survey of gradient reconstruction methods
@@ -1880,25 +1992,28 @@ class Solvers(object):
         v0 = zero
         p0 = one/gamma
         
+        
+        # Incoming shock speed
+        
+        M_shock = 5.09
+        u_shock = M_shock * np.sqrt(gamma*p0/rho0)
+        
+        # Post-shock state: These values will be used in the inflow boundary condition.
+        rho_inf = rho0 * (gamma + one)*M_shock**2/( (gamma - one)*M_shock**2 + two )
+        p_inf =   p0 * (   two*gamma*M_shock**2 - (gamma - one) )/(gamma + one)
+        u_inf = (one - rho0/rho_inf)*u_shock
+        self.M_inf = u_inf / np.sqrt(gamma*p_inf/rho_inf)
+        
+        
+        self.rho_inf = rho_inf
+        self.u_inf  = u_inf
+        self.v_inf = zero
+        self.p_inf = p_inf
+        
         #vertex or cell based?
         #for i, vtx in enumerate(self.mesh.nodes) #example is vertex (node) centered
         for i, cell in enumerate(self.mesh.cells): #this code is set up to be cell centered
             
-            # Incoming shock speed
-            
-            M_shock = 5.09
-            u_shock = M_shock * np.sqrt(gamma*p0/rho0)
-            
-            # Post-shock state: These values will be used in the inflow boundary condition.
-            rho_inf = rho0 * (gamma + one)*M_shock**2/( (gamma - one)*M_shock**2 + two )
-            p_inf =   p0 * (   two*gamma*M_shock**2 - (gamma - one) )/(gamma + one)
-            u_inf = (one - rho0/rho_inf)*u_shock
-            self.M_inf = u_inf / np.sqrt(gamma*p_inf/rho_inf)
-            self.v_inf = zero
-            
-            
-            self.u_inf  = u_inf
-            self.p_inf = p_inf
             
             # Set the initial solution: set the pre-shock state inside the domain.
             

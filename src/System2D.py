@@ -385,7 +385,7 @@ class Cell(object):
     cw-winding: normals point in
     """
     def __init__(self, nodes, cid, nface,
-                 nConserved=3, facelist=None): #, FaceCellMap):
+                 nConserved=3, facelist=None, level=0): #, FaceCellMap):
         self.nodes = nodes #Node data type
         self.N = len(self.nodes)
         self.num_faces = self.N
@@ -400,6 +400,7 @@ class Cell(object):
         self.cid = cid
         self.set_face_vectors(nface, facelist)
         self.Q = np.zeros((nConserved,1),float)
+        self.level = level #level 0 is the base grid.  level 1 is refined once, etc.
         for node in self.nodes:
             node.parent_cells.append(self)
         
@@ -447,7 +448,7 @@ class Cell(object):
                                parentcell=self,
                                fid = nface)
             self.faces.append( face )
-            facelist.append(   face )
+            facelist.append(   face ) #this actually builds the grid facelist!
             nface += 1
         return #n, FaceCellMap
     
@@ -799,7 +800,7 @@ class Grid(object):
                             ],
                             cid = self.nCells,
                             nface = self.nFaces,
-                            facelist = self.faceList
+                            facelist = self.faceList #adds new faces (to be build in cell) to the facelist
                             )
                 self.Cellindex2Nodesindex[self.nCells] = elm
                 
@@ -826,7 +827,7 @@ class Grid(object):
                             ],
                             cid = self.nCells,
                             nface = self.nFaces,
-                            facelist = self.faceList
+                            facelist = self.faceList #adds new faces (to be build in cell) to the facelist
                             )
                 
                 self.cells.append(cell)
@@ -1167,13 +1168,16 @@ class Grid(object):
     
     def orderBoundaryList(self):
         new_list = []
+        
+        self.halfedgeList = np.copy(self.boundaryList)
         for i,bound in enumerate(self.bound):
             for bface in bound.faces:
                 node1 = bface.nodes[0]
-                node2 = bface.nodes[1]
+                #node2 = bface.nodes[1]
                 for face in self.boundaryList:
                     if node1.nid == face.nodes[0].nid:
                         new_list.append(face)
+                        
                         
         self.boundaryList = new_list
         
