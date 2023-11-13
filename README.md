@@ -34,7 +34,7 @@ Here are some shock diffraction (supersonic flow over a backward facing step) pl
 
 ![AirfoilDensity](pics/test_cases/shock_diffraction/density.png)
 ![AirfoilDensity](pics/test_cases/shock_diffraction/mach.png)
-![AirfoilDensity](pics/test_cases/shock_diffraction/mach_reflection.png)
+![AirfoilDensity](pics/test_cases/shock_diffraction/mach_reflection_gridded.png)
 ![AirfoilDensity](pics/test_cases/shock_diffraction/pressure.png)
 
 
