@@ -32,17 +32,18 @@ The implemenatation is pretty well finished, but I am expanding it.  Right now, 
 
 Here are some shock diffraction (supersonic flow over a backward facing step) plots made with the solver:
 
-![AirfoilDensity](pics/test_cases/steady_airfoil/density.png)
-![AirfoilDensity](pics/test_cases/steady_airfoil/x-velocity.png)
-![AirfoilDensity](pics/test_cases/steady_airfoil/y-velocity.png)
-![AirfoilDensity](pics/test_cases/steady_airfoil/pressure.png)
-
-And here's a sample result of flow over an airfoil:
-
 ![AirfoilDensity](pics/test_cases/shock_diffraction/density.png)
 ![AirfoilDensity](pics/test_cases/shock_diffraction/mach.png)
 ![AirfoilDensity](pics/test_cases/shock_diffraction/mach_reflection.png)
 ![AirfoilDensity](pics/test_cases/shock_diffraction/pressure.png)
+
+
+And here's a sample result of flow over an airfoil:
+
+![AirfoilDensity](pics/test_cases/steady_airfoil/density.png)
+![AirfoilDensity](pics/test_cases/steady_airfoil/x-velocity.png)
+![AirfoilDensity](pics/test_cases/steady_airfoil/y-velocity.png)
+![AirfoilDensity](pics/test_cases/steady_airfoil/pressure.png)
 
 
 Update:  need to update the initial vortex:
