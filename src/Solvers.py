@@ -167,8 +167,6 @@ class Solvers(object):
         self.compute_te_mms = self.Parameters.compute_te_mms
         
         
-        #self.second_order = True
-        #self.use_limiter = True
         
         # solution data
         self.u = np.zeros((mesh.nCells,nq),float) # conservative variables at cells/nodes
@@ -410,8 +408,8 @@ class Solvers(object):
         #instability known for Euler solvers. So, this is the unweighted LSQ gradient.
         #More accurate gradients are obtained with 1.0, and such can be used for the
         #viscous terms and source terms in turbulence models.
-        lsq_weight_invdis_power = 0.0
-        #lsq_weight_invdis_power = 1.0
+        #lsq_weight_invdis_power = 0.0
+        lsq_weight_invdis_power = 1.0
         
         
         #----------------------------------------------------------------------
@@ -708,7 +706,7 @@ class Solvers(object):
         
         # self.compute_residual_norm_shock()
         # print('t = ',time, ' L1(res)=', self.res_norm_shock[:,0]  )
-        
+        normal_scalar = 1.0
         # sys.exit()
         
         #for jj in range(1): #debugging!
@@ -719,7 +717,7 @@ class Solvers(object):
             # Compute the residual: res(i,:)
             #print("stage 1 compute residual")
             self.compute_residual_shock_problem(roe3D, 'vk_limiter', 
-                                                normal_scalar = 1.0)
+                                                normal_scalar = normal_scalar)
             #self.compute_residual_shock_problem(roe3D, 'vanalbada_limiter') #limiter options:  'vk_limiter , vanalbada_limiter'
             #self.compute_residual_shock_problem(roe2D)
             
@@ -778,7 +776,7 @@ class Solvers(object):
             #print("stage 2 compute residual")
             #self.compute_residual_shock_problem(roe3D)
             self.compute_residual_shock_problem(roe3D, 'vk_limiter', 
-                                                normal_scalar = 1.0)
+                                                normal_scalar = normal_scalar)
             #self.compute_residual_shock_problem(roe3D, 'vanalbada_limiter') 
             #self.compute_residual_shock_problem(roe2D)
             #exit()
@@ -1400,14 +1398,14 @@ class Solvers(object):
                 
                 #  Add the flux multiplied by the magnitude of the directed area vector to c1.
     
-                self.res[c1.cid,:] += num_flux * face.face_nrml_mag #* normal_scalar
-                self.wsn[c1.cid] += wave_speed * face.face_nrml_mag #* normal_scalar
+                self.res[c1.cid,:] += num_flux * face.face_nrml_mag * normal_scalar
+                self.wsn[c1.cid] += wave_speed * face.face_nrml_mag * normal_scalar
     
                 #  Subtract the flux multiplied by the magnitude of the directed area vector from c2.
                 #  NOTE: Subtract because the outward face normal is -n for the c2.
                 
-                self.res[c2.cid,:] -= num_flux * face.face_nrml_mag #* normal_scalar
-                self.wsn[c2.cid] += wave_speed * face.face_nrml_mag #* normal_scalar
+                self.res[c2.cid,:] -= num_flux * face.face_nrml_mag * normal_scalar
+                self.wsn[c2.cid] += wave_speed * face.face_nrml_mag * normal_scalar
                 
                 # print('c1 = ',c1.cid)
                 # print('c2 = ',c2.cid)
@@ -1427,7 +1425,9 @@ class Solvers(object):
                 # print('i, wsn(c1) = ',c1.cid, self.wsn[c1.cid])
                 # print('i, wsn(c2) = ',c2.cid, self.wsn[c2.cid])
                 # print('--------------------------')
-    
+                
+                # sys.exit()
+                
                 # End of Residual computation: interior faces
                 #--------------------------------------------------------------------------------
         #sys.exit()
@@ -1538,8 +1538,8 @@ class Solvers(object):
 
             #---------------------------------------------------
             #  Add the boundary contributions to the residual.
-            self.res[c1.cid,:] += num_flux * bface.face_nrml_mag# * normal_scalar
-            self.wsn[c1.cid] += wave_speed * bface.face_nrml_mag# * normal_scalar
+            self.res[c1.cid,:] += num_flux * bface.face_nrml_mag * normal_scalar
+            self.wsn[c1.cid] += wave_speed * bface.face_nrml_mag * normal_scalar
             
 
             # # no c2 on the boundary
@@ -2639,7 +2639,7 @@ class Solvers(object):
             
         lines.append('Mach    1 ' + str(nnodes) + '  double'+'\n')
         for i in range(nnodes):
-            mn = np.sqrt(wn[i,1]**2 + wn[i,2]**2) / ( self.gamma * (wn[i,3]/wn[i,0]) )
+            mn = np.sqrt( (wn[i,1]**2 + wn[i,2]**2) / ( self.gamma * (wn[i,3]/wn[i,0]) ) )
             lines.append(str(mn)+'\n')
             
         
