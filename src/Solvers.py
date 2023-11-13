@@ -716,9 +716,21 @@ class Solvers(object):
             #------------------------------------------------------------------
             # Compute the residual: res(i,:)
             #print("stage 1 compute residual")
-            self.compute_residual_shock_problem(roe3D, 'vk_limiter', 
-                                                normal_scalar = normal_scalar)
-            #self.compute_residual_shock_problem(roe3D, 'vanalbada_limiter') #limiter options:  'vk_limiter , vanalbada_limiter'
+            # self.compute_residual_shock_problem(roe3D, 
+            #                                     'vk_limiter', 
+            #                                     normal_scalar = normal_scalar)
+            
+            #self.compute_residual_shock_problem(roe3D, 
+            #                                    'vanalbada_limiter', 
+            #                                    normal_scalar = normal_scalar)
+            
+            self.compute_residual_shock_problem(roe2D, 
+                                                'vk_limiter', 
+                                                normal_scalar = normal_scalar) 
+            
+            # self.compute_residual_shock_problem(roe2D, 
+            #                                     'vanalbada_limiter', 
+            #                                     normal_scalar = normal_scalar) #limiter options:  'vk_limiter , vanalbada_limiter'
             #self.compute_residual_shock_problem(roe2D)
             
             #experiement:  (did not work)
@@ -775,8 +787,21 @@ class Solvers(object):
                 
             #print("stage 2 compute residual")
             #self.compute_residual_shock_problem(roe3D)
-            self.compute_residual_shock_problem(roe3D, 'vk_limiter', 
-                                                normal_scalar = normal_scalar)
+            
+            # self.compute_residual_shock_problem(roe3D, 
+            #                                     'vk_limiter', 
+            #                                     normal_scalar = normal_scalar)
+            # self.compute_residual_shock_problem(roe3D, 
+            #                                     'vanalbada_limiter', 
+            #                                     normal_scalar = normal_scalar)
+            
+            self.compute_residual_shock_problem(roe2D, 
+                                                'vk_limiter', 
+                                                normal_scalar = normal_scalar) 
+            
+            # self.compute_residual_shock_problem(roe2D, 
+            #                                     'vanalbada_limiter', 
+            #                                     normal_scalar = normal_scalar) 
             #self.compute_residual_shock_problem(roe3D, 'vanalbada_limiter') 
             #self.compute_residual_shock_problem(roe2D)
             #exit()
@@ -2011,6 +2036,9 @@ class Solvers(object):
         #
         # - Compute the gradient by [wx,wy] = sum_nghbrs [cx,cy]*(w_nghbr - wj),
         #   where [cx,cy] are the LSQ coefficients.
+        #
+        #
+        # note: this is the Linear LSQ gradient
         #
         #*******************************************************************************
         """
