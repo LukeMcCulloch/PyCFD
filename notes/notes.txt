@@ -7,3 +7,8 @@ roe2D is "faster" than roe3D
 eigen limiting factors of 0.2 are less diffusive than 0.1, I think
 
 
+roe3D seems slightly more 
+* diffusive, 
+* stable, 
+* and is slower in speed than roe 2D, 
+because of eigen limiting factors in the Harten Entropy Fix in the 3D version, absent in the 2Droe
