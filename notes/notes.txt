@@ -1,0 +1,9 @@
+
+
+second order gradients are "linear LSQ" : corresponding to linear gradients in the unsteady Euler shock solver of Ossan
+
+roe2D is "faster" than roe3D
+
+eigen limiting factors of 0.2 are less diffusive than 0.1, I think
+
+
