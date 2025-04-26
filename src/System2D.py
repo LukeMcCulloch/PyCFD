@@ -22,9 +22,12 @@ from PlotGrids import PlotGrid
 from Utilities import normalize, normalized, norm, dot, cross, \
     normalize2D, normalized2D, triangle_area, triangle_area_from_raw_data
     
-from FileTools import GetLines, GetLineByLine
+# import FileTools as FT
+from FileTools import GetLines, GetLineByLine, WriteLines
 
 from DataHandler import DataHandler
+
+from AdaptiveMeshRefinement  import AMR
 
 class Node(Overload):
     def __init__(self, vector, nid, nConserved=3):
@@ -412,7 +415,15 @@ class Cell(object):
         -barycentric?
         """
         scale = 1./float(self.N)
-        self.centroid = scale * sum([el.vector for el in self.nodes]) 
+        #self.centroid = scale * sum([el.vector for el in self.nodes])
+        self.centroid = np.zeros((2),float)
+        for el in self.nodes:
+            self.centroid += el.vector
+        self.centroid *= scale
+        
+        print('centroid = {}'.format(self.centroid))
+        print('self.nodes[0] = {}'.format(self.nodes[0]))
+        print('self.nodes[0].vector = {}'.format(self.nodes[0].vector ))
         return self.centroid
     
     def set_volume(self):
@@ -1631,7 +1642,7 @@ class Grid(object):
         #     lines.append(str(wn[i,1])+' ' +str(wn[i,2])+' 0.0 \n')
         
         
-        FT.WriteLines(directory=self.out_dir,
+        WriteLines(directory=self.out_dir,
                       filename=filename_vtk,
                       lines = lines)
         

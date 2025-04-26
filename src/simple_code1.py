@@ -4,6 +4,11 @@
 Created on Sun May 19 07:21:28 2019
 
 @author: lukemcculloch
+
+this is oooold python 2.7 code.  Looks like a total 'make a solver in 1 file' type of thing
+
+not sure if it belongs in the PyCFD codebase
+I don't think it's useful at this point (April 2025)
 """
 #========================================================================#
 #code1.m
@@ -82,7 +87,7 @@ for i in range(1,nx+1):
             r[i,j]=rho2
 #================== START TIME LOOP======================================
 for iis in range(nstep):#is
-    print iis
+    print( iis )
     # tangential velocity at boundaries
     u[:nx+1,1]=2*usouth-u[:nx+1,2]
     u[:nx+1,ny+1]=2*unorth-u[:nx+1,ny+1]

@@ -11,9 +11,23 @@ Created on Sat Apr 26 14:32:58 2025
  refinement [see Berger & Colella, J. Comput. Phys. 82(1989) and
  Mavriplis, J. Comput. Phys. 128(1996)].
 
+
+notes:
+    
+    Mesh helpers (ensure_edge_midpoints, add_node, add_cell, remove_cell) 
+    plug into your existing Grid, Node, and Cell classes.
+    
+    the standalone cell_reconstruct_gradient uses least‐squares over neighbor centroids.
+    
+    refine_triangle/refine_quad use the helpers and avoid duplicate midpoint nodes.
+    
+    compute_error_indicator uses the new gradient routine
+    
 """
 
 import numpy as np
+
+import System2D as s2d
 
 # Adaptive Mesh Refinement (AMR) module
 
@@ -105,14 +119,14 @@ def add_node(mesh, position):
 
     Parameters
     ----------
-    mesh : Grid
+    mesh : Grid  (from System2D.py imported as s2d)
         The mesh to modify.
     position : array_like
         Length-2 sequence giving the (x,y) coordinates.
     """
     pos = np.array(position, dtype=float)
     nid = mesh.nNodes
-    new_node = Node(pos, nid)
+    new_node = s2d.Node(pos, nid)
     mesh.nodeList.append(new_node)
     mesh.nodes_array = np.asarray(mesh.nodeList)
     mesh.nNodes += 1
@@ -126,14 +140,14 @@ def add_cell(mesh, nodes):
 
     Parameters
     ----------
-    mesh : Grid
+    mesh : Grid  (from System2D.py imported as s2d)
         The mesh to modify.
-    nodes : list of Node
+    nodes : list of Nodes  (from System2D.py imported as s2d)
         The vertices of the new cell, in order.
     """
     cid = mesh.nCells
     # create faces for the new cell; Cell constructor appends to mesh.faceList
-    cell = Cell(nodes, cid=cid, nface=len(nodes), facelist=mesh.faceList)
+    cell = s2d.Cell(nodes, cid=cid, nface=len(nodes), facelist=mesh.faceList)
     mesh.cells.append(cell)
     mesh.cellList.append(cell)
     if len(nodes) == 3:
@@ -151,9 +165,9 @@ def remove_cell(mesh, cell):
 
     Parameters
     ----------
-    mesh : Grid
+    mesh : Grid  (from System2D.py imported as s2d)
         The mesh to modify.
-    cell : Cell
+    cell : Cell  (from System2D.py imported as s2d)
         The cell to remove.
     """
     # remove from cell lists
@@ -216,7 +230,9 @@ def refine_triangle(mesh, cell):
     """
     Split a triangular cell into 4 sub-triangles by connecting edge midpoints
     """
+    #magic_number = 3.0 # not very mystical ;)
     # 1) Compute midpoints of each edge and add new nodes
+    ensure_edge_midpoints(mesh)
     mid = {}
     nodes = cell.nodes
     for i in range(3):
@@ -245,7 +261,9 @@ def refine_quad(mesh, cell):
     """
     Split a quadrilateral cell into 4 sub-quads by connecting edge midpoints and center
     """
+    magic_number = 4.0 # not very mystical ;)
     # Compute midpoints on each edge
+    ensure_edge_midpoints(mesh)
     mid = {}
     nodes = cell.nodes
     for i in range(4):
@@ -258,7 +276,7 @@ def refine_quad(mesh, cell):
             mesh._edge_midpoints[key] = new_node
         mid[i] = mesh._edge_midpoints[key]
     # Center point
-    center_pos = sum([n.vector for n in nodes]) / 4.0
+    center_pos = sum([n.vector for n in nodes]) / magic_number
     center = mesh.add_node(center_pos)
     # Create 4 quads
     new_cells = []
