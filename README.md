@@ -81,6 +81,114 @@ Normals, centroids, face centers, edges, and vertices shown.
 Normals, centroids, face centers, edges, and vertices shown.
 
 
+## PyCFD Repository Overview
+
+A quick, markdown-formatted, chatgpt assisted tour of each part of the codebase:
+
+
+---
+
+### Top-level files & folders
+
+- **`README.md`**  
+  Project overview, requirements, sample results & plots.
+
+- **`LICENSE`**  
+  MIT license text.
+
+- **`.gitignore`**  
+  Git ignore rules.
+
+- **`cases/`**  
+  Sample mesh/case definitions (e.g., airfoil, cylinder).
+
+- **`notes/`**  
+  Development notes and TODOs.
+
+- **`output/vtk/`**  
+  VTK files (e.g. `.vtu`) written by the solver for ParaView.
+
+- **`pics/`**  
+  PNGs used in the README to illustrate results.
+
+---
+
+### `src/` — Core solver code
+
+- **`getPaths.py`**  
+  Utility to locate your `cases`, `output`, etc., in a portable way.
+
+- **`input.nml`**  
+  Namelist of simulation parameters (time step, CFL, thresholds, file names).
+
+- **`Parameters.py`**  
+  Parser that reads `input.nml` into structured Python parameters.
+
+- **`Element.py`**  
+  Defines per-element data (triangle/quad primitives, face connectivity).
+
+- **`System2D.py`**  
+  The mesh classes (`Grid`, `Node`, `Cell`) plus routines to build incidence maps, centroids, normals.
+
+- **`Math2D.py`**  
+  2D geometric utilities (area, centroid, vector operations).
+
+- **`Overload.py`**  
+  Operator overloads (e.g. vector arithmetic).
+
+- **`Utilities.py`**  
+  Miscellaneous helpers (e.g. logging, timing).
+
+- **`FileTools.py`**  
+  File I/O helpers (e.g. directory creation, file copying).
+
+- **`DataHandler.py`**  
+  Read/write mesh and flow-field data (VTK, CSV, etc.).
+
+- **`InitialConditions.py`**  
+  Preset flow fields (vortex, backward-facing-step, etc.).
+
+- **`BoundaryConditions.py`**  
+  Enforcement of wall, inlet, outlet, symmetry BCs.
+
+- **`1DRiemann.py`** / **`2DRiemann.py`**  
+  1D and 2D Riemann solvers for Euler fluxes (Roe approximate).
+
+- **`flux.py`**  
+  Higher-level flux wrappers that call your Riemann solvers.
+
+- **`ManufacturedSolutions.py`**  
+  Tools to generate or verify against analytic “manufactured” solutions.
+
+- **`PlotGrids.py`**  
+  Mesh-plotting routines (tri/quad, centroids, normals).
+
+- **`Solvers.py`**  
+  Spatial discretization: finite-volume stencils, residual assembly.
+
+- **`Integrator.py`**  
+  Time stepping (explicit RK methods, CFL control).
+
+- **`Debugging.py`**  
+  Helper functions for introspecting/debugging mesh & fields.
+
+- **`simple_code1.py`**  
+  Minimal demo script showing basic solver usage (good for quick smoke tests).
+  
+  **`amr.py`** 
+  Adaptive mesh refinement module that will hook into `System2D.py`’s mesh structures, 
+  using the existing LSQ stencil routines to drive adaptive refinement.
+
+---
+
+
+
+
+
+
+
+
+
 
 
 Cheers,
