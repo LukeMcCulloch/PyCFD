@@ -87,6 +87,131 @@ class AMR:
         self.mesh.buildVertexToCellIncidence()
 
 
+
+
+# Mesh helper functions for AMR
+
+def ensure_edge_midpoints(mesh):
+    """
+    Ensure the mesh has an edge_midpoints dictionary to track midpoint nodes.
+    """
+    if not hasattr(mesh, '_edge_midpoints'):
+        mesh._edge_midpoints = {}
+
+
+def add_node(mesh, position):
+    """
+    Add a new Node to the mesh at the given 2D position and return it.
+
+    Parameters
+    ----------
+    mesh : Grid
+        The mesh to modify.
+    position : array_like
+        Length-2 sequence giving the (x,y) coordinates.
+    """
+    pos = np.array(position, dtype=float)
+    nid = mesh.nNodes
+    new_node = Node(pos, nid)
+    mesh.nodeList.append(new_node)
+    mesh.nodes_array = np.asarray(mesh.nodeList)
+    mesh.nNodes += 1
+    return new_node
+
+
+def add_cell(mesh, nodes):
+    """
+    Add a new Cell to the mesh using the provided Node objects and return it.
+    Updates cell and face lists and counts.
+
+    Parameters
+    ----------
+    mesh : Grid
+        The mesh to modify.
+    nodes : list of Node
+        The vertices of the new cell, in order.
+    """
+    cid = mesh.nCells
+    # create faces for the new cell; Cell constructor appends to mesh.faceList
+    cell = Cell(nodes, cid=cid, nface=len(nodes), facelist=mesh.faceList)
+    mesh.cells.append(cell)
+    mesh.cellList.append(cell)
+    if len(nodes) == 3:
+        mesh.tria.append(cell)
+    elif len(nodes) == 4:
+        mesh.quad.append(cell)
+    mesh.nFaces += len(nodes)
+    mesh.nCells += 1
+    return cell
+
+
+def remove_cell(mesh, cell):
+    """
+    Remove a Cell and its faces from the mesh.
+
+    Parameters
+    ----------
+    mesh : Grid
+        The mesh to modify.
+    cell : Cell
+        The cell to remove.
+    """
+    # remove from cell lists
+    mesh.cells.remove(cell)
+    mesh.cellList.remove(cell)
+    if len(cell.nodes) == 3 and cell in mesh.tria:
+        mesh.tria.remove(cell)
+    if len(cell.nodes) == 4 and cell in mesh.quad:
+        mesh.quad.remove(cell)
+    mesh.nCells -= 1
+    # remove faces
+    for face in list(cell.faces):
+        if face in mesh.faceList:
+            mesh.faceList.remove(face)
+            mesh.nFaces -= 1
+
+
+def cell_reconstruct_gradient(mesh, cell, var):
+    """
+    Reconstruct the gradient of a scalar field var at a given cell
+    using a least-squares fit over neighboring cell center values.
+
+    Parameters
+    ----------
+    mesh : Grid
+    cell : Cell
+    var : array_like, shape (nCells,)
+        Scalar values at each cell center.
+
+    Returns
+    -------
+    grad : ndarray, shape (2,)
+        The reconstructed (dvar/dx, dvar/dy) at the cell.
+    """
+    # compute centroids if not already present
+    if not hasattr(cell, 'centroid'):
+        cell.centroid = sum(n.vector for n in cell.nodes) / len(cell.nodes)
+    deltas = []
+    diffs = []
+    for face in cell.faces:
+        nbr = face.adjacentface.parentcell
+        if nbr is None:
+            continue
+        if not hasattr(nbr, 'centroid'):
+            nbr.centroid = sum(n.vector for n in nbr.nodes) / len(nbr.nodes)
+        deltas.append(nbr.centroid - cell.centroid)
+        diffs.append(var[nbr.cid] - var[cell.cid])
+    if not deltas:
+        return np.zeros(2)
+    A = np.vstack(deltas)
+    b = np.array(diffs)
+    grad, *_ = np.linalg.lstsq(A, b, rcond=None)
+    return grad
+
+
+# Adaptive Mesh Refinement (AMR) module
+
+
 def refine_triangle(mesh, cell):
     """
     Split a triangular cell into 4 sub-triangles by connecting edge midpoints
