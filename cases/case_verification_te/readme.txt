@@ -1,5 +1,6 @@
 #########################################################
-# To perform a TE test.
+# To perform a TE test.  ... sorry this is the c++ readme?  
+# it's been a while.'
 #########################################################
 
 # Go into the directory 'grids'.
