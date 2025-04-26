@@ -175,7 +175,7 @@ A quick, markdown-formatted, chatgpt assisted tour of each part of the codebase:
 - **`simple_code1.py`**  
   Minimal demo script showing basic solver usage (good for quick smoke tests).
   
-  **`amr.py`** 
+- **`amr.py`** 
   Adaptive mesh refinement module that will hook into `System2D.py`’s mesh structures, 
   using the existing LSQ stencil routines to drive adaptive refinement.
 
