@@ -47,6 +47,10 @@ class AMR:
         self.error = np.zeros(mesh.nCells)
         self.refine_ids = []
         self.coarsen_ids = []
+        # parent->children mapping
+        self.parent_to_children = {}
+        # child->parent mapping
+        self.child_to_parent = {}
 
     def compute_error_indicator(self):
         """
@@ -71,24 +75,100 @@ class AMR:
         self.coarsen_ids = np.where(self.error < self.coarsen_thresh)[0]
         return self.refine_ids, self.coarsen_ids
 
+    # def refine(self):
+    #     """
+    #     Refine all marked cells in-place
+    #     """
+    #     for cid in self.refine_ids:
+    #         cell = self.mesh.cells[cid]
+    #         if len(cell.nodes) == 3:
+    #             refine_triangle(self.mesh, cell)
+    #         elif len(cell.nodes) == 4:
+    #             refine_quad(self.mesh, cell)
+    #     self._update_mesh_connectivity()
+
+    # def refine(self):
+    #     """
+    #     Refine all marked cells in-place
+    #     """
+    #     ensure_edge_midpoints(self.mesh)
+    #     for pid in list(self.refine_ids):
+    #         parent = self.mesh.cells[pid]
+    #         children = []
+    #         if len(parent.nodes) == 3:
+    #             children = refine_triangle(self.mesh, parent)
+    #         elif len(parent.nodes) == 4:
+    #             children = refine_quad(self.mesh, parent)
+                
+    #         # record mappings
+    #         self.parent_to_children[parent.cid] = [c.cid for c in children]
+    #         for c in children:
+    #             self.child_to_parent[c.cid] = parent.cid
+    #     self._update_mesh_connectivity()
+        
+        
     def refine(self):
         """
         Refine all marked cells in-place
         """
-        for cid in self.refine_ids:
-            cell = self.mesh.cells[cid]
-            if len(cell.nodes) == 3:
-                refine_triangle(self.mesh, cell)
-            elif len(cell.nodes) == 4:
-                refine_quad(self.mesh, cell)
-        self._update_mesh_connectivity()
+        ensure_edge_midpoints(self.mesh)
+        for pid in list(self.refine_ids):
+            parent = self.mesh.cells[pid]
+            # spawn children (tri or quad refinement)
+            if len(parent.nodes) == 3:
+                children = refine_triangle(self.mesh, parent)
+            else:
+                children = refine_quad(self.mesh, parent)
 
+            # **track the mapping**:
+            child_ids = [c.cid for c in children]
+            self.parent_to_children[parent.cid] = child_ids
+            for cid in child_ids:
+                self.child_to_parent[cid] = parent.cid
+
+        self._update_mesh_connectivity()
+        
+    # def coarsen(self):
+    #     """
+    #     Coarsen all marked cells where possible (requires tracking refinement history)
+    #     """
+    #     # Placeholder: implement coarsening logic based on refinement tree
+    #     self._update_mesh_connectivity()
+        
+        
+    # def coarsen(self):
+    #     """
+    #     Coarsen all marked cells where possible (requires tracking refinement history)
+    #     """
+    #     # Reverse mapping: if all children flagged for coarsening
+    #     for pid, kids in list(self.parent_to_children.items()):
+    #         if all([kid in self.coarsen_ids for kid in kids]):
+    #             # collapse kids into parent
+    #             coarsen_group(self.mesh, pid, kids)
+    #             # clean up maps
+    #             for kid in kids:
+    #                 del self.child_to_parent[kid]
+    #             del self.parent_to_children[pid]
+    #     self._update_mesh_connectivity()
+        
     def coarsen(self):
         """
         Coarsen all marked cells where possible (requires tracking refinement history)
         """
-        # Placeholder: implement coarsening logic based on refinement tree
+        ensure_edge_midpoints(self.mesh)
+        # look for parent groups where *all* children are flagged to coarsen
+        for parent_cid, child_ids in list(self.parent_to_children.items()):
+            if all(cid in self.coarsen_ids for cid in child_ids):
+                # collapse them back into the parent
+                coarsen_group(self.mesh, parent_cid, child_ids)
+
+                # **clean up the mappings**:
+                for cid in child_ids:
+                    del self.child_to_parent[cid]
+                del self.parent_to_children[parent_cid]
+
         self._update_mesh_connectivity()
+        
 
     def _update_mesh_connectivity(self):
         """
@@ -226,64 +306,129 @@ def cell_reconstruct_gradient(mesh, cell, var):
 # Adaptive Mesh Refinement (AMR) module
 
 
+# def refine_triangle(mesh, cell):
+#     """
+#     Split a triangular cell into 4 sub-triangles by connecting edge midpoints
+#     """
+#     #magic_number = 3.0 # not very mystical ;)
+#     # 1) Compute midpoints of each edge and add new nodes
+#     ensure_edge_midpoints(mesh)
+#     mid = {}
+#     nodes = cell.nodes
+#     for i in range(3):
+#         a = nodes[i]
+#         b = nodes[(i+1)%3]
+#         key = tuple(sorted((a.id, b.id)))
+#         if key not in mesh._edge_midpoints:
+#             pos = 0.5*(a.vector + b.vector)
+#             new_node = mesh.add_node(pos)
+#             mesh._edge_midpoints[key] = new_node
+#         mid[i] = mesh._edge_midpoints[key]
+#     # 2) Create 4 new triangles
+#     n0, n1, n2 = nodes
+#     m0, m1, m2 = mid[0], mid[1], mid[2]
+#     new_cells = [
+#         mesh.add_cell([n0, m0, m2]),
+#         mesh.add_cell([m0, n1, m1]),
+#         mesh.add_cell([m2, m1, n2]),
+#         mesh.add_cell([m0, m1, m2])
+#     ]
+#     # 3) Remove parent cell
+#     mesh.remove_cell(cell)
+
+
+# def refine_quad(mesh, cell):
+#     """
+#     Split a quadrilateral cell into 4 sub-quads by connecting edge midpoints and center
+#     """
+#     magic_number = 4.0 # not very mystical ;)
+#     # Compute midpoints on each edge
+#     ensure_edge_midpoints(mesh)
+#     mid = {}
+#     nodes = cell.nodes
+#     for i in range(4):
+#         a = nodes[i]
+#         b = nodes[(i+1)%4]
+#         key = tuple(sorted((a.id, b.id)))
+#         if key not in mesh._edge_midpoints:
+#             pos = 0.5*(a.vector + b.vector)
+#             new_node = mesh.add_node(pos)
+#             mesh._edge_midpoints[key] = new_node
+#         mid[i] = mesh._edge_midpoints[key]
+#     # Center point
+#     center_pos = sum([n.vector for n in nodes]) / magic_number
+#     center = mesh.add_node(center_pos)
+#     # Create 4 quads
+#     new_cells = []
+#     for i in range(4):
+#         n0 = nodes[i]
+#         n1 = mid[i]
+#         n2 = center
+#         n3 = mid[(i-1)%4]
+#         new_cells.append(mesh.add_cell([n0, n1, n2, n3]))
+#     mesh.remove_cell(cell)
+    
+    
 def refine_triangle(mesh, cell):
-    """
-    Split a triangular cell into 4 sub-triangles by connecting edge midpoints
-    """
-    #magic_number = 3.0 # not very mystical ;)
-    # 1) Compute midpoints of each edge and add new nodes
     ensure_edge_midpoints(mesh)
-    mid = {}
-    nodes = cell.nodes
+    mid, nodes = {}, cell.nodes
     for i in range(3):
-        a = nodes[i]
-        b = nodes[(i+1)%3]
-        key = tuple(sorted((a.id, b.id)))
+        a, b = nodes[i], nodes[(i+1)%3]
+        key = tuple(sorted((a.nid, b.nid)))
         if key not in mesh._edge_midpoints:
-            pos = 0.5*(a.vector + b.vector)
-            new_node = mesh.add_node(pos)
-            mesh._edge_midpoints[key] = new_node
+            mesh._edge_midpoints[key] = add_node(mesh, 0.5*(a.vector+b.vector))
         mid[i] = mesh._edge_midpoints[key]
-    # 2) Create 4 new triangles
-    n0, n1, n2 = nodes
-    m0, m1, m2 = mid[0], mid[1], mid[2]
-    new_cells = [
-        mesh.add_cell([n0, m0, m2]),
-        mesh.add_cell([m0, n1, m1]),
-        mesh.add_cell([m2, m1, n2]),
-        mesh.add_cell([m0, m1, m2])
-    ]
-    # 3) Remove parent cell
-    mesh.remove_cell(cell)
+    # create children
+    c0 = add_cell(mesh, [nodes[0], mid[0], mid[2]])
+    c1 = add_cell(mesh, [mid[0], nodes[1], mid[1]])
+    c2 = add_cell(mesh, [mid[2], mid[1], nodes[2]])
+    c3 = add_cell(mesh, [mid[0], mid[1], mid[2]])
+    remove_cell(mesh, cell)
+    return [c0, c1, c2, c3]
 
 
 def refine_quad(mesh, cell):
-    """
-    Split a quadrilateral cell into 4 sub-quads by connecting edge midpoints and center
-    """
-    magic_number = 4.0 # not very mystical ;)
-    # Compute midpoints on each edge
     ensure_edge_midpoints(mesh)
-    mid = {}
     nodes = cell.nodes
+    mid = {}
     for i in range(4):
-        a = nodes[i]
-        b = nodes[(i+1)%4]
-        key = tuple(sorted((a.id, b.id)))
+        a, b = nodes[i], nodes[(i+1)%4]
+        key = tuple(sorted((a.nid,b.nid)))
         if key not in mesh._edge_midpoints:
-            pos = 0.5*(a.vector + b.vector)
-            new_node = mesh.add_node(pos)
-            mesh._edge_midpoints[key] = new_node
+            mesh._edge_midpoints[key] = add_node(mesh, 0.5*(a.vector+b.vector))
         mid[i] = mesh._edge_midpoints[key]
-    # Center point
-    center_pos = sum([n.vector for n in nodes]) / magic_number
-    center = mesh.add_node(center_pos)
-    # Create 4 quads
-    new_cells = []
+    center = add_node(mesh, sum([n.vector for n in nodes])/4.0)
+    kids = []
     for i in range(4):
-        n0 = nodes[i]
-        n1 = mid[i]
-        n2 = center
-        n3 = mid[(i-1)%4]
-        new_cells.append(mesh.add_cell([n0, n1, n2, n3]))
-    mesh.remove_cell(cell)
+        kids.append(add_cell(mesh, [nodes[i], mid[i], center, mid[(i-1)%4]]))
+    remove_cell(mesh, cell)
+    return kids
+
+
+
+def coarsen_group(mesh, parent_cid, children_cids):
+    # remove child cells, then re-create the parent cell
+    children = [mesh.cells[cid] for cid in children_cids]
+    parent = s2d.Cell([], cid=parent_cid, nface=0, facelist=mesh.faceList)
+    # derive parent nodes (assumes children share boundary)
+    parent_nodes = derive_parent_nodes(children)
+    parent = add_cell(mesh, parent_nodes)
+    for ch in children:
+        remove_cell(mesh, ch)
+    return parent
+
+def derive_parent_nodes(mesh):
+    """
+    reverse the refinement to find original nodes
+
+    Parameters
+    ----------
+    mesh : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    tbd.
+
+    """
+    return

@@ -23,6 +23,9 @@ import numpy as np
 from pylab import * #old fashioned quiver example
 zeros = np.zeros
 
+#from AdaptiveMeshRefinement import AMR, cell_reconstruct_gradient
+
+
 def max2d(this):
     return max(map(max, abs(this)))
 #domain size and physical variables

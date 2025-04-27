@@ -421,9 +421,9 @@ class Cell(object):
             self.centroid += el.vector
         self.centroid *= scale
         
-        print('centroid = {}'.format(self.centroid))
-        print('self.nodes[0] = {}'.format(self.nodes[0]))
-        print('self.nodes[0].vector = {}'.format(self.nodes[0].vector ))
+        #print('centroid = {}'.format(self.centroid))
+        #print('self.nodes[0] = {}'.format(self.nodes[0]))
+        #print('self.nodes[0].vector = {}'.format(self.nodes[0].vector ))
         return self.centroid
     
     def set_volume(self):

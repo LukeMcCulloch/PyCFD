@@ -45,6 +45,9 @@ from PlotGrids import PlotGrid
 from Debugging import dbInterfaceFlux, dbRoeFlux
 
 
+from AdaptiveMeshRefinement  import AMR
+
+
 nq = 4 # Euler system size
 
 class StencilLSQ(object):
@@ -1805,10 +1808,10 @@ class Solvers(object):
         
         gamma = self.gamma
         
-        iu = self.iu
-        iv = self.iv
-        ir = self.ir
-        ip = self.ip
+        ir = self.ir # density rho
+        iu = self.iu # x-momentum rho u
+        iv = self.iv # y-momentum rho v
+        ip = self.ip # pressure p
         
         u[0] = w[ir]
         u[1] = w[ir]*w[iu]
@@ -2304,6 +2307,7 @@ class Solvers(object):
         
         ********************************************************************************
         '''
+        print( "setting: initial_solution_shock_diffraction")
         self.gamma = 1.4
         gamma = self.gamma
         
