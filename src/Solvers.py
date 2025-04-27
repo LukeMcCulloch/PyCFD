@@ -44,6 +44,8 @@ from PlotGrids import PlotGrid
 
 from Debugging import dbInterfaceFlux, dbRoeFlux
 
+from ProblemTypesDefinitions import vtkNames, whichSolver, solvertype
+
 
 from AdaptiveMeshRefinement  import AMR
 
@@ -2822,7 +2824,13 @@ class TestShockDiffractiongrid(object):
                          dhandle = self.DHandler,
                          type_='quad',
                          winding='ccw')
-    
+
+
+whichTest = {0:TestInviscidVortex,
+             1:TestSteadyAirfoil,
+             2:TestSteadyCylinder,
+             3:TestTEgrid,
+             4:TestShockDiffractiongrid}
         
         
 # class TestQEgrid(object):
@@ -2844,6 +2852,8 @@ class TestShockDiffractiongrid(object):
     
 
 if __name__ == '__main__':
+    
+    
     # gd = Grid(type_='quad',m=10,n=10,
     #           winding='ccw')
     
@@ -2860,18 +2870,20 @@ if __name__ == '__main__':
     
     #cell.plot_cell()
     
-    vtkNames = {0:'vortex.vtk',
-                1:'airfoil.vtk',
-                2:'cylinder.vtk',
-                3:'test.vtk',
-                4:'shock_diffraction.vtk'}
+    # vtkNames = {0:'vortex.vtk',
+    #             1:'airfoil.vtk',
+    #             2:'cylinder.vtk',
+    #             3:'test.vtk',
+    #             4:'shock_diffraction.vtk'}
     
     thisTest = 4
-    whichTest = {0:TestInviscidVortex,
-                 1:TestSteadyAirfoil,
-                 2:TestSteadyCylinder,
-                 3:TestTEgrid,
-                 4:TestShockDiffractiongrid}
+    
+    # whichTest = {0:TestInviscidVortex,
+    #              1:TestSteadyAirfoil,
+    #              2:TestSteadyCylinder,
+    #              3:TestTEgrid,
+    #              4:TestShockDiffractiongrid}
+    
     #test = TestInviscidVortex()
     #test = TestSteadyAirfoil()
     #test = TestSteadyCylinder()
@@ -2903,16 +2915,13 @@ if __name__ == '__main__':
         #'''
         
         #"""
-        whichSolver = {0: 'vortex',
-                        1: 'freestream',
-                        2: 'freestream',
-                        3: 'mms',
-                        4:'shock-diffraction'}
         # whichSolver = {0: 'vortex',
-        #                1: 'freestream',
-        #                2: 'freestream',
-        #                3: 'mms',
-        #                4:'freestream'}
+        #                 1: 'freestream',
+        #                 2: 'freestream',
+        #                 3: 'mms',
+        #                 4:'shock-diffraction'}
+        
+        
         #self.solver_boot(flowtype = 'mms') #TODO fixme compute_manufactured_sol_and_f_euler return vals
         #self.solver_boot(flowtype = 'freestream')
         #self.solver_boot(flowtype = 'vortex')
