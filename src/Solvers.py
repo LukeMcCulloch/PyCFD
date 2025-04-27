@@ -367,7 +367,7 @@ class Solvers(object):
         self.solver_initialized = True
         return
     
-    def solver_solve(self, tfinal=1.0, dt=.01, solver_type='explicit_unsteady_solver'):
+    def solver_solve(self, tfinal=1.0, dt=.01, solver_type='explicit_unsteady_solver', max_steps = 1.e9):
         if not self.solver_initialized :
             print("You must initialize the solver first!")
             print("call solver_boot() on this object to initialize solver")
@@ -375,6 +375,7 @@ class Solvers(object):
         #self.explicit_steady_solver()
         #self.explicit_unsteady_solver(tfinal=tfinal, dt=dt)
         
+        self.max_steps = max_steps # max steps after 1st step
         
         self.solver_switch = {'mms_solver':[],
                               'explicit_unsteady_solver':[tfinal, dt],
@@ -715,7 +716,7 @@ class Solvers(object):
         #for jj in range(1): #debugging!
         i_iteration = 0
         pic_counter = 1
-        while (time < self.t_final):
+        while (time < self.t_final and i_iteration <= self.max_steps):
             #------------------------------------------------------------------
             # Compute the residual: res(i,:)
             #print("stage 1 compute residual")

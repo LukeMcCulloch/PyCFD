@@ -6,14 +6,80 @@ Created on Sun Apr 27 15:12:09 2025
 @author: lukemcculloch
 """
 
-import Solvers as solve
+import numpy as np
+
+import System2D as s2d
+
+import Parameters as Parameters
+import Solvers as FiniteVolumeSolver
+import Integrator   as RKIntegrator
 
 import AdaptiveMeshRefinement  as AMR
 
 
 
 
-if __name__ == '__main__':
+def stage1_static_solve():
+    
+    
+    # 1) read parameters (including mesh filename, output folder, CFL, etc.)
+    #params = Parameters('input.nml')
+    
+    vtkNames = {0:'vortex.vtk',
+                1:'airfoil.vtk',
+                2:'cylinder.vtk',
+                3:'test.vtk',
+                4:'shock_diffraction.vtk'}
+    whichSolver = {0: 'vortex',
+                   1: 'freestream',
+                   2: 'freestream',
+                   3: 'mms',
+                   4:'shock-diffraction'}
+    
+    solvertype = {0:'explicit_unsteady_solver',
+                  1:'explicit_steady_solver',
+                  2:'explicit_steady_solver',
+                  3:'mms_solver',
+                  4:'explicit_unsteady_solver_efficient_shockdiffraction'}
+    
+    
+    thisTest = 4
+    whichTest = {0:FiniteVolumeSolver.TestInviscidVortex,
+                 1:FiniteVolumeSolver.TestSteadyAirfoil,
+                 2:FiniteVolumeSolver.TestSteadyCylinder,
+                 3:FiniteVolumeSolver.TestTEgrid,
+                 4:FiniteVolumeSolver.TestShockDiffractiongrid}
+    
+    
+    # # 2) load an initial mesh + solution from VTK
+    test = whichTest[thisTest]()
+    mesh = test.grid
+    
+    
+    # # 3) set up solver + RK integrator
+    # solver     = FiniteVolumeSolver(mesh, params)
+    # integrator = RKIntegrator(mesh, solver, params)
+    explicitSolver = FiniteVolumeSolver.Solvers(mesh = test.grid)
+    explicitSolver.solver_boot(flowtype = whichSolver[thisTest])
+
+    # # 4) one time‐step
+    # dt = integrator.compute_dt(w)
+    # w_new = integrator.advance(w, dt)
+    explicitSolver.solver_solve(
+        tfinal=1.0, 
+        dt=.01,
+        max_steps = 1,
+        solver_type = solvertype[thisTest])
+    
+    w_new = explicitSolver.w
+
+    # # 5) write out for ParaView
+    # write_vtk(mesh, w_new, params.output_dir + '/stage1.vtu')
+    # print(f"Stage 1: wrote {params.output_dir}/stage1.vtu")
+
+
+def bigMessFromSolvers():
+    
     # gd = Grid(type_='quad',m=10,n=10,
     #           winding='ccw')
     
@@ -37,11 +103,11 @@ if __name__ == '__main__':
                 4:'shock_diffraction.vtk'}
     
     thisTest = 4
-    whichTest = {0:solve.TestInviscidVortex,
-                 1:solve.TestSteadyAirfoil,
-                 2:solve.TestSteadyCylinder,
-                 3:solve.TestTEgrid,
-                 4:solve.TestShockDiffractiongrid}
+    whichTest = {0:FiniteVolumeSolver.TestInviscidVortex,
+                 1:FiniteVolumeSolver.TestSteadyAirfoil,
+                 2:FiniteVolumeSolver.TestSteadyCylinder,
+                 3:FiniteVolumeSolver.TestTEgrid,
+                 4:FiniteVolumeSolver.TestShockDiffractiongrid}
     #test = TestInviscidVortex()
     #test = TestSteadyAirfoil()
     #test = TestSteadyCylinder()
@@ -170,3 +236,8 @@ if __name__ == '__main__':
         
         #'''
         self.print_nml_data()
+    
+
+if __name__ == '__main__':
+    stage1_static_solve()
+    

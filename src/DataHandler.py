@@ -64,20 +64,23 @@ class DataHandler(object):
         handle all else with defaults in the solver parameters
         '''
         
-        self.inputParameters = {'project_name' : False,
-                              'steady_or_unsteady' : False,
-                              't_final' : False,
-                              'generate_tec_file' : False,
-                              'generate_vtk_file' : False,
-                              'M_inf' : False,
-                              'aoa' : False,
-                              'inviscid_flux' : False,
-                              'eig_limiting_factor' : False,
-                              'CFL' : False,
-                              'second_order' : False,
-                              'first_order' : False,
-                              'use_limiter' : False,
-                              'compute_te_mms' : False}
+        self.inputParameters = {'project_name'          : False,
+                              'steady_or_unsteady'      : False,
+                              't_final'                 : False,
+                              'generate_tec_file'       : False,
+                              'generate_vtk_file'       : False,
+                              'M_inf'                   : False,
+                              'aoa'                     : False,
+                              'inviscid_flux'           : False,
+                              'eig_limiting_factor'     : False,
+                              'CFL'                     : False,
+                              'second_order'            : False,
+                              'first_order'             : False,
+                              'use_limiter'             : False,
+                              'compute_te_mms'          : False,
+                              'do_amr'                  : False,
+                              'refine_threshold'        : False,
+                              'coarsen_threshold'       : False}
     
     def readinput(self):
         self.ilines = GetLines(directory = self.path_to_inputs_folder,
