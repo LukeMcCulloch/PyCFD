@@ -15,6 +15,7 @@ class Parameters(object):
         self.iparams = iparams
         self.get_parameters()
         
+        
     def get_parameters(self):
         
         iparams = self.iparams
@@ -68,3 +69,21 @@ class Parameters(object):
         else:
             self.use_limiter = (True if iparams['use_limiter']=='T' else False)
             
+        
+        if iparams['do_amr'] == False:
+            self.do_amr = False
+        else:
+            self.do_amr = bool(iparams['do_amr'])
+            
+        if iparams['refine_threshold'] == False:
+            self.refine_threshold = 0.2
+        else:
+            self.refine_threshold = float(iparams['refine_threshold']) #namelist.get('refine_threshold', 0.2)
+        
+        if iparams['coarsen_threshold'] == False:
+            self.coarsen_threshold = 0.1
+        else:
+            self.coarsen_threshold = float(iparams['coarsen_threshold']) #namelist.get('coarsen_threshold', 0.1)
+            
+            
+        
