@@ -1603,12 +1603,16 @@ class Solvers(object):
     #
     #-------------------------------------------------------------------------#
     def compute_global_time_step(self):
+        '''
+        includes the factor of 1/2
+        '''
         CFL = self.Parameters.CFL
         
         #Initialize dt with the local time step at cell 1.
         i = 0
         assert(abs(self.wsn[i]) > 0.),'wsn time step initilization div by zero'
-        physical_time_step = CFL*self.mesh.cells[i].volume / ( 0.5*self.wsn[i] )
+        
+        physical_time_step = 1.0e6 #CFL*self.mesh.cells[i].volume / ( 0.5*self.wsn[i] )
         
         for i, cell in enumerate(self.mesh.cells):
             physical_time_step = min( physical_time_step,
@@ -1622,13 +1626,22 @@ class Solvers(object):
     #     return self.compute_global_time_step()
     
     def compute_global_time_step_shock_diffraction(self):
+        '''
+        the factor of 1/2 is gone from this time stepper
+
+        Returns
+        -------
+        physical_time_step : TYPE
+            DESCRIPTION.
+
+        '''
         CFL = self.Parameters.CFL
         
         #Initialize dt with the local time step at cell 1.
         i = 0
         assert(abs(self.wsn[i]) > 0.),'wsn time step initilization div by zero'
-        physical_time_step = CFL*self.mesh.cells[i].volume / self.wsn[i] 
         
+        physical_time_step = 1.0e6 #CFL*self.mesh.cells[i].volume / self.wsn[i] 
         for i, cell in enumerate(self.mesh.cells):
             physical_time_step = min( physical_time_step,
                         CFL*self.mesh.cells[i].volume / self.wsn[i]  )

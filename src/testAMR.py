@@ -128,12 +128,16 @@ def test_amr_loop():
     AMR.quantifyMeshSolutionErrors(err)
     
 
-    ''' # tlm todo: start here!
-    for step in range(params.nSteps):
-        dt = integrator.compute_dt(w)
-        w = integrator.advance(w, dt)
-
-        # mark
+    #''' # tlm todo: start here!
+    
+    # for step in range(params.nSteps):
+    #     #dt = integrator.compute_dt(w)
+    #     w = integrator.advance(w, dt)
+        
+    #     dt = self.solver.compute_global_time_step()# do note that time stepping could become very local...
+        
+    '''
+        # mark cell
         refine_ids, coarsen_ids = amr.mark_cells()
         print(f"[step {step}] refine={len(refine_ids)} coarsen={len(coarsen_ids)}")
 
@@ -171,7 +175,9 @@ def test_amr_loop():
         # optional: write out every N steps
         if step % params.output_interval == 0:
             write_vtk(mesh, w, f"{params.output_dir}/step{step}.vtu")
-        #'''
+    
+    
+    #'''
         
     return explicitSolver
 
