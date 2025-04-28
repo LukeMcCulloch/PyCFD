@@ -20,6 +20,9 @@
         second_order = T
          use_limiter = T
 
+# AMR Parameters
+ refine_threshold   = 0.0001
+ coarsen_threshold  = 0.001
 
 /
 

@@ -76,14 +76,20 @@ def stage1_static_solve():
     
     # 5) set up AMR and mark once
     amr = AMR.AMR(
-        mesh, 
+        mesh,
+        explicitSolver,
         w_new, 
         explicitSolver.Parameters.refine_threshold, 
         explicitSolver.Parameters.coarsen_threshold)
     
+    err = amr.compute_error_indicator()# tlm todo: fixme!
+    
     refine_ids, coarsen_ids = amr.mark_cells()
     print(f"AMR would refine {len(refine_ids)} cells, coarsen {len(coarsen_ids)} cells")
 
+    AMR.quantifyMeshSolutionErrors(err)
+    
+    return explicitSolver
 
 
 def test_amr_loop():
@@ -107,10 +113,22 @@ def test_amr_loop():
     
     amr = AMR.AMR(
         mesh, 
+        explicitSolver,#code smell to get access to compute_lsq_coefficients()
         explicitSolver.w, 
         explicitSolver.Parameters.refine_threshold, 
         explicitSolver.Parameters.coarsen_threshold)
-''' # tlm todo: start here!
+    
+    
+    
+    err = amr.compute_error_indicator()# tlm todo: fixme!
+    
+    refine_ids, coarsen_ids = amr.mark_cells()
+    print(f"AMR would refine {len(refine_ids)} cells, coarsen {len(coarsen_ids)} cells")
+    
+    AMR.quantifyMeshSolutionErrors(err)
+    
+
+    ''' # tlm todo: start here!
     for step in range(params.nSteps):
         dt = integrator.compute_dt(w)
         w = integrator.advance(w, dt)
@@ -153,15 +171,17 @@ def test_amr_loop():
         # optional: write out every N steps
         if step % params.output_interval == 0:
             write_vtk(mesh, w, f"{params.output_dir}/step{step}.vtu")
-#'''
+        #'''
+        
+    return explicitSolver
 
 
 
 if __name__ == '__main__':
     
-    stage1_static_solve()
+    self = stage1_static_solve()
     
-    test_amr_loop()
+    self = test_amr_loop()
 
 
 

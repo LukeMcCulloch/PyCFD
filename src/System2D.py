@@ -29,6 +29,8 @@ from DataHandler import DataHandler
 
 from AdaptiveMeshRefinement  import AMR
 
+from Solvers import StencilLSQ #code smell - move this 
+
 class Node(Overload):
     def __init__(self, vector, nid, nConserved=3):
         self.x0 = vector[0]
@@ -926,9 +928,9 @@ class Grid(object):
                 print(' boundary, {},   bnodes = {}'.format(i,self.bound[i].nbnodes))
                 print('                bfaces = {}'.format(self.bound[i].nbfaces))
                 
-            '''
-            read Boundary Conditions
-            '''
+            ##########################################################
+            #read Boundary Conditions
+            ##########################################################
             handleBC.readline()#hard coded line break is a smell!
             print('\n\nReading the boundary condition file.... {}\n'.format(dhandle.filename_bc))
             for i in range(nbound):
@@ -1273,6 +1275,10 @@ class Grid(object):
                 n = node.nid
                 self.VToE[n,c] = 1
         return
+    
+    def generateStencilsLSQ(self):
+        return np.asarray( [StencilLSQ(cell,self) for cell in self.cells] )
+        
     
     
     #-------------------------------------------------------------------------#

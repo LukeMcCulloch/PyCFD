@@ -81,10 +81,10 @@ class StencilLSQ(object):
         else:
             raise LookupError("mesh was destroyed")
             
-    def __del__(self):
-        pass
-        #print("delete LSQ",self.cell.cid)
-        #print("delete", "LSQstencil")
+    # def __del__(self):
+    #     pass
+    #     #print("delete LSQ",self.cell.cid)
+    #     #print("delete", "LSQstencil")
         
         
     def construct_vertex_stencil(self):
@@ -150,6 +150,7 @@ class Solvers(object):
       (4)energy
     """
     def __init__(self, mesh):
+        self.nq = 4 # Euler system size
         self.solver_initialized = False
         self.do_mms = False
         self.mesh = mesh

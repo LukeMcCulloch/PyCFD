@@ -32,7 +32,8 @@ import System2D as s2d
 # Adaptive Mesh Refinement (AMR) module
 
 class AMR:
-    def __init__(self, mesh, state_w, refine_thresh, coarsen_thresh=None):
+    def __init__(self, mesh, solver, state_w, 
+            refine_thresh, coarsen_thresh=None):
         """
         mesh: instance of Grid (unstructured mesh)
         state_w: numpy array of primitive variables, shape (nCells, nVars)
@@ -40,6 +41,7 @@ class AMR:
         coarsen_thresh: error threshold below which cells are coarsened
         """
         self.mesh = mesh
+        self.solver = solver # code smell to get at compute_lsq_coefficients until I move it
         self.w = state_w
         self.refine_thresh = refine_thresh
         # default coarsen threshold is half of refine
@@ -52,20 +54,42 @@ class AMR:
         # child->parent mapping
         self.child_to_parent = {}
 
-    def compute_error_indicator(self):
+
+    def compute_error_indicator(self, ivar = 0):
         """
         Simple gradient-based error: magnitude of density gradient per cell
         Requires mesh to have LSQ gradient reconstruction implemented
+        
+        which variable to get the gradient of?
+        ivar = 0 : grad rho
+        ivar = 1 : grad w
+        ivar = 2: grad v
+        ivar = 3 : grad p
         """
         # ensure LSQ stencil is set up
-        self.mesh.compute_compact_gradient_reconstruction_A_matrix()
+        #self.mesh.compute_compact_gradient_reconstruction_A_matrix()
+        self.mesh.generateStencilsLSQ() #loop over cells
+        self.solver.compute_lsq_coefficients()
+        
+        
         # reconstruct per-cell gradients
-        for cell in self.mesh.cells:
+        self.solver.compute_gradients()
+        # for cell in self.mesh.cells:
+        #     cid = cell.cid
+        #     # w[cid,0] is density
+        #     #grad = cell.reconstruct_gradient(self.w[:,0])  
+        #     cell.compute_compact_gradient_reconstruction_A_matrix()
+        #     grad = cell.rinvqt
+        
+        #for ivar in range(self.solver.nq):
+        for cell in self.mesh.cells:#cellList???
             cid = cell.cid
-            # w[cid,0] is density
-            grad = cell.reconstruct_gradient(self.w[:,0])  # user must implement reconstruct_gradient
+            grad = self.solver.gradw[cid,:,:] # 2D grad of all quantities at the cell cid
+            #grad = self.solver.gradw[cid,ivar,:] # 2D grad of scalar quantity ivar at cell cid
+            
             self.error[cid] = np.linalg.norm(grad)
         return self.error
+
 
     def mark_cells(self):
         """
@@ -432,3 +456,22 @@ def derive_parent_nodes(mesh):
 
     """
     return
+
+def quantifyMeshSolutionErrors(err):
+    """
+    this is just a helper to take the error on the mesh
+    and compute thresholds that would ask the AMR to do 
+    some refinement and or coarsening
+    """
+    print(f"  error:  min {err.min():.2e},  med {np.median(err):.2e},  max {err.max():.2e}")
+    for q in (0.25, 0.5, 0.75, 0.9, 0.99):
+        print(f"  {int(q*100)}%ile: {np.quantile(err, q):.2e}")
+    ##
+    max_err = err.max()
+    med_err = np.median(err)
+    
+    thr_high = np.quantile(err, 0.90)   # top 10% for refinemet
+    thr_low  = np.quantile(err, 0.10)   # bottom 10% for coarsening
+    
+    return
+    
