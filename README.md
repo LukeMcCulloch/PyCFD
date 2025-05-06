@@ -1,6 +1,7 @@
 # PyCFD
 
-An unstructured solver for the Euler equations on a 2D grid, prototyped in Python.  Adaptive mesh refinement (AMR) now under construction!
+An unstructured solver for the Euler equations on a 2D grid, prototyped in Python.  Adaptive mesh refinement (AMR) now under construction!  
+Edit the AMR bit is under development in [PyAMRCFD](https://github.com/LukeMcCulloch/PyAMRCFD) 
 
 1. LSQ gradient reconstruction
 2. Roe approximate Riemmann solver for the flux 
